@@ -9,7 +9,9 @@ selectors = {
     'firstrun':"#wrapper",
     'qrCode':"#window > div.entry-main > div.qrcode > img",
     'mainPage':".app.two",
-    'chatList':".infinite-list-viewport"
+    'chatList':".infinite-list-viewport",
+    'messageList':"#main > div > div:nth-child(1) > div > div.message-list",
+    'unreadMessageBar':"#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread"
 }
 def init():
     driver.get(url)
@@ -35,9 +37,12 @@ def press_send():
     pass
 
 def enter_message():
+    pass
+
+def get_user_list():
+    pass
 
 def run():
-
     pass
 
 init()
