@@ -3,9 +3,9 @@ import selenium
 from selenium.webdriver.common.by import By
 import time
 import os
-driver = webdriver.Firefox()
-url="http://web.whatsapp.com"
-selectors = {
+
+URL="http://web.whatsapp.com"
+SELECTORS = {
     'firstrun':"#wrapper",
     'qrCode':"#window > div.entry-main > div.qrcode > img",
     'mainPage':".app.two",
@@ -15,13 +15,15 @@ selectors = {
     'searchBar':"#side > div.search-container > div > label > input",
     'chats':".infinite-list-item"
 }
+driver = webdriver.Firefox()
+
 def init():
-    driver.get(url)
+    driver.get(URL)
     driver.implicitly_wait(10)
     while True:
         try:
             time.sleep(1)
-            element = driver.find_element_by_css_selector(selectors['mainPage'])
+            element = driver.find_element_by_css_selector(SELECTORS['mainPage'])
         except:
             firstrun()
             continue
@@ -33,8 +35,6 @@ def firstrun():
     screen = driver.save_screenshot('temp.png')
     ok = input("waiting")
 
-    pass
-
 def press_send():
     pass
 
@@ -42,24 +42,25 @@ def enter_message():
     pass
 
 def select_contact(contact):
-    element = driver.find_element_by_css_selector(selectors['searchBar']).send_keys(contact)
+    element = driver.find_element_by_css_selector(SELECTORS['searchBar']).send_keys(contact)
     time.sleep(1)
     result = get_user_list()
-    print result.find_elements_by_css_selector(selectors['chats'])
-    if len(result.find_elements_by_css_selector(selectors['chats']))>0:
-        result.find_elements_by_css_selector(selectors['chats'])[0].click()
+    print result.find_elements_by_css_selector(SELECTORS['chats'])
+    if len(result.find_elements_by_css_selector(SELECTORS['chats']))>0:
+        result.find_elements_by_css_selector(SELECTORS['chats'])[0].click()
         pass
 
 
 def get_user_list():
-    element = driver.find_element_by_css_selector(selectors['chatList'])
+    element = driver.find_element_by_css_selector(SELECTORS['chatList'])
     return element
 
 def run():
     pass
 
 init()
-time.sleep(1)
-get_user_list()
-time.sleep(1)
-select_contact("9704170702")
+if __name__ == "__main__":
+    time.sleep(1)
+    get_user_list()
+    time.sleep(1)
+    select_contact("9704170702")
