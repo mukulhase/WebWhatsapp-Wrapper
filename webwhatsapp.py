@@ -13,8 +13,11 @@ SELECTORS = {
     'messageList':"#main > div > div:nth-child(1) > div > div.message-list",
     'unreadMessageBar':"#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
     'searchBar':"#side > div.search-container > div > label > input",
-    'chats':".infinite-list-item"
+    'chats':".infinite-list-item",
+    'chatBar':'div.input',
+    'sendButton':'button.icon:nth-child(3)',
 }
+
 driver = webdriver.Firefox()
 
 def init():
@@ -36,20 +39,19 @@ def firstrun():
     ok = input("waiting")
 
 def press_send():
-    pass
+    driver.find_element_by_css_selector(SELECTORS['sendButton']).click()
 
-def enter_message():
-    pass
+def enter_message(message):
+    driver.find_element_by_css_selector(SELECTORS['chatBar']).send_keys(message)
 
 def select_contact(contact):
     element = driver.find_element_by_css_selector(SELECTORS['searchBar']).send_keys(contact)
     time.sleep(1)
     result = get_user_list()
-    print result.find_elements_by_css_selector(SELECTORS['chats'])
+    a = result.find_elements_by_css_selector(SELECTORS['chats'])
     if len(result.find_elements_by_css_selector(SELECTORS['chats']))>0:
         result.find_elements_by_css_selector(SELECTORS['chats'])[0].click()
-        pass
-
+    return a
 
 def get_user_list():
     element = driver.find_element_by_css_selector(SELECTORS['chatList'])
