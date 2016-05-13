@@ -1,8 +1,12 @@
 from selenium import webdriver
+from dateutil.parser import *
+
 import selenium
 from selenium.webdriver.common.by import By
 import time
 import os
+from bs4 import BeautifulSoup
+import datetime
 
 URL="http://web.whatsapp.com"
 SELECTORS = {
@@ -93,21 +97,55 @@ def send_message(contact, message):
     enter_message(message)
     press_send()
 
+def check_unread(contact):
+    html = contact.get_attribute('innerHTML')
+    return 'icon-meta' in html
+
 def update_unread():
     listelement = get_user_list()
     list = listelement.find_elements_by_css_selector(SELECTORS['chats'])
     unreadlist =[]
-    for contact in reversed(list):
-        if len(contact.find_elements_by_css_selector(SELECTORS['UnreadChatlistIden']))==0:
-            break
-        else:
+    for contact in list:
+        if check_unread(contact):
             unreadlist.append(contact)
-    for chat in unreadlist:
-        print chat.text
+
+    messages=[]
+    ##SCOPE FOR OPTIMISATION IF SINGLE MESSAGE NO NEED TO OPEN CHAT(Unless we have to remove the read
+    for contact in unreadlist:
+        contact_name=contact.text.split("\n")
+        msg={}
+        msg["contact"]=contact_name
+        msg["message"]=read_message(contact)
+        messages.append(msg)
         #for testing
         #Iterate here
+
+    return messages
+
+
+
+def read_message(contact_element):
+    contact_element.click()
+    messages_html = driver.find_element_by_css_selector(SELECTORS['messageList']).get_attribute('innerHTML')
+    soup = BeautifulSoup("<html>"+messages_html+"</html>", 'html.parser')
+    message_list = soup.find_all("div",class_="msg")
+    messages=[]
+    for message in message_list:
+        msg = {}
+        ##print(message.text)
+        message_content = message.find_all(class_="message-text")
+        if len(message_content)!=0:
+            text = message_content[0].text
+            separated = "".join(text.split(u"\u2060")).split(u"\xa0")
+            msg["timestamp"] = parse(separated[0][1:-1])
+            msg["contact"] = separated[1]
+            msg["text"] = separated[2]
+            messages.append(msg)
+    return messages
 
 def run():
     pass
 
 init()
+print update_unread()
+driver.close()
