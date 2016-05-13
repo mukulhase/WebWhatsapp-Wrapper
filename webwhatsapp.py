@@ -3,6 +3,7 @@ import selenium
 from selenium.webdriver.common.by import By
 import time
 import os
+from bs4 import BeautifulSoup
 
 URL="http://web.whatsapp.com"
 SELECTORS = {
@@ -102,10 +103,18 @@ def update_unread():
             break
         else:
             unreadlist.append(contact)
+
+    ##SCOPE FOR OPTIMISATION IF SINGLE MESSAGE NO NEED TO OPEN CHAT(Unless we have to remove the read
     for chat in unreadlist:
         print chat.text
         #for testing
         #Iterate here
+
+def read_message(contact_element):
+    contact_element.click()
+    messages_html = driver.find_elements_by_css_selector(SELECTORS['messageList']).get_attribute('innerHTML')
+    soup = BeautifulSoup(messages_html, 'html.parser')
+    soup.select('.messageList')
 
 def run():
     pass
