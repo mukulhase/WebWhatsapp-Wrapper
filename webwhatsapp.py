@@ -26,19 +26,22 @@ def init():
     driver.get(URL)
     driver.implicitly_wait(10)
     while True:
-        try:
-            time.sleep(1)
-            element = driver.find_element_by_css_selector(SELECTORS['mainPage'])
-        except:
+        if len(driver.find_elements_by_css_selector(SELECTORS['mainPage']))==0:
             firstrun()
             continue
-        break
+        else:
+            break
     run()
 
 def firstrun():
+    "Sends QRCode if not registered"
     print "first run"
     screen = driver.save_screenshot('temp.png')
-    ok = input("waiting")
+    while True:
+        if len(driver.find_elements_by_css_selector(SELECTORS['mainPage']))==0:
+            continue
+        else:
+            break
 
 def press_send():
     "Presses the send button"
@@ -90,4 +93,3 @@ if __name__ == "__main__":
     time.sleep(1)
     get_user_list()
     time.sleep(1)
-    select_contact("9704170702")
