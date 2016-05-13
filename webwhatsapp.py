@@ -17,6 +17,9 @@ SELECTORS = {
     'chats':".infinite-list-item",
     'chatBar':'div.input',
     'sendButton':'button.icon:nth-child(3)',
+    'LoadHistory':'.btn-more',
+    'UnreadChatlistIden':'.icon-meta',
+    'UnreadChatBanner':'.message-list',
 }
 
 driver = webdriver.Firefox()
