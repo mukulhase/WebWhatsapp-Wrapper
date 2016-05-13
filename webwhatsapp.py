@@ -88,6 +88,11 @@ def get_user_list():
     element = driver.find_element_by_css_selector(SELECTORS['chatList'])
     return element
 
+def send_message(contact, message):
+    select_contact(contact)
+    enter_message(message)
+    press_send()
+
 def run():
     pass
 
