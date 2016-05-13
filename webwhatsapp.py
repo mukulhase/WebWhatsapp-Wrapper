@@ -93,11 +93,21 @@ def send_message(contact, message):
     enter_message(message)
     press_send()
 
+def update_unread():
+    listelement = get_user_list()
+    list = listelement.find_elements_by_css_selector(SELECTORS['chats'])
+    unreadlist =[]
+    for contact in reversed(list):
+        if len(contact.find_elements_by_css_selector(SELECTORS['UnreadChatlistIden']))==0:
+            break
+        else:
+            unreadlist.append(contact)
+    for chat in unreadlist:
+        print chat.text
+        #for testing
+        #Iterate here
+
 def run():
     pass
 
 init()
-if __name__ == "__main__":
-    time.sleep(1)
-    get_user_list()
-    time.sleep(1)
