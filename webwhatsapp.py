@@ -1,8 +1,6 @@
 from selenium import webdriver
 from dateutil.parser import *
 
-import selenium
-from selenium.webdriver.common.by import By
 import time
 import os
 from bs4 import BeautifulSoup
@@ -22,8 +20,12 @@ SELECTORS = {
     'chatBar':'div.input',
     'sendButton':'button.icon:nth-child(3)',
     'LoadHistory':'.btn-more',
-    'UnreadChatlistIden':'.icon-meta',
-    'UnreadChatBanner':'.message-list',
+    'UnreadBadge':'.icon-meta',
+}
+CLASSES = {
+    'unreadBadge':'icon-meta',
+    'messageContent':"message-text",
+    'messageList':"msg"
 }
 
 driver = webdriver.Firefox()
@@ -38,7 +40,6 @@ def init():
             continue
         else:
             break
-    run()
 
 def firstrun():
     "Sends QRCode if not registered"
@@ -52,10 +53,12 @@ def firstrun():
 
 def press_send():
     "Presses the send button"
+    #optimisation can be made here, store the element instead of using the selector search everytime
     driver.find_element_by_css_selector(SELECTORS['sendButton']).click()
 
 def enter_message(message):
     "Enters the message onto the chat bar"
+    #optimisation can be made here, store the element instead of using the selector search everytime
     driver.find_element_by_css_selector(SELECTORS['chatBar']).send_keys(message)
 
 def select_contact(contact, entry = None):
@@ -98,8 +101,10 @@ def send_message(contact, message):
     press_send()
 
 def check_unread(contact):
+    ##more reliable unread check -> store timestamps
+    ##to use combination of both, timestamp and badge
     html = contact.get_attribute('innerHTML')
-    return 'icon-meta' in html
+    return CLASSES["unreadBadge"] in html
 
 def update_unread():
     listelement = get_user_list()
@@ -110,14 +115,13 @@ def update_unread():
             unreadlist.append(contact)
 
     messages=[]
-    ##SCOPE FOR OPTIMISATION IF SINGLE MESSAGE NO NEED TO OPEN CHAT(Unless we have to remove the read
+    ##SCOPE FOR OPTIMISATION IF SINGLE MESSAGE NO NEED TO OPEN CHAT(Unless we have to remove the read)
     for contact in unreadlist:
         contact_name=contact.text.split("\n")
         msg={}
         msg["contact"]=contact_name
-        msg["message"]=read_message(contact)
+        msg["messages"]=read_message(contact)
         messages.append(msg)
-        #for testing
         #Iterate here
 
     return messages
@@ -128,24 +132,20 @@ def read_message(contact_element):
     contact_element.click()
     messages_html = driver.find_element_by_css_selector(SELECTORS['messageList']).get_attribute('innerHTML')
     soup = BeautifulSoup("<html>"+messages_html+"</html>", 'html.parser')
-    message_list = soup.find_all("div",class_="msg")
+    message_list = soup.find_all("div",class_=CLASSES["messageList"])
     messages=[]
     for message in message_list:
         msg = {}
-        ##print(message.text)
-        message_content = message.find_all(class_="message-text")
+        message_content = message.find_all(class_=CLASSES["messageContent"])
         if len(message_content)!=0:
+            ##need to add group message support
             text = message_content[0].text
             separated = "".join(text.split(u"\u2060")).split(u"\xa0")
             msg["timestamp"] = parse(separated[0][1:-1])
-            msg["contact"] = separated[1]
+            msg["contact"] = separated[1][:-1]
             msg["text"] = separated[2]
             messages.append(msg)
     return messages
 
-def run():
-    pass
-
 init()
-print update_unread()
 driver.close()
