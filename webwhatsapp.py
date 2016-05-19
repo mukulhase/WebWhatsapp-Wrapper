@@ -4,6 +4,8 @@ from selenium.webdriver.common.by import By
 import time
 import os
 from bs4 import BeautifulSoup
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class WhatsAPIDriver():
     URL="http://web.whatsapp.com"
@@ -22,32 +24,40 @@ class WhatsAPIDriver():
         'LoadHistory':'.btn-more',
         'UnreadChatlistIden':'.icon-meta',
         'UnreadChatBanner':'.message-list',
+        'ReconnectLink':'.action',
+        'WhatsappQrIcon':'span.icon:nth-child(2)',
     }
 
     driver = None
 
     def __init__(self):
-        self.driver = webdriver.Firefox()
         "Initialises the browser"
+        self.driver = webdriver.Firefox()
         self.driver.get(self.URL)
         self.driver.implicitly_wait(10)
-        while True:
-            if len(self.driver.find_elements_by_css_selector(self.SELECTORS['mainPage']))==0:
-                self.firstrun()
-                continue
-            else:
-                break
-        self.run()
+        # if "Use WhatsApp on your phone to scan the code" in driver.page_source:
+        #     self.driver.save_screenshot('temp.png')
+        # else:
+        # while True:
+        #     if len(self.driver.find_elements_by_css_selector(self.SELECTORS['mainPage']))==0:
+        #         self.firstrun()
+        #         continue
+        #     else:
+        #         break
+        # self.run()
 
     def firstrun(self):
         "Sends QRCode if not registered"
-        print "first run"
-        screen = self.driver.save_screenshot('temp.png')
-        while True:
-            if len(self.driver.find_elements_by_css_selector(self.SELECTORS['mainPage']))==0:
-                continue
-            else:
-                break
+        WebDriverWait(self.driver, 30).until(\
+                    EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['WhatsappQrIcon'])))
+        print "NOT WAITING NOW"
+        screen = self.driver.save_screenshot('media/%s.png' %(self.username))
+
+        # while True:
+        #     if len(self.driver.find_elements_by_css_selector(self.SELECTORS['mainPage']))==0:
+        #         continue
+        #     else:
+        #         break
 
     def press_send(self):
         "Presses the send button"
@@ -92,7 +102,9 @@ class WhatsAPIDriver():
         return element
 
     def send_message(self, contact, message, entry=None):
-        self.select_contact(contact, entry)
+        val = self.select_contact(contact, entry)
+        if val != True:
+            return val
         self.enter_message(message)
         self.press_send()
 
@@ -117,6 +129,12 @@ class WhatsAPIDriver():
         messages_html = self.driver.find_elements_by_css_selector(self.SELECTORS['messageList']).get_attribute('innerHTML')
         soup = BeautifulSoup(messages_html, 'html.parser')
         soup.select('.messageList')
+
+    def __unicode__(self):
+        return self.username
+
+    def __str__(self):
+        return self.__unicode__()
 
     def run(self):
         pass
