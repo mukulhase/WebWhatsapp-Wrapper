@@ -1,4 +1,3 @@
-
 from selenium import webdriver
 from dateutil.parser import *
 import time
@@ -107,14 +106,14 @@ class WhatsAPIDriver():
         ##more reliable unread check -> store timestamps
         ##to use combination of both, timestamp and badge
         html = contact.get_attribute('innerHTML')
-        return CLASSES["unreadBadge"] in html
+        return self.CLASSES["unreadBadge"] in html
 
     def update_unread(self):
         listelement = self.get_user_list()
-        list = listelement.find_elements_by_css_selector(SELECTORS['chats'])
+        list = listelement.find_elements_by_css_selector(self.SELECTORS['chats'])
         unreadlist =[]
         for contact in list:
-            if check_unread(contact):
+            if self.check_unread(contact):
                 unreadlist.append(contact)
 
         messages=[]
@@ -123,21 +122,21 @@ class WhatsAPIDriver():
             contact_name=contact.text.split("\n")
             msg={}
             msg["contact"]=contact_name
-            msg["messages"]=read_message(contact)
+            msg["messages"]=self.read_message(contact)
             messages.append(msg)
             #Iterate here
 
         return messages
 
-    def read_message(contact_element):
+    def read_message(self, contact_element):
         contact_element.click()
-        messages_html = self.driver.find_element_by_css_selector(SELECTORS['messageList']).get_attribute('innerHTML')
+        messages_html = self.driver.find_element_by_css_selector(self.SELECTORS['messageList']).get_attribute('innerHTML')
         soup = BeautifulSoup("<html>"+messages_html+"</html>", 'html.parser')
-        message_list = soup.find_all("div",class_=CLASSES["messageList"])
+        message_list = soup.find_all("div",class_=self.CLASSES["messageList"])
         messages=[]
         for message in message_list:
             msg = {}
-            message_content = message.find_all(class_=CLASSES["messageContent"])
+            message_content = message.find_all(class_=self.CLASSES["messageContent"])
             if len(message_content)!=0:
                 ##need to add group message support
                 text = message_content[0].text
