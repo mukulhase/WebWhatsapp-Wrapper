@@ -1,3 +1,4 @@
+
 from selenium import webdriver
 from dateutil.parser import *
 import time
@@ -6,6 +7,7 @@ from bs4 import BeautifulSoup
 import datetime
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 class WhatsAPIDriver():
     URL="http://web.whatsapp.com"
@@ -23,6 +25,10 @@ class WhatsAPIDriver():
         'sendButton':'button.icon:nth-child(3)',
         'LoadHistory':'.btn-more',
         'UnreadBadge':'.icon-meta',
+        'UnreadChatBanner':'.message-list',
+        'ReconnectLink':'.action',
+        'WhatsappQrIcon':'span.icon:nth-child(2)',
+        'QRReloader':'.qr-container',
     }
     CLASSES = {
         'unreadBadge':'icon-meta',
@@ -32,18 +38,20 @@ class WhatsAPIDriver():
 
     driver = None
 
-    def __init__(self):
+    def __init__(self, username):
         "Initialises the browser"
         self.driver = webdriver.Firefox()
+        self.username = username
         self.driver.get(self.URL)
         self.driver.implicitly_wait(10)
 
     def firstrun(self):
         "Sends QRCode if not registered"
+        if "CLICK TO RELOAD QR" in self.driver.page_source:
+            self.reloadQRCode()
         WebDriverWait(self.driver, 30).until(\
                     EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['WhatsappQrIcon'])))
-        print "NOT WAITING NOW"
-        screen = self.driver.save_screenshot('media/%s.png' %(self.username))
+        self.driver.save_screenshot('media/%s.png' %(self.username))
 
     def press_send(self):
         "Presses the send button"
@@ -93,6 +101,7 @@ class WhatsAPIDriver():
             return val
         self.enter_message(message)
         self.press_send()
+        return True
 
     def check_unread(self,contact):
         ##more reliable unread check -> store timestamps
@@ -145,5 +154,5 @@ class WhatsAPIDriver():
     def __str__(self):
         return self.__unicode__()
 
-    def run(self):
-        pass
+    def reloadQRCode(self):
+        self.driver.find_element_by_css_selector(self.SELECTORS['QRReloader']).click()

@@ -5,13 +5,9 @@
 
 ` from WhatsAPI.webwhatsapp import WhatsAPIDriver `
 
-- Instantiate driver
+- Instantiate driver and set username
 
-` driver = WhatsAPIDriver() `
-
-- Set Username
-
-` driver.username = "helloworld" `
+` driver = WhatsAPIDriver(username="mkhase") `
 
 - Scan QR (username.png stored in the same directory after running command)
 
@@ -19,7 +15,9 @@
 
 - And now, the fun part, sending messages
 
-` user_driver.send_message(contact, message) `
+` user_driver.send_message(contact, message,[ entry]) `
+
+Incase a search for 'contact' yields multiple contacts, the list will be returned. To send the message to a specific person, call the function again, and pass the entry argument, and the message will be sent to that entry on the list
 
 
 ##Use Cases:
