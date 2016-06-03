@@ -101,51 +101,11 @@ class WhatsAPIDriver():
         self.enter_message(message)
         self.press_send()
         return True
+        pass
 
-    def check_unread(self,contact):
-        ##more reliable unread check -> store timestamps
-        ##to use combination of both, timestamp and badge
-        html = contact.get_attribute('innerHTML')
-        return self.CLASSES["unreadBadge"] in html
-
-    def update_unread(self):
-        listelement = self.get_user_list()
-        list = listelement.find_elements_by_css_selector(self.SELECTORS['chats'])
-        unreadlist =[]
-        for contact in list:
-            if self.check_unread(contact):
-                unreadlist.append(contact)
-
-        messages=[]
-        ##SCOPE FOR OPTIMISATION IF SINGLE MESSAGE NO NEED TO OPEN CHAT(Unless we have to remove the read)
-        for contact in unreadlist:
-            contact_name=contact.text.split("\n")
-            msg={}
-            msg["contact"]=contact_name
-            msg["messages"]=self.read_message(contact)
-            messages.append(msg)
-            #Iterate here
-
-        return messages
-
-    def read_message(self, contact_element):
-        contact_element.click()
-        messages_html = self.driver.find_element_by_css_selector(self.SELECTORS['messageList']).get_attribute('innerHTML')
-        soup = BeautifulSoup("<html>"+messages_html+"</html>", 'html.parser')
-        message_list = soup.find_all("div",class_=self.CLASSES["messageList"])
-        messages=[]
-        for message in message_list:
-            msg = {}
-            message_content = message.find_all(class_=self.CLASSES["messageContent"])
-            if len(message_content)!=0:
-                ##need to add group message support
-                text = message_content[0].text
-                separated = "".join(text.split(u"\u2060")).split(u"\xa0")
-                msg["timestamp"] = parse(separated[0][1:-1])
-                msg["contact"] = separated[1][:-1]
-                msg["text"] = separated[2]
-                messages.append(msg)
-        return messages
+    def view_unread(self):
+        Store =  self.driver.execute_script(open("./script.js").read())
+        return Store
 
     def __unicode__(self):
         return self.username
