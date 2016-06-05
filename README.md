@@ -11,11 +11,15 @@
 
 - Scan QR (username.png stored in the same directory after running command)
 
-` user_driver.firstrun() `
+` driver.firstrun() `
 
 - And now, the fun part, sending messages
 
-` user_driver.send_message(contact, message,[ entry]) `
+` driver.send_message(contact, message,[ entry]) `
+
+- Viewing unread messages
+
+` driver.view_unread() `
 
 Incase a search for 'contact' yields multiple contacts, the list will be returned. To send the message to a specific person, call the function again, and pass the entry argument, and the message will be sent to that entry on the list
 
