@@ -50,7 +50,7 @@ class WhatsAPIDriver():
             self.reloadQRCode()
         WebDriverWait(self.driver, 30).until(\
                     EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['WhatsappQrIcon'])))
-        self.driver.save_screenshot('media/%s.png' %(self.username))
+        self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
 
     def press_send(self):
         "Presses the send button"
