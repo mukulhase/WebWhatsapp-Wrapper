@@ -58,7 +58,9 @@ class WhatsAPIDriver():
 
     def enter_message(self, message):
         "Enters the message onto the chat bar"
-        self.driver.find_element_by_css_selector(self.SELECTORS['chatBar']).send_keys(message)
+        chatbar = self.driver.find_element_by_css_selector(self.SELECTORS['chatBar'])
+        chatbar.click()
+        chatbar.send_keys(message)
 
     def select_contact(self, contact, entry = None):
         """
@@ -67,11 +69,13 @@ class WhatsAPIDriver():
         """
 
         # Focusing before sending keys solves many problems
-        self.driver.find_element_by_css_selector(self.SELECTORS['searchBar']).click()
-
-        element = self.driver.find_element_by_css_selector(self.SELECTORS['searchBar']).send_keys(contact)
-        time.sleep(1)
-
+        searchbar = self.driver.find_element_by_css_selector(self.SELECTORS['searchBar'])
+        searchbar.click()
+        searchbar.send_keys(" ")
+        self.driver.find_element_by_css_selector(self.SELECTORS['searchCancel']).click()
+        searchbar.click()
+        searchbar.send_keys(contact)
+        WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['searchCancel'])))
         try:
             result = self.get_user_list()
         except NoSuchElementException:
@@ -79,8 +83,6 @@ class WhatsAPIDriver():
 
         # To get the most recent chat first, we reverse it
         contacts = result.find_elements_by_css_selector(self.SELECTORS['chats'])[::-1]
-        time.sleep(1)
-
         if len(contacts) == 1:
             result.find_elements_by_css_selector(self.SELECTORS['chats'])[0].click()
         elif entry is None:
@@ -119,7 +121,8 @@ class WhatsAPIDriver():
             temp.messages = [];
             var messages = Chats[chat].msgs.models;
             for (var i=messages.length-1;i>=0;i--) {
-                if (messages[i]._values.t <= last_read[Chats[chat]._values.formattedTitle]) {
+                console.log(messages[i].id.fromMe);
+                if (messages[i]._values.t <= last_read[Chats[chat]._values.formattedTitle] || (messages[i].id.fromMe==true)) {
                     break;
                 } else {
                     temp.messages.push(
