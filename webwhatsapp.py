@@ -73,23 +73,38 @@ class WhatsAPIDriver():
         searchbar.click()
         searchbar.send_keys(" ")
         self.driver.find_element_by_css_selector(self.SELECTORS['searchCancel']).click()
+
         searchbar.click()
         searchbar.send_keys(contact)
-        WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['searchCancel'])))
+        time.sleep(2)
+        # WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['searchCancel'])))
         try:
             result = self.get_user_list()
         except NoSuchElementException:
             return False
 
         # To get the most recent chat first, we reverse it
-        contacts = result.find_elements_by_css_selector(self.SELECTORS['chats'])[::-1]
+        contacts = result.find_elements_by_css_selector(self.SELECTORS['chats'])
+
+        for i, a in enumerate(contacts):
+            if a.text == "CHATS" or a.text == "GROUPS":
+                contacts.pop(i)
+            if a.text == "MESSAGES":
+                contacts = contacts[:i]
+                break
+            
+        time.sleep(2)
+
         if len(contacts) == 1:
             result.find_elements_by_css_selector(self.SELECTORS['chats'])[0].click()
         elif entry is None:
             self.driver.find_element_by_css_selector(self.SELECTORS['searchCancel']).click()
             return contacts
         else:
-            contacts[entry].click()
+            try:
+                contacts[entry].click()
+            except IndexError:
+                return False
         return True
 
     def get_user_list(self):
