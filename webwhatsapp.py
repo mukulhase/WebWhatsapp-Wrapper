@@ -87,11 +87,16 @@ class WhatsAPIDriver():
         contacts = result.find_elements_by_css_selector(self.SELECTORS['chats'])
 
         for i, a in enumerate(contacts):
-            if a.text == "CHATS" or a.text == "GROUPS":
-                contacts.pop(i)
             if a.text == "MESSAGES":
                 contacts = contacts[:i]
                 break
+
+        contact_list = []
+        for i, a in enumerate(contacts):
+            if a.text == "CHATS" or a.text == "GROUPS":
+                contacts.pop(i)
+            else:
+                contact_list = a.text
             
         time.sleep(2)
 
@@ -99,7 +104,7 @@ class WhatsAPIDriver():
             result.find_elements_by_css_selector(self.SELECTORS['chats'])[0].click()
         elif entry is None:
             self.driver.find_element_by_css_selector(self.SELECTORS['searchCancel']).click()
-            return contacts
+            return contact_list
         else:
             try:
                 contacts[entry].click()
