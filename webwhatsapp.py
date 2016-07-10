@@ -93,7 +93,7 @@ class WhatsAPIDriver():
 
         contact_list = []
         for i, a in enumerate(contacts):
-            if a.text == "CHATS" or a.text == "GROUPS":
+            if a.text == "CHATS" or a.text == "GROUPS" or a.text == "CONTACTS":
                 contacts.pop(i)
             else:
                 contact_list = a.text
