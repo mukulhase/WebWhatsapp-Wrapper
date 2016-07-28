@@ -43,6 +43,7 @@ class WhatsAPIDriver():
         self.username = username
         self.driver.get(self.URL)
         self.driver.implicitly_wait(10)
+        self.view_unread()
 
     def firstrun(self):
         "Sends QRCode if not registered"

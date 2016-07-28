@@ -7,15 +7,19 @@
 
 - Instantiate driver and set username
 
-` driver = WhatsAPIDriver(username="mkhase") `
+` driver = WhatsAPIDriver("mkhase") `
 
-- Scan QR (username.png stored in the same directory after running command)
+- If the module is to be used as part of a script, and you need an image of the QR code, run the firstrun method. This saves the QR as username.png in, stored in the same directory after running command.
 
 ` driver.firstrun() `
 
-- And now, the fun part, sending messages
+If not, you can skip the above step, and directly scan the QR with your phone.
+
+- And now, the fun part, sending messages.
 
 ` driver.send_message(contact, message,[ entry]) `
+
+If the entry parameter is not given, and there are multiple contacts which match the contact argument, they are returned as a list. To choose an entry out of the list, call the function, with the index of the contact as entry argument.
 
 - Viewing unread messages
 
