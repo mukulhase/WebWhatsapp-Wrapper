@@ -7,8 +7,12 @@ import datetime
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.proxy import Proxy, ProxyType
 
 class WhatsAPIDriver():
+
+    PROXY = None
+
     URL="http://web.whatsapp.com"
     SELECTORS = {
         'firstrun':"#wrapper",
@@ -39,7 +43,14 @@ class WhatsAPIDriver():
 
     def __init__(self, username="API"):
         "Initialises the browser"
-        self.driver = webdriver.Firefox()
+        env_proxy = {
+            'proxyType': ProxyType.MANUAL,
+            'httpProxy': os.environ.get("http_proxy"),
+            'httpsProxy': os.environ.get("https_proxy"),
+            'ftpProxy': os.environ.get("ftp_proxy"),
+        }
+        self.PROXY = Proxy(env_proxy)
+        self.driver = webdriver.Firefox(proxy=self.PROXY)
         self.username = username
         self.driver.get(self.URL)
         self.driver.implicitly_wait(10)

@@ -3,7 +3,7 @@
 ##Usage:
 - Import library
 
-` from WhatsAPI.webwhatsapp import WhatsAPIDriver `
+` from webwhatsapp import WhatsAPIDriver `
 
 - Instantiate driver and set username
 
