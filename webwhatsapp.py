@@ -37,7 +37,7 @@ class WhatsAPIDriver():
 
     driver = None
 
-    def __init__(self, username):
+    def __init__(self, username="API"):
         "Initialises the browser"
         self.driver = webdriver.Firefox()
         self.username = username
@@ -96,7 +96,7 @@ class WhatsAPIDriver():
             if a.text == "CHATS" or a.text == "GROUPS" or a.text == "CONTACTS":
                 contacts.pop(i)
             else:
-                contact_list = a.text
+                contact_list += [a.text]
             
         # time.sleep(2)
 
