@@ -128,7 +128,7 @@ class WhatsAPIDriver():
         element = self.driver.find_element_by_css_selector(self.SELECTORS['chatList'])
         return element
 
-    def send_message(self, contact, message, entry=None):
+    def send(self, contact, message, entry=None):
         val = self.select_contact(contact, entry)
         if val != True:
             return val
@@ -154,3 +154,35 @@ class WhatsAPIDriver():
 
     def reloadQRCode(self):
         self.driver.find_element_by_css_selector(self.SELECTORS['QRReloader']).click()
+
+    def contact_from_number(self, pno):
+        try:
+            script_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            script_path = os.getcwd()
+        script = open(os.path.join(script_path, "contactfromnumber.js"), "r").read()
+        script += "return getContactName(\"%d\");" %(pno)
+        return self.driver.execute_script(script)
+
+    def send_to_number(self, pno, message):
+        contact = self.contact_from_number(pno)
+        name = contact[1]
+        id = contact[0]
+        index =0
+        found = False
+        while True:
+            if self.select_contact(name, index):
+                element = self.driver.find_element_by_class_name(self.CLASSES['messageContent'])
+                if id in element.get_attribute('data-id'):
+                    found = True
+                    break
+            else:
+                break
+
+            index +=1
+        if found:
+            self.enter_message(message)
+            self.press_send()
+            return True
+        else:
+            return False
