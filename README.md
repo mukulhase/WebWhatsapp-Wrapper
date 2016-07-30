@@ -17,7 +17,9 @@ If not, you can skip the above step, and directly scan the QR with your phone.
 
 - And now, the fun part, sending messages.
 
-` driver.send_message(contact, message,[ entry]) `
+` driver.send(contact, message,[ entry]) `
+OR
+` driver.send_to_number(phonenumber, message) `
 
 If the entry parameter is not given, and there are multiple contacts which match the contact argument, they are returned as a list. To choose an entry out of the list, call the function, with the index of the contact as entry argument.
 
@@ -30,7 +32,7 @@ Incase a search for 'contact' yields multiple contacts, the list will be returne
 
 ##Use Cases:
 - Auto Reply bot for whatsapp, “I am away from phone”
-- Can use Phone whatsapp's at the same time, (unlike the other whatsapp APIs)
+- Can use whatsapp on phone and this api at the same time, (unlike the other whatsapp APIs, since this uses web.whatsapp)
 - No need for number registration
 - Hackathons, very easy to setup a whatsapp messaging service, just simple ajax requests!
 - API for custom bot making
