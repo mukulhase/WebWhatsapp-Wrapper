@@ -57,11 +57,18 @@ class WhatsAPIDriver():
 
     def firstrun(self):
         "Sends QRCode if not registered"
-        if "CLICK TO RELOAD QR" in self.driver.page_source:
-            self.reloadQRCode()
-        WebDriverWait(self.driver, 30).until(\
+        while True:
+            try:
+                if "CLICK TO RELOAD QR" in self.driver.page_source:
+                    self.reloadQRCode()
+                element = WebDriverWait(self.driver, 30).until(\
                     EC.presence_of_element_located((By.CSS_SELECTOR, self.SELECTORS['WhatsappQrIcon'])))
-        self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
+                self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
+                time.sleep(10)
+            except:
+                break
+            
+
 
     def press_send(self):
         "Presses the send button"

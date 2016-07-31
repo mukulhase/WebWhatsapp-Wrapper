@@ -2,17 +2,22 @@ var Chats = Store.Chat.models;
 if (!('last_read' in window)) {
     this.last_read = {};
     for (chat in Chats) {
+        if (isNaN(chat)) {
+        continue;
+        };
         window.last_read[Chats[chat]._values.formattedTitle] = Math.floor(Date.now() / 1000);
     }
 }
 var Output = [];
 for (chat in Chats) {
+    if (isNaN(chat)) {
+        continue;
+    };
     var temp = {};
     temp.contact = Chats[chat]._values.formattedTitle;
     temp.messages = [];
     var messages = Chats[chat].msgs.models;
     for (var i=messages.length-1;i>=0;i--) {
-        console.log(messages[i].id.fromMe);
         if (messages[i]._values.t <= last_read[Chats[chat]._values.formattedTitle] || (messages[i].id.fromMe==true)) {
             break;
         } else {
