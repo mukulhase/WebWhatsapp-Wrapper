@@ -174,11 +174,18 @@ class WhatsAPIDriver():
         contact = self.contact_from_number(pno)
         name = contact[1]
         id = contact[0]
+        send_to_id(contact[0],contact[1],message)
+
+    def send_to_id(self, id, name, message):
         index =0
         found = False
         while True:
             if self.select_contact(name, index):
-                element = self.driver.find_element_by_class_name(self.CLASSES['messageContent'])
+                try:
+                    element = self.driver.find_element_by_class_name(self.CLASSES['messageContent'])
+                except:
+                    index+=1
+                    continue
                 if id in element.get_attribute('data-id'):
                     found = True
                     break

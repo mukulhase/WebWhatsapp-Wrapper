@@ -15,6 +15,7 @@ for (chat in Chats) {
     };
     var temp = {};
     temp.contact = Chats[chat]._values.formattedTitle;
+    temp.id = Chats[chat]._values.id;
     temp.messages = [];
     var messages = Chats[chat].msgs.models;
     for (var i=messages.length-1;i>=0;i--) {
