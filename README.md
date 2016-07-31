@@ -29,6 +29,9 @@ If the entry parameter is not given, and there are multiple contacts which match
 
 Incase a search for 'contact' yields multiple contacts, the list will be returned. To send the message to a specific person, call the function again, and pass the entry argument, and the message will be sent to that entry on the list
 
+- Callback on receiving messages
+
+For scripting, to set a function to be called whenever a message is received, use the create_callback method, and pass as the only argument, a function. The function must accept an argument, which is the received messages as a list.
 
 ##Use Cases:
 - Auto Reply bot for whatsapp, “I am away from phone”

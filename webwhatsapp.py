@@ -54,7 +54,6 @@ class WhatsAPIDriver():
         self.username = username
         self.driver.get(self.URL)
         self.driver.implicitly_wait(10)
-        self.view_unread()
 
     def firstrun(self):
         "Sends QRCode if not registered"
@@ -186,3 +185,13 @@ class WhatsAPIDriver():
             return True
         else:
             return False
+
+    def create_callback(callback_function):
+        try:
+            while True:
+                messages = view_unread()
+                if message != []:
+                    callback_function(messages)
+                time.sleep(5)
+        except KeyboardInterrupt:
+            pass
