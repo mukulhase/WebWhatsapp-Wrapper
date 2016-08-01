@@ -179,7 +179,15 @@ class WhatsAPIDriver():
     def send_to_id(self, id, name, message):
         index =0
         found = False
-        while True:
+        #optimisation, check if window is already open
+        try:
+            element = self.driver.find_element_by_class_name(self.CLASSES['messageContent'])
+            if id in element.get_attribute('data-id'):
+                found = True
+        except:
+            pass
+
+        while not found:
             if self.select_contact(name, index):
                 try:
                     element = self.driver.find_element_by_class_name(self.CLASSES['messageContent'])
@@ -188,7 +196,6 @@ class WhatsAPIDriver():
                     continue
                 if id in element.get_attribute('data-id'):
                     found = True
-                    break
             else:
                 break
 
