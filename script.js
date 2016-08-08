@@ -19,7 +19,7 @@ for (chat in Chats) {
     temp.messages = [];
     var messages = Chats[chat].msgs.models;
     for (var i=messages.length-1;i>=0;i--) {
-        if (messages[i]._values.t <= last_read[Chats[chat]._values.formattedTitle] || (messages[i].id.fromMe==true)) {
+        if (messages[i]._values.t <= last_read[Chats[chat]._values.formattedTitle] || (messages[i].id.fromMe==true && messages[i]._values.body[0] != "\\")) {
             break;
         } else {
             temp.messages.push(
