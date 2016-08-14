@@ -30,7 +30,7 @@ for (chat in Chats) {
             );
         }
     }
-    last_read[Chats[chat]._values.formattedTitle] = messages[messages.length-1]._values.t;
+    last_read[Chats[chat]._values.formattedTitle] = Math.floor(Date.now() / 1000);
     if(temp.messages.length>0)
         Output.push(temp);
 }
