@@ -12,5 +12,12 @@ while True:
 		if True:
 			for message in contact[u"messages"]:
 				##message here
-				print message
-				driver.send_to_id(contact[u"id"], contact[u"contact"], "hello" + message[u"message"])
+				msg=message[u'message']
+				#If audio print print message if not continue with messages
+				if msg is None:
+					print "This is audio"
+				else:
+					#Display message on the screen!
+					print 'Escuchando --> ' + message[u'message']  
+				
+					driver.send_to_id(contact[u"id"], contact[u"contact"], "hello" + message[u"message"])
