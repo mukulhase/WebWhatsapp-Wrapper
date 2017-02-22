@@ -1,5 +1,7 @@
 # [WIP] WhatsAPI (Based on web.whatsapp)
 
+Requires installation of [Gecko Driver](https://github.com/mozilla/geckodriver).
+
 ##Usage:
 - Import library
 
