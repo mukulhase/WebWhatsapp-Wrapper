@@ -21,7 +21,7 @@ class WhatsAPIDriver(object):
         'chatList':".infinite-list-viewport",
         'messageList':"#main > div > div:nth-child(1) > div > div.message-list",
         'unreadMessageBar':"#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
-        'searchBar':"#side > div.search-container > div > label > input",
+        'searchBar':".input",
         'searchCancel':".icon-search-morph",
         'chats':".infinite-list-item",
         'chatBar':'div.input',
@@ -109,13 +109,10 @@ class WhatsAPIDriver(object):
                 contacts = contacts[:i]
                 break
 
-        contact_list = []
-        for i, a in enumerate(contacts):
-            if a.text == "CHATS" or a.text == "GROUPS" or a.text == "CONTACTS":
-                contacts.pop(i)
-            else:
-                contact_list += [a.text]
-        # time.sleep(2)
+        contacts = filter(lambda x: x.text != "CHATS" and x.text != "GROUPS" and x.text != "CONTACTS", contacts)
+        contact_list = [i.text for i in contacts]
+
+        # Might need a time.sleep(2) here, if problem persists
 
         if len(contacts) == 1:
             result.find_elements_by_css_selector(self._SELECTORS['chats'])[0].click()
