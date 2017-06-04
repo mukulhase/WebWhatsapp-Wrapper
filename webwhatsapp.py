@@ -1,7 +1,11 @@
+
+"""
+WhatsAPI module
+"""
+
 import time
 import os
 from selenium import webdriver
-from dateutil.parser import *
 import datetime
 from bs4 import BeautifulSoup
 from selenium.webdriver.support.ui import WebDriverWait
@@ -33,6 +37,7 @@ class WhatsAPIDriver(object):
         'WhatsappQrIcon':'span.icon:nth-child(2)',
         'QRReloader':'.qr-container',
     }
+
     _CLASSES = {
         'unreadBadge':'icon-meta',
         'messageContent':"message-text",
@@ -59,7 +64,7 @@ class WhatsAPIDriver(object):
         "Sends QRCode if not registered"
         while True:
             try:
-                if "CLICK TO RELOAD QR" in self.driver.page_source:
+                if "Click to reload QR code" in self.driver.page_source:
                     self.reloadQRCode()
                 WebDriverWait(self.driver, 30).until(\
                     EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['WhatsappQrIcon'])))
@@ -67,8 +72,6 @@ class WhatsAPIDriver(object):
                 time.sleep(10)
             except:
                 break
-
-
 
     def _press_send(self):
         "Presses the send button"
@@ -204,9 +207,10 @@ class WhatsAPIDriver(object):
     def create_callback(self, callback_function):
         try:
             while True:
-                messages = view_unread()
+                messages = self.view_unread()
                 if messages != []:
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
             pass
+        

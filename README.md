@@ -1,8 +1,11 @@
 # [WIP] WhatsAPI (Based on web.whatsapp)
 
-Requires installation of [Gecko Driver](https://github.com/mozilla/geckodriver), if using firefox.
+## Installation
 
-##Usage:
+use `pip install -r requirements.txt' to install the required packages.
+You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) separately, if using firefox, which is the default.
+
+## Usage:
 - Import library
 
 ` from webwhatsapp import WhatsAPIDriver `
@@ -35,7 +38,7 @@ Incase a search for 'contact' yields multiple contacts, the list will be returne
 
 For scripting, to set a function to be called whenever a message is received, use the create_callback method, and pass as the only argument, a function. The function must accept an argument, which is the received messages as a list.
 
-##Use Cases:
+## Use Cases:
 - Auto Reply bot for whatsapp, “I am away from phone”
 - Can use whatsapp on phone and this api at the same time, (unlike the other whatsapp APIs, since this uses web.whatsapp)
 - No need for number registration
