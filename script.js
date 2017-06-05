@@ -1,11 +1,11 @@
 var Chats = Store.Chat.models;
 if (!('last_read' in window)) {
-    this.last_read = {};
+    window.last_read = {};
     for (chat in Chats) {
         if (isNaN(chat)) {
         continue;
         };
-        window.last_read[Chats[chat]._values.formattedTitle] = Math.floor(Date.now() / 1000);
+        window.last_read[Chats[chat].__x_formattedTitle] = Math.floor(Date.now() / 1000);
     }
 }
 var Output = [];
@@ -14,23 +14,23 @@ for (chat in Chats) {
         continue;
     };
     var temp = {};
-    temp.contact = Chats[chat]._values.formattedTitle;
-    temp.id = Chats[chat]._values.id;
+    temp.contact = Chats[chat].__x__formattedTitle;
+    temp.id = Chats[chat].__x_id;
     temp.messages = [];
     var messages = Chats[chat].msgs.models;
     for (var i=messages.length-1;i>=0;i--) {
-        if (messages[i]._values.t <= last_read[Chats[chat]._values.formattedTitle] || (messages[i].id.fromMe==true && messages[i]._values.body[0] != "\\")) {
+        if (messages[i].__x_t <= last_read[Chats[chat].__x_formattedTitle] || (messages[i].id.fromMe==true && messages[i].__x_body[0] != "\\")) {
             break;
         } else {
             temp.messages.push(
                 {
-                    message: messages[i]._values.body,
-                    timestamp: messages[i]._values.t
+                    message: messages[i].__x_body,
+                    timestamp: messages[i].__x_t
                 }
             );
         }
     }
-    last_read[Chats[chat]._values.formattedTitle] = Math.floor(Date.now() / 1000);
+    last_read[Chats[chat].__x_formattedTitle] = Math.floor(Date.now() / 1000);
     if(temp.messages.length>0)
         Output.push(temp);
 }
