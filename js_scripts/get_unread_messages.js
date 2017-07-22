@@ -19,9 +19,11 @@ for (chat in Chats) {
     temp.messages = [];
     var messages = Chats[chat].msgs.models;
     for (var i=messages.length-1;i>=0;i--) {
-        if (messages[i].__x_t <= last_read[Chats[chat].__x_formattedTitle] || (messages[i].id.fromMe==true && messages[i].__x_body[0] != "\\")) {
+        if (messages[i].__x_t <= last_read[Chats[chat].__x_formattedTitle] || messages[i].id.fromMe==true) {
+            console.log("no");
             break;
         } else {
+            console.log("yes");
             temp.messages.push(
                 {
                     message: messages[i].__x_body,
@@ -34,4 +36,5 @@ for (chat in Chats) {
     if(temp.messages.length>0)
         Output.push(temp);
 }
+console.log("hi", Output);
 return Output;

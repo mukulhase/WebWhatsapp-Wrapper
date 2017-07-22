@@ -18,9 +18,10 @@ class WhatsAPIDriver(object):
     _PROXY = None
 
     _URL = "http://web.whatsapp.com"
+
     _SELECTORS = {
         'firstrun':"#wrapper",
-        'qrCode':"#window > div.entry-main > div.qrcode > img",
+        'qrCode':"div.qrcode > img",
         'mainPage':".app.two",
         'chatList':".infinite-list-viewport",
         'messageList':"#main > div > div:nth-child(1) > div > div.message-list",
@@ -60,6 +61,30 @@ class WhatsAPIDriver(object):
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
 
+    def waitForQrLoad(self):
+        while True:
+            try:
+                if "Click to reload QR code" in self.driver.page_source:
+                    self.reloadQRCode()
+                WebDriverWait(self.driver, 30).until(\
+                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
+                self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
+                time.sleep(1)
+            except:
+                break
+
+    def waitForQrScan(self):
+        while True:
+            try:
+                if "Click to reload QR code" in self.driver.page_source:
+                    self.reloadQRCode()
+                WebDriverWait(self.driver, 30).until(\
+                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
+                self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
+                time.sleep(10)
+            except:
+                break
+
     def firstrun(self):
         "Sends QRCode if not registered"
         while True:
@@ -67,88 +92,39 @@ class WhatsAPIDriver(object):
                 if "Click to reload QR code" in self.driver.page_source:
                     self.reloadQRCode()
                 WebDriverWait(self.driver, 30).until(\
-                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['WhatsappQrIcon'])))
+                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
                 self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
                 time.sleep(10)
             except:
+                print "wut"
                 break
-
-    def _press_send(self):
-        "Presses the send button"
-        self.driver.find_element_by_css_selector(self._SELECTORS['sendButton']).click()
-
-    def _enter_message(self, message):
-        "Enters the message onto the chat bar"
-        chatbar = self.driver.find_element_by_css_selector(self._SELECTORS['chatBar'])
-        chatbar.click()
-        chatbar.send_keys(message)
-
-    def select_contact(self, contact, entry=None):
-        """
-        Searches for the contact, as either name or number. If multiple exists, returns the
-        'entry'th contact. If entry is not sent, return all the rows.
-        """
-
-        # Focusing before sending keys solves many problems
-        searchbar = self.driver.find_element_by_css_selector(self._SELECTORS['searchBar'])
-        searchbar.click()
-        searchbar.send_keys(" ")
-        self.driver.find_element_by_css_selector(self._SELECTORS['searchCancel']).click()
-
-        searchbar.click()
-        searchbar.send_keys(contact)
-        time.sleep(2)
-        # WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['searchCancel'])))
-        try:
-            result = self.get_user_list()
-        except NoSuchElementException:
-            return False
-
-        # To get the most recent chat first, we reverse it
-        contacts = result.find_elements_by_css_selector(self._SELECTORS['chats'])
-
-        for i, a in enumerate(contacts):
-            if a.text == "MESSAGES":
-                contacts = contacts[:i]
-                break
-
-        contacts = filter(lambda x: x.text != "CHATS" and x.text != "GROUPS" and x.text != "CONTACTS", contacts)
-        contact_list = [i.text for i in contacts]
-
-        # Might need a time.sleep(2) here, if problem persists
-
-        if len(contacts) == 1:
-            result.find_elements_by_css_selector(self._SELECTORS['chats'])[0].click()
-        elif entry is None:
-            self.driver.find_element_by_css_selector(self._SELECTORS['searchCancel']).click()
-            return contact_list
-        else:
-            try:
-                contacts[entry].click()
-            except IndexError:
-                return False
-        return True
-
-    def get_user_list(self):
-        element = self.driver.find_element_by_css_selector(self._SELECTORS['chatList'])
-        return element
-
-    def send(self, contact, message, entry=None):
-        val = self.select_contact(contact, entry)
-        if val != True:
-            return val
-        self._enter_message(message)
-        self._press_send()
-        return True
 
     def view_unread(self):
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
             script_path = os.getcwd()
-        script = open(os.path.join(script_path, "script.js"), "r").read()
+        script = open(os.path.join(script_path, "js_scripts/get_unread_messages.js"), "r").read()
         Store = self.driver.execute_script(script)
         return Store
+
+    def send_to_whatsapp_id(self, id, message):
+        try:
+            script_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            script_path = os.getcwd()
+        script = open(os.path.join(script_path, "js_scripts/send_message_to_whatsapp_id.js"), "r").read()
+        success = self.driver.execute_script(script, id, message)
+        return success
+
+    def send_to_phone_number(self, pno, message):
+        try:
+            script_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            script_path = os.getcwd()
+        script = open(os.path.join(script_path, "js_scripts/send_message_to_phone_number.js"), "r").read()
+        success = self.driver.execute_script(script, pno, message)
+        return success
 
     def __unicode__(self):
         return self.username
@@ -158,51 +134,6 @@ class WhatsAPIDriver(object):
 
     def reloadQRCode(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['QRReloader']).click()
-
-    def contact_from_number(self, pno):
-        try:
-            script_path = os.path.dirname(os.path.abspath(__file__))
-        except NameError:
-            script_path = os.getcwd()
-        script = open(os.path.join(script_path, "contactfromnumber.js"), "r").read()
-        script += "return getContactName(\"%d\");" %(pno)
-        return self.driver.execute_script(script)
-
-    def send_to_number(self, pno, message):
-        contact = self.contact_from_number(pno)
-        name = contact[1]
-        id = contact[0]
-        send_to_id(contact[0], contact[1], message)
-
-    def send_to_id(self, id, name, message):
-        index = 0
-        found = False
-        #optimisation, check if window is already open
-        try:
-            element = self.driver.find_element_by_class_name(self._CLASSES['messageContent'])
-            if id in element.get_attribute('data-id'):
-                found = True
-        except:
-            pass
-
-        while not found:
-            if self.select_contact(name, index):
-                try:
-                    element = self.driver.find_element_by_class_name(self._CLASSES['messageContent'])
-                except:
-                    index += 1
-                    continue
-                if id in element.get_attribute('data-id'):
-                    found = True
-            else:
-                break
-
-            index += 1
-        if found:
-            self._enter_message(message)
-            self._press_send()
-            return True
-        return False
 
     def create_callback(self, callback_function):
         try:

@@ -15,7 +15,7 @@ function lcs(lcstest, lcstarget) {
        result = RegExp.$1;
        break;
        }
-     lscos = lscos + 1;
+     lscos = lscos + 1;w
      }
      if(matchfound==1){return result; break;}
     lsclen = lsclen - 1;
@@ -26,7 +26,6 @@ function lcs(lcstest, lcstarget) {
 function getContactName(pno){
     var contacts = window.Store.Contact.models;
     for(var i in contacts){
-        console.log(i, Number.isInteger(i));
         if(i!="remove"){
             if(match(pno,contacts[i]._values.id))
             return [contacts[i]._values.id, contacts[i]._values.name];
