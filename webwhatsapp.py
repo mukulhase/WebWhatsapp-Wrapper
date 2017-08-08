@@ -1,4 +1,3 @@
-
 """
 WhatsAPI module
 """
@@ -21,7 +20,7 @@ class WhatsAPIDriver(object):
 
     _SELECTORS = {
         'firstrun':"#wrapper",
-        'qrCode':"div.qrcode > img",
+        'qrCode':".qrcode > img:nth-child(4)",
         'mainPage':".app.two",
         'chatList':".infinite-list-viewport",
         'messageList':"#main > div > div:nth-child(1) > div > div.message-list",
@@ -36,7 +35,7 @@ class WhatsAPIDriver(object):
         'UnreadChatBanner':'.message-list',
         'ReconnectLink':'.action',
         'WhatsappQrIcon':'span.icon:nth-child(2)',
-        'QRReloader':'.qr-container',
+        'QRReloader':'.qr-wrapper-container'
     }
 
     _CLASSES = {
@@ -56,10 +55,10 @@ class WhatsAPIDriver(object):
             'ftpProxy': os.environ.get("ftp_proxy"),
         }
         self._PROXY = Proxy(env_proxy)
-        self.driver = webdriver.Firefox(proxy=self._PROXY)
+        self.driver = webdriver.Firefox(webdriver.FirefoxProfile().set_proxy(self._PROXY))
         self.username = username
         self.driver.get(self._URL)
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(10) #
 
     def waitForQrLoad(self):
         while True:
@@ -87,17 +86,20 @@ class WhatsAPIDriver(object):
 
     def firstrun(self):
         "Sends QRCode if not registered"
-        while True:
-            try:
-                if "Click to reload QR code" in self.driver.page_source:
-                    self.reloadQRCode()
-                WebDriverWait(self.driver, 30).until(\
-                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
-                self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
-                time.sleep(10)
-            except:
-                print "wut"
-                break
+        if "Click to reload QR code" in self.driver.page_source:
+            self.reloadQRCode()
+        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+        qr.screenshot(self.username)
+        # while True:
+        #     try:
+        #         # WebDriverWait(self.driver, 30).until(\
+        #         #     EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
+        #         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).screenshot(self.username)
+        #         # self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
+        #         time.sleep(10)
+        #     except:
+        #         print "wut"
+        #         break
 
     def view_unread(self):
         try:
