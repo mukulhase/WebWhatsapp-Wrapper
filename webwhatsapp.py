@@ -48,58 +48,26 @@ class WhatsAPIDriver(object):
 
     def __init__(self, username="API"):
         "Initialises the browser"
-        env_proxy = {
-            'proxyType': ProxyType.MANUAL,
-            'httpProxy': os.environ.get("http_proxy"),
-            'httpsProxy': os.environ.get("https_proxy"),
-            'ftpProxy': os.environ.get("ftp_proxy"),
-        }
-        self._PROXY = Proxy(env_proxy)
-        self.driver = webdriver.Firefox(webdriver.FirefoxProfile().set_proxy(self._PROXY))
+        ## Proxy support not currently working
+        # env_proxy = {
+        #     'proxyType': ProxyType.MANUAL,
+        #     'httpProxy': os.environ.get("http_proxy"),
+        #     'httpsProxy': os.environ.get("https_proxy"),
+        #     'ftpProxy': os.environ.get("ftp_proxy"),
+        # }
+        # self._PROXY = Proxy(env_proxy)
+        self.driver = webdriver.Firefox(webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
         self.username = username
         self.driver.get(self._URL)
-        self.driver.implicitly_wait(10) #
-
-    def waitForQrLoad(self):
-        while True:
-            try:
-                if "Click to reload QR code" in self.driver.page_source:
-                    self.reloadQRCode()
-                WebDriverWait(self.driver, 30).until(\
-                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
-                self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
-                time.sleep(1)
-            except:
-                break
-
-    def waitForQrScan(self):
-        while True:
-            try:
-                if "Click to reload QR code" in self.driver.page_source:
-                    self.reloadQRCode()
-                WebDriverWait(self.driver, 30).until(\
-                    EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
-                self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
-                time.sleep(10)
-            except:
-                break
+        self.driver.implicitly_wait(10)
 
     def firstrun(self):
-        "Sends QRCode if not registered"
+        "Saves QRCode and waits for it to go away"
         if "Click to reload QR code" in self.driver.page_source:
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         qr.screenshot(self.username)
-        # while True:
-        #     try:
-        #         # WebDriverWait(self.driver, 30).until(\
-        #         #     EC.presence_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
-        #         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).screenshot(self.username)
-        #         # self.driver.save_screenshot('WhatsAPI/media/%s.png' %(self.username))
-        #         time.sleep(10)
-        #     except:
-        #         print "wut"
-        #         break
+        WebDriverWait(self.driver, 30).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
 
     def view_unread(self):
         try:
@@ -145,5 +113,5 @@ class WhatsAPIDriver(object):
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
-            pass
+            print "Exited"
         
