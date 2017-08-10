@@ -56,7 +56,7 @@ class WhatsAPIDriver(object):
         #     'ftpProxy': os.environ.get("ftp_proxy"),
         # }
         # self._PROXY = Proxy(env_proxy)
-        self.driver = webdriver.Firefox(webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
+        self.driver = webdriver.Firefox()# trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
         self.username = username
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
