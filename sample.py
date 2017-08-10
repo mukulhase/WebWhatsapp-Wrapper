@@ -3,17 +3,12 @@ from webwhatsapp import WhatsAPIDriver
 print "waiting for QR"
 driver = WhatsAPIDriver()
 driver.firstrun()
-print "bot started"
+time.sleep(10)
 driver.view_unread()
+print "bot started"
 while True:
-	time.sleep(1)
-	contacts = driver.view_unread()
-	print(contacts)
-	for contact in contacts:
-		##filters here
-		##if "Mom" in contact[u"contact"]:
-		if True:
-			for message in contact[u"messages"]:
-				##message here
-				print message
-				##driver.send_to_whatsapp_id(contact[u"id"], "echo" + message[u"message"])
+	time.sleep(10)
+	print('checking for more messages')
+	for contact in driver.view_unread():
+		for message in contact[u'messages']:
+			driver.send_to_whatsapp_id(contact[u'id'],message[u'message'])
