@@ -24,7 +24,7 @@ If not, you can skip the above step, and directly scan the QR with your phone.
 
 ` driver.send(contact, message,[ entry]) `
 OR
-` driver.send_to_number(phonenumber, message) `
+` driver.send_to_phone_number(phonenumber, message) `
 
 If the entry parameter is not given, and there are multiple contacts which match the contact argument, they are returned as a list. To choose an entry out of the list, call the function, with the index of the contact as entry argument.
 
