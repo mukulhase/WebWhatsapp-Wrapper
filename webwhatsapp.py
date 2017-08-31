@@ -6,6 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from message import Message, MessageGroup
+from chat import Chat
+
 
 class WhatsAPIDriver(object):
     _PROXY = None
@@ -59,8 +62,24 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
         script = open(os.path.join(script_path, "js_scripts/get_unread_messages.js"), "r").read()
-        Store = self.driver.execute_script(script)
-        return Store
+
+        raw_message_groups = self.driver.execute_script(script)
+
+        unread_messages = []
+        for raw_message_group in raw_message_groups:
+            chat = Chat(
+                raw_message_group["name"], raw_message_group["id"], raw_message_group["isGroup"])
+            messages = [
+                Message(
+                    Chat(raw_message["sender"]["name"], raw_message["sender"]["id"], False),
+                    raw_message["timestamp"],
+                    raw_message["content"])
+                for raw_message in raw_message_group["messages"]
+            ]
+
+            unread_messages.append(MessageGroup(chat, messages))
+
+        return unread_messages
 
     def send_to_whatsapp_id(self, id, message):
         try:
