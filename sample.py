@@ -2,7 +2,7 @@ import time
 from webwhatsapp import WhatsAPIDriver
 print "waiting for QR"
 driver = WhatsAPIDriver()
-driver.firstrun()
+driver.first_run()
 time.sleep(10)
 driver.view_unread()
 print "bot started"
