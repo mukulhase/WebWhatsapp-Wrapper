@@ -8,53 +8,55 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from message import Message, MessageGroup
 from chat import Chat
+from consts import Selectors, URL
 
 
 class WhatsAPIDriver(object):
     _PROXY = None
-
-    _URL = "http://web.whatsapp.com"
-    _SELECTORS = {
-        "firstrun": "#wrapper",
-        "qrCode": ".qrcode > img:nth-child(4)",
-        "mainPage": ".app.two",
-        "chatList": ".infinite-list-viewport",
-        "messageList": "#main > div > div:nth-child(1) > div > div.message-list",
-        "unreadMessageBar": "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
-        "searchBar": ".input",
-        "searchCancel": ".icon-search-morph",
-        "chats": ".infinite-list-item",
-        "chatBar": "div.input",
-        "sendButton": "button.icon:nth-chld(3)",
-        "LoadHistory": ".btn-more",
-        "UnreadBadge": ".icon-meta",
-        "UnreadChatBanner": ".message-list",
-        "ReconnectLink": ".action",
-        "WhatsappQrIcon": "span.icon:nth-child(2)",
-        "QRReloader": ".qr-wrapper-container"
-    }
-
-    _CLASSES = {
-        "unreadBadge": "icon-meta",
-        "messageContent": "message-text",
-        "messageList": "msg"
-    }
 
     driver = None
 
     def __init__(self, username="API"):
         self.driver = webdriver.Firefox()
         self.username = username
-        self.driver.get(self._URL)
+        self.driver.get(URL)
         self.driver.implicitly_wait(10)
+
+    @staticmethod
+    def _get_script_path(script_file):
+        """
+        Resolves location of js_scripts folder and returns full path to given script
+
+        :param script_file: Filename of script
+        :return: Full path to script
+        """
+        try:
+            script_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            script_path = os.getcwd()
+
+        return os.path.join(script_path, script_file)
+
+    def _execute_script(self, script_name):
+        """
+        Runs a js file from the js_scripts folder
+
+        :param script_name: Name of script (without extension)
+        :return: Script output
+        """
+        with file(WhatsAPIDriver._get_script_path(script_name + ".js"), "rb") as script:
+            return self.driver.execute_script(script)
 
     def first_run(self):
         if "Click to reload QR code" in self.driver.page_source:
-            self.reload_qr_code()
-        qr = self.driver.find_element_by_css_selector(self._SELECTORS["qrCode"])
+            self._reload_qr_code()
+        qr = self.driver.find_element_by_css_selector(Selectors.QR_CODE)
         qr.screenshot(self.username)
         WebDriverWait(self.driver, 30).until(
-            EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS["qrCode"])))
+            EC.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
+
+    def reset_unread(self):
+        self._execute_script("reset_unread_messages")
 
     def view_unread(self):
         try:
@@ -105,14 +107,14 @@ class WhatsAPIDriver(object):
     def __str__(self):
         return self.__unicode__()
 
-    def reload_qr_code(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS["QRReloader"]).click()
+    def _reload_qr_code(self):
+        self.driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
 
     def create_callback(self, callback_function):
         try:
             while True:
                 messages = self.view_unread()
-                if messages != []:
+                if messages:
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
