@@ -1,1 +1,0 @@
-window.last_read = {};

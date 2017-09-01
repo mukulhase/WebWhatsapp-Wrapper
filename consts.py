@@ -24,3 +24,8 @@ class Classes(object):
     UNREAD_BADGE = "icon-meta"
     MESSAGE_CONTENT = "message-text"
     MESSAGE_LIST = "msg"
+
+
+class JSFunctions(object):
+    GET_CONTACTS = "return WAPI.getContacts();"
+    RESET_UNREAD_MESSAGES = "window.last_read = {};"

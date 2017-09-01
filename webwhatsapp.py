@@ -8,15 +8,20 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from message import Message, MessageGroup
 from chat import Chat
-from consts import Selectors, URL
+from consts import Selectors, URL, JSFunctions
 
 
 class WhatsAPIDriver(object):
     def __init__(self, username="API"):
-        self.driver = webdriver.Firefox()
+        self._driver = webdriver.Firefox()
         self.username = username
-        self.driver.get(URL)
-        self.driver.implicitly_wait(10)
+
+        # Open page
+        self._driver.get(URL)
+        self._driver.implicitly_wait(10)
+
+        # Add common functions to scope
+        self._reload_common_script()
 
     @staticmethod
     def _get_script_path(script_file):
@@ -34,6 +39,12 @@ class WhatsAPIDriver(object):
 
         return os.path.join(script_path, "js_scripts", script_file)
 
+    def _reload_common_script(self):
+        """
+        Adds common js utility functions to scope
+        """
+        self._execute_script("common")
+
     def _execute_script(self, script_name, *args):
         """
         Runs a js file from the js_scripts folder
@@ -42,21 +53,28 @@ class WhatsAPIDriver(object):
         :return: Script output
         """
         with file(WhatsAPIDriver._get_script_path(script_name + ".js"), "rb") as script:
-            return self.driver.execute_script(script.read(), *args)
+            return self._driver.execute_script(script.read(), *args)
 
     def first_run(self):
-        if "Click to reload QR code" in self.driver.page_source:
+        if "Click to reload QR code" in self._driver.page_source:
             self._reload_qr_code()
-        qr = self.driver.find_element_by_css_selector(Selectors.QR_CODE)
+        qr = self._driver.find_element_by_css_selector(Selectors.QR_CODE)
         qr.screenshot(self.username + ".png")
-        WebDriverWait(self.driver, 30).until(
+        WebDriverWait(self._driver, 30).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
+
+    def get_contacts(self):
+        raw_contacts = self._driver.execute_script(JSFunctions.GET_CONTACTS)
+
+        contacts = []
+        for contact in raw_contacts:
+            contacts.append(Chat(*contact))
 
     def reset_unread(self):
         """
         Resets unread messages list
         """
-        self._execute_script("reset_unread_messages")
+        self._driver.execute_script(JSFunctions.RESET_UNREAD_MESSAGES)
 
     def view_unread(self):
         """
@@ -104,7 +122,7 @@ class WhatsAPIDriver(object):
         This function would receive:
             972512345678
 
-        :param uid: Whatsapp ID
+        :param number: Phone number
         :param message: Message to send
         :return: True if succeeded, else False
         :rtype: bool
@@ -112,7 +130,7 @@ class WhatsAPIDriver(object):
         return self._execute_script("send_message_to_phone_number", number, message)
 
     def _reload_qr_code(self):
-        self.driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
+        self._driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
 
     def create_callback(self, callback_function):
         try:
