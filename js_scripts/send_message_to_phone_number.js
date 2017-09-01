@@ -9,7 +9,7 @@ for (chat in Chats) {
     }
 
     var temp = {};
-    temp.contact = Chats[chat].__x__formattedTitle;
+    temp.name = Chats[chat].__x__formattedTitle;
     temp.id = Chats[chat].__x_id;
     if (temp.id.indexOf(contact) != -1 && temp.id.indexOf("g.us") == -1) {
         Chats[chat].sendMessage(message);
