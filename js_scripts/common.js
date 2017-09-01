@@ -26,7 +26,7 @@ window.WAPI.getContacts = function() {
     let output = [];
 
     for (const contact in contacts) {
-        if (contact !== "remove") {
+        if (contact !== "remove" && contacts[contact].isMyContact === true && contacts[contact].__x_name !== "You") {
             output.push(WAPI.serializeChat(contacts[contact]));
         }
     }
