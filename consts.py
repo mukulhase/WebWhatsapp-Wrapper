@@ -29,3 +29,4 @@ class Classes(object):
 class JSFunctions(object):
     GET_CONTACTS = "return WAPI.getContacts();"
     RESET_UNREAD_MESSAGES = "window.last_read = {};"
+    GET_ME = "return WAPI.getMe();"

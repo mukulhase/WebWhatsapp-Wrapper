@@ -4,7 +4,7 @@ class Chat(object):
         self.chat_id = js_obj["id"]
         self.is_group = js_obj["isGroup"]
 
-        self._raw_js_obj = js_obj["_raw"]
+        self.raw_js_obj = js_obj["_raw"]
 
     def __repr__(self):
         try:

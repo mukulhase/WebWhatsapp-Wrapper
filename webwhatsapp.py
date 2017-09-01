@@ -134,6 +134,18 @@ class WhatsAPIDriver(object):
         """
         return self._execute_script("send_message_to_phone_number", number, message)
 
+    def get_chat_from_id(self, uid):
+        contacts = self.get_contacts()
+
+        chat = next((contact for contact in contacts if contact.chat_id == uid), None)
+        return chat
+
+    def get_chat_from_phone_number(self, number):
+        contacts = self.get_contacts()
+
+        chat = next((contact for contact in contacts if contact.raw_js_obj.wapi___x_formattedUser == number), None)
+        return chat
+
     def _reload_qr_code(self):
         self._driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
 
