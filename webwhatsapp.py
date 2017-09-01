@@ -106,33 +106,17 @@ class WhatsAPIDriver(object):
 
         return unread_messages
 
-    def send_to_whatsapp_id(self, uid, message):
+    def send_message(self, chat, message):
         """
         Sends message using Whatsapp ID
 
-        :param uid: Whatsapp ID
+        :param chat: Whatsapp ID
+        :type chat: Chat
         :param message: Message to send
         :return: True if succeeded, else False
         :rtype: bool
         """
-        return self._execute_script("send_message_to_whatsapp_id", uid, message)
-
-    def send_to_phone_number(self, number, message):
-        """
-        Sends message using phone number
-
-        Number format should be as it appears in Whatsapp ID
-        For example, for the number:
-            +972-51-234-5678
-        This function would receive:
-            972512345678
-
-        :param number: Phone number
-        :param message: Message to send
-        :return: True if succeeded, else False
-        :rtype: bool
-        """
-        return self._execute_script("send_message_to_phone_number", number, message)
+        return self._execute_script("send_message_to_whatsapp_id", chat.chat_id, message)
 
     def get_chat_from_id(self, uid):
         contacts = self.get_contacts()
@@ -141,6 +125,19 @@ class WhatsAPIDriver(object):
         return chat
 
     def get_chat_from_phone_number(self, number):
+        """
+        Gets chat by phone number
+
+        Number format should be as it appears in Whatsapp ID
+        For example, for the number:
+            +972-51-234-5678
+        This function would receive:
+            972512345678
+
+        :param number: Phone number
+        :return: Chat
+        :rtype: Chat
+        """
         contacts = self.get_contacts()
 
         chat = next((contact for contact in contacts if contact.chat_id.startswith(number)), None)

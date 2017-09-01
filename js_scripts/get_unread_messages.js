@@ -3,9 +3,9 @@ const chats = Store.Chat.models;
 if (!("last_read" in window)) {
     window.last_read = {};
     for (let chat in chats) {
-        // if (isNaN(chat)) {
-        //     continue;
-        // }
+        if (isNaN(chat)) {
+            continue;
+        }
 
         window.last_read[chats[chat].__x_formattedTitle] = Math.floor(Date.now() / 1000);
     }
