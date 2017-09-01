@@ -16,7 +16,18 @@ class Message(object):
         self.content = js_obj["content"]
 
     def __repr__(self):
-        return "<Message - from {sender} at {timestamp}>".format(sender=self.sender.name, timestamp=self.timestamp)
+        try:
+            safe_content = self.content.decode("ascii")
+        except UnicodeEncodeError:
+            safe_content = "(unicode content)"
+
+        truncation_length = 20
+        truncated_content = safe_content[:truncation_length] + (safe_content[truncation_length:] and "...")
+
+        return "<Message - from {sender} at {timestamp}: {content}>".format(
+            sender=self.sender.name,
+            timestamp=self.timestamp,
+            content=truncated_content)
 
 
 class MessageGroup(object):
@@ -33,5 +44,13 @@ class MessageGroup(object):
         self.messages = messages
 
     def __repr__(self):
-        return "<MessageGroup - {num} messages>".format(num=len(self.messages))
+        try:
+            safe_chat_name = self.chat.name.decode("ascii")
+        except UnicodeEncodeError:
+            safe_chat_name = "(unicode name)"
+
+        return "<MessageGroup - {num} {messages} in {chat}>".format(
+            num=len(self.messages),
+            messages="message" if len(self.messages) == 1 else "messages",
+            chat=safe_chat_name)
 
