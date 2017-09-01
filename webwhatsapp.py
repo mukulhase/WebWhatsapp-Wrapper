@@ -37,7 +37,7 @@ class WhatsAPIDriver(object):
 
         return os.path.join(script_path, script_file)
 
-    def _execute_script(self, script_name):
+    def _execute_script(self, script_name, *args):
         """
         Runs a js file from the js_scripts folder
 
@@ -45,7 +45,7 @@ class WhatsAPIDriver(object):
         :return: Script output
         """
         with file(WhatsAPIDriver._get_script_path(script_name + ".js"), "rb") as script:
-            return self.driver.execute_script(script)
+            return self.driver.execute_script(script, *args)
 
     def first_run(self):
         if "Click to reload QR code" in self.driver.page_source:
@@ -80,11 +80,11 @@ class WhatsAPIDriver(object):
 
         return unread_messages
 
-    def send_to_whatsapp_id(self, id, message):
-        return self._execute_script("send_message_to_whatsapp_id")
+    def send_to_whatsapp_id(self, uid, message):
+        return self._execute_script("send_message_to_whatsapp_id", uid, message)
 
-    def send_to_phone_number(self, pno, message):
-        return self._execute_script("send_message_to_phone_number")
+    def send_to_phone_number(self, number, message):
+        return self._execute_script("send_message_to_phone_number", number, message)
 
     def __unicode__(self):
         return self.username
