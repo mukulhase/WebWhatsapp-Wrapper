@@ -143,7 +143,7 @@ class WhatsAPIDriver(object):
     def get_chat_from_phone_number(self, number):
         contacts = self.get_contacts()
 
-        chat = next((contact for contact in contacts if contact.raw_js_obj.wapi___x_formattedUser == number), None)
+        chat = next((contact for contact in contacts if contact.chat_id.startswith(number)), None)
         return chat
 
     def _reload_qr_code(self):
