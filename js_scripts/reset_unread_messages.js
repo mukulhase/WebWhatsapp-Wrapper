@@ -1,0 +1,1 @@
+window.last_read = undefined;
