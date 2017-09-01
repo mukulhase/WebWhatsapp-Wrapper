@@ -64,11 +64,19 @@ class WhatsAPIDriver(object):
             ec.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
 
     def get_contacts(self):
+        """
+        Fetches list of all contacts
+
+        :return: List of contacts
+        :rtype: list[Chat]
+        """
         raw_contacts = self._driver.execute_script(JSFunctions.GET_CONTACTS)
 
         contacts = []
         for contact in raw_contacts:
             contacts.append(Chat(contact))
+
+        return contacts
 
     def reset_unread(self):
         """
