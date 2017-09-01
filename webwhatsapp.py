@@ -56,16 +56,13 @@ class WhatsAPIDriver(object):
             EC.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
 
     def reset_unread(self):
+        """
+        Resets unread messages list
+        """
         self._execute_script("reset_unread_messages")
 
     def view_unread(self):
-        try:
-            script_path = os.path.dirname(os.path.abspath(__file__))
-        except NameError:
-            script_path = os.getcwd()
-        script = open(os.path.join(script_path, "js_scripts/get_unread_messages.js"), "r").read()
-
-        raw_message_groups = self.driver.execute_script(script)
+        raw_message_groups = self._execute_script("get_unread_messages")
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -84,22 +81,10 @@ class WhatsAPIDriver(object):
         return unread_messages
 
     def send_to_whatsapp_id(self, id, message):
-        try:
-            script_path = os.path.dirname(os.path.abspath(__file__))
-        except NameError:
-            script_path = os.getcwd()
-        script = open(os.path.join(script_path, "js_scripts/send_message_to_whatsapp_id.js"), "r").read()
-        success = self.driver.execute_script(script, id, message)
-        return success
+        return self._execute_script("send_message_to_whatsapp_id")
 
     def send_to_phone_number(self, pno, message):
-        try:
-            script_path = os.path.dirname(os.path.abspath(__file__))
-        except NameError:
-            script_path = os.getcwd()
-        script = open(os.path.join(script_path, "js_scripts/send_message_to_phone_number.js"), "r").read()
-        success = self.driver.execute_script(script, pno, message)
-        return success
+        return self._execute_script("send_message_to_phone_number")
 
     def __unicode__(self):
         return self.username
