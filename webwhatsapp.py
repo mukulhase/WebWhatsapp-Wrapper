@@ -32,7 +32,7 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
 
-        return os.path.join(script_path, script_file)
+        return os.path.join(script_path, "js_scripts", script_file)
 
     def _execute_script(self, script_name, *args):
         """
@@ -42,7 +42,7 @@ class WhatsAPIDriver(object):
         :return: Script output
         """
         with file(WhatsAPIDriver._get_script_path(script_name + ".js"), "rb") as script:
-            return self.driver.execute_script(script, *args)
+            return self.driver.execute_script(script.read(), *args)
 
     def first_run(self):
         if "Click to reload QR code" in self.driver.page_source:
