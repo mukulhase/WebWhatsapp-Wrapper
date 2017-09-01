@@ -3,7 +3,7 @@ import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 from message import Message, MessageGroup
@@ -61,14 +61,14 @@ class WhatsAPIDriver(object):
         qr = self._driver.find_element_by_css_selector(Selectors.QR_CODE)
         qr.screenshot(self.username + ".png")
         WebDriverWait(self._driver, 30).until(
-            EC.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
+            ec.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
 
     def get_contacts(self):
         raw_contacts = self._driver.execute_script(JSFunctions.GET_CONTACTS)
 
         contacts = []
         for contact in raw_contacts:
-            contacts.append(Chat(*contact))
+            contacts.append(Chat(contact))
 
     def reset_unread(self):
         """
@@ -87,13 +87,10 @@ class WhatsAPIDriver(object):
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
-            chat = Chat(
-                raw_message_group["name"], raw_message_group["id"], raw_message_group["isGroup"])
+            chat = Chat(raw_message_group)
+
             messages = [
-                Message(
-                    Chat(raw_message["sender"]["name"], raw_message["sender"]["id"], False),
-                    raw_message["timestamp"],
-                    raw_message["content"])
+                Message(Chat(raw_message["sender"]), raw_message)
                 for raw_message in raw_message_group["messages"]
             ]
 
