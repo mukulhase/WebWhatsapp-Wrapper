@@ -1,1 +1,1 @@
-window.last_read = undefined;
+window.last_read = {};
