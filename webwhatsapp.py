@@ -25,6 +25,7 @@ class WhatsAPIDriver(object):
 
         :param script_file: Filename of script
         :return: Full path to script
+        :rtype: str
         """
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
@@ -47,7 +48,7 @@ class WhatsAPIDriver(object):
         if "Click to reload QR code" in self.driver.page_source:
             self._reload_qr_code()
         qr = self.driver.find_element_by_css_selector(Selectors.QR_CODE)
-        qr.screenshot(self.username)
+        qr.screenshot(self.username + ".png")
         WebDriverWait(self.driver, 30).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
 
@@ -58,6 +59,12 @@ class WhatsAPIDriver(object):
         self._execute_script("reset_unread_messages")
 
     def view_unread(self):
+        """
+        Fetches unread messages
+
+        :return: List of unread messages grouped by chats
+        :rtype: list[MessageGroup]
+        """
         raw_message_groups = self._execute_script("get_unread_messages")
 
         unread_messages = []
@@ -77,16 +84,32 @@ class WhatsAPIDriver(object):
         return unread_messages
 
     def send_to_whatsapp_id(self, uid, message):
+        """
+        Sends message using Whatsapp ID
+
+        :param uid: Whatsapp ID
+        :param message: Message to send
+        :return: True if succeeded, else False
+        :rtype: bool
+        """
         return self._execute_script("send_message_to_whatsapp_id", uid, message)
 
     def send_to_phone_number(self, number, message):
+        """
+        Sends message using phone number
+
+        Number format should be as it appears in Whatsapp ID
+        For example, for the number:
+            +972-51-234-5678
+        This function would receive:
+            972512345678
+
+        :param uid: Whatsapp ID
+        :param message: Message to send
+        :return: True if succeeded, else False
+        :rtype: bool
+        """
         return self._execute_script("send_message_to_phone_number", number, message)
-
-    def __unicode__(self):
-        return self.username
-
-    def __str__(self):
-        return self.__unicode__()
 
     def _reload_qr_code(self):
         self.driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
