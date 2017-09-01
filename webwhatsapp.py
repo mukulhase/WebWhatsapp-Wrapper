@@ -12,10 +12,6 @@ from consts import Selectors, URL
 
 
 class WhatsAPIDriver(object):
-    _PROXY = None
-
-    driver = None
-
     def __init__(self, username="API"):
         self.driver = webdriver.Firefox()
         self.username = username
