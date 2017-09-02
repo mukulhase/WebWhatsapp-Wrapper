@@ -48,7 +48,7 @@ class WhatsAPIDriver(object):
         """
         Resets unread messages list
         """
-        self._driver.execute_script("window.last_read = {}")
+        self._driver.execute_script("window.WAPI.lastRead = {}")
 
     def get_unread(self):
         """

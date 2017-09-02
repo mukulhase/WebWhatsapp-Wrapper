@@ -3,7 +3,9 @@
  */
 
 
-window.WAPI = {};
+window.WAPI = {
+    lastRead: {}
+};
 
 /**
  * Serializes a raw object
@@ -144,7 +146,7 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe) {
         }
     }
 
-    last_read[chat.__x_formattedTitle] = Math.floor(Date.now() / 1000);
+    WAPI.lastRead[chat.__x_formattedTitle] = Math.floor(Date.now() / 1000);
 
     return output;
 };
@@ -173,16 +175,14 @@ window.WAPI.sendMessage = function (id, message) {
 window.WAPI.getUnreadMessages = function () {
     const chats = Store.Chat.models;
 
-    if (!("last_read" in window)) {
-        window.last_read = {};
-        for (let chat in chats) {
-            if (isNaN(chat)) {
-                continue;
-            }
+     WAPI.lastRead = {};
+     for (let chat in chats) {
+         if (isNaN(chat)) {
+             continue;
+         }
 
-            window.last_read[chats[chat].__x_formattedTitle] = Math.floor(Date.now() / 1000);
-        }
-    }
+         WAPI.lastRead[chats[chat].__x_formattedTitle] = Math.floor(Date.now() / 1000);
+     }
 
     let output = [];
     for (let chat in chats) {
@@ -205,7 +205,7 @@ window.WAPI.getUnreadMessages = function () {
                 continue;
             }
 
-            if (messageObj.__x_t <= last_read[messageGroupObj.__x_formattedTitle] || messageObj.id.fromMe === true) {
+            if (messageObj.__x_t <= WAPI.lastRead[messageGroupObj.__x_formattedTitle] || messageObj.id.fromMe === true) {
                 break;
             } else {
                 let sender = WAPI.serializeChat(messageObj.__x_senderObj);
@@ -215,7 +215,7 @@ window.WAPI.getUnreadMessages = function () {
             }
         }
 
-        last_read[messageGroupObj.__x_formattedTitle] = Math.floor(Date.now() / 1000);
+        WAPI.lastRead[messageGroupObj.__x_formattedTitle] = Math.floor(Date.now() / 1000);
 
         if (messageGroup.messages.length > 0) {
             output.push(messageGroup);
