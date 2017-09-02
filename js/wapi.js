@@ -1,3 +1,8 @@
+/**
+ * This script contains WAPI functions that need to be run in the context of the webpage
+ */
+
+
 window.WAPI = {};
 
 /**

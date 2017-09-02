@@ -27,7 +27,7 @@ class WhatsAPIDriver(object):
     @staticmethod
     def _get_script_path(script_file):
         """
-        Resolves location of js_scripts folder and returns full path to given script
+        Resolves location of js folder and returns full path to given script
 
         :param script_file: Filename of script
         :return: Full path to script
@@ -38,17 +38,19 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
 
-        return os.path.join(script_path, "js_scripts", script_file)
+        return os.path.join(script_path, "js", script_file)
 
     def _reload_common_script(self):
         """
         Adds common js utility functions to scope
+
+        Useful for debugging and development
         """
-        self._execute_script("common")
+        self._execute_script("wapi")
 
     def _execute_script(self, script_name, *args):
         """
-        Runs a js file from the js_scripts folder
+        Runs a js file from the js folder
 
         :param script_name: Name of script (without extension)
         :return: Script output
