@@ -7,8 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from message import Message, MessageGroup
 from chat import Chat
-from consts import Selectors, URL
 from wapi_js_wrapper import WapiJsWrapper
+from consts import Selectors, URL
 
 
 class WhatsAPIDriver(object):
@@ -33,16 +33,16 @@ class WhatsAPIDriver(object):
         """
         Fetches list of all contacts
 
+        This will return chats with people from the address book only
+        Use get_all_chats for all chats
+
         :return: List of contacts
         :rtype: list[Chat]
         """
-        raw_contacts = self.wapi_functions.getContacts()
+        return [Chat(contact) for contact in self.wapi_functions.getContacts()]
 
-        contacts = []
-        for contact in raw_contacts:
-            contacts.append(Chat(contact))
-
-        return contacts
+    def get_all_chats(self):
+        return [Chat(chat) for chat in self.wapi_functions.getAllChats()]
 
     def reset_unread(self):
         """
@@ -63,10 +63,7 @@ class WhatsAPIDriver(object):
         for raw_message_group in raw_message_groups:
             chat = Chat(raw_message_group)
 
-            messages = []
-            for raw_message in raw_message_group["messages"]:
-                message = Message(raw_message)
-                messages.append(message)
+            messages = [Message(message) for message in raw_message_group["messages"]]
 
             unread_messages.append(MessageGroup(chat, messages))
 
@@ -110,10 +107,9 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
-        contacts = self.get_contacts()
+        chats = filter(lambda chat: not chat.is_group, self.get_all_chats())
 
-        chat = next((contact for contact in contacts if contact.chat_id.startswith(number)), None)
-        return chat
+        return next((contact for contact in chats if contact.chat_id.startswith(number)), None)
 
     def _reload_qr_code(self):
         self._driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
