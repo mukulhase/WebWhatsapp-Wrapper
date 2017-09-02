@@ -8,66 +8,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from message import Message, MessageGroup
 from chat import Chat
-from consts import Selectors, URL, JSFunctions
-from js_arg import JSArg
+from consts import Selectors, URL
+from wapi_js_wrapper import WapiJsWrapper
 
 
 class WhatsAPIDriver(object):
     def __init__(self, username="API"):
         self._driver = webdriver.Firefox()
+        self.wapi_functions = WapiJsWrapper(self._driver)
         self.username = username
 
         # Open page
         self._driver.get(URL)
         self._driver.implicitly_wait(10)
-
-        # Add common functions to scope
-        self._reload_common_script()
-
-    @staticmethod
-    def _get_script_path(script_file):
-        """
-        Resolves location of js folder and returns full path to given script
-
-        :param script_file: Filename of script
-        :return: Full path to script
-        :rtype: str
-        """
-        try:
-            script_path = os.path.dirname(os.path.abspath(__file__))
-        except NameError:
-            script_path = os.getcwd()
-
-        return os.path.join(script_path, "js", script_file)
-
-    def _reload_common_script(self):
-        """
-        Adds common js utility functions to scope
-
-        Useful for debugging and development
-        """
-        self._execute_script("wapi")
-
-    def _execute_script(self, script_name, *args):
-        """
-        Runs a js file from the js folder
-
-        :param script_name: Name of script (without extension)
-        :return: Script output
-        """
-        with file(WhatsAPIDriver._get_script_path(script_name + ".js"), "rb") as script:
-            return self._driver.execute_script(script.read(), *args)
-
-    def _call_js_function(self, function_name, *args):
-        if len(args):
-            command = "return WAPI.{0}({1})".format(function_name, ",".join([str(JSArg(arg)) for arg in args]))
-        else:
-            command = "return WAPI.{0}()".format(function_name)
-
-        print args
-        print command
-
-        return self._driver.execute_script(command)
 
     def first_run(self):
         if "Click to reload QR code" in self._driver.page_source:
@@ -84,7 +37,7 @@ class WhatsAPIDriver(object):
         :return: List of contacts
         :rtype: list[Chat]
         """
-        raw_contacts = self._call_js_function(JSFunctions.GET_CONTACTS)
+        raw_contacts = self.wapi_functions.getContacts()
 
         contacts = []
         for contact in raw_contacts:
@@ -105,7 +58,7 @@ class WhatsAPIDriver(object):
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self._execute_script("get_unread_messages")
+        raw_message_groups = self.wapi_functions.getUnreadMessages()
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -121,7 +74,7 @@ class WhatsAPIDriver(object):
         return unread_messages
 
     def get_all_messages_in_chat(self, chat, include_me=False):
-        message_objs = self._call_js_function(JSFunctions.GET_ALL_MESSAGES, chat.chat_id, include_me)
+        message_objs = self.wapi_functions.getAllMessagesInChat(chat.chat_id, include_me)
 
         messages = []
         for message in message_objs:
@@ -139,10 +92,10 @@ class WhatsAPIDriver(object):
         :return: True if succeeded, else False
         :rtype: bool
         """
-        return self._execute_script("send_message_to_whatsapp_id", chat.chat_id, message)
+        return self.wapi_functions.sendMessage(chat.chat_id, message)
 
     def get_chat_from_id(self, uid):
-        return Chat(self._call_js_function(JSFunctions.GET_CHAT, uid))
+        return Chat(self.wapi_functions.getChat(uid))
 
     def get_chat_from_phone_number(self, number):
         """

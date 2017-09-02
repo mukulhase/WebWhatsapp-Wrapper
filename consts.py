@@ -25,10 +25,3 @@ class Classes(object):
     UNREAD_BADGE = "icon-meta"
     MESSAGE_CONTENT = "message-text"
     MESSAGE_LIST = "msg"
-
-
-class JSFunctions(object):
-    GET_CONTACTS = "getContacts"
-    GET_ME = "getMe"
-    GET_ALL_MESSAGES = "getAllMessagesInChat"
-    GET_CHAT = "getChat"
