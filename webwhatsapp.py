@@ -120,20 +120,6 @@ class WhatsAPIDriver(object):
 
         return unread_messages
 
-    def get_all_messages(self, chat, include_me=False):
-        group_objs = self._call_js_function(JSFunctions.GET_ALL_MESSAGES, chat.chat_id, include_me)
-
-        groups = []
-        for group_obj in group_objs:
-
-            group_messages = []
-            for message in group_obj["messages"]:
-                group_messages.append(Message(message))
-
-            groups.append(MessageGroup(Chat(group_obj), group_messages))
-
-        return groups
-
     def get_all_messages_in_chat(self, chat, include_me=False):
         message_objs = self._call_js_function(JSFunctions.GET_ALL_MESSAGES, chat.chat_id, include_me)
 
