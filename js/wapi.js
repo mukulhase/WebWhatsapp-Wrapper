@@ -224,3 +224,7 @@ window.WAPI.getUnreadMessages = function () {
 
     return output;
 };
+
+window.WAPI.getAllChats = function() {
+    return Store.Chat.models.map((chat) => WAPI.serializeChat(chat));
+};
