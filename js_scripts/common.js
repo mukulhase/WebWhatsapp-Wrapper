@@ -12,7 +12,7 @@ window.WAPI = {};
  * @returns {{}}
  * @private
  */
-window.WAPI._serializeRawObj = function(rawObj) {
+window.WAPI._serializeRawObj = function (rawObj) {
     let obj = {};
     for (const property in rawObj) {
         if (rawObj[property] !== Object(rawObj[property])) {
@@ -29,9 +29,23 @@ window.WAPI._serializeRawObj = function(rawObj) {
  * @param rawChat Chat object
  * @returns {{}}
  */
-window.WAPI.serializeChat = function(rawChat) {
+window.WAPI.serializeChat = function (rawChat) {
     let chat = {};
-    chat.name = rawChat.__x_name;
+
+    let name = null;
+    if (rawChat.__x_name !== undefined) {
+        name = rawChat.__x_name;
+    } else {
+        if (rawChat.__x_formattedName !== undefined) {
+            name = rawChat.__x_formattedName;
+        } else {
+            if (rawChat.__x_formattedTitle !== undefined) {
+                name = rawChat.__x_formattedTitle;
+            }
+        }
+    }
+
+    chat.name = name;
     chat.id = rawChat.__x_id;
     chat.isGroup = rawChat.isGroup;
     chat._raw = WAPI._serializeRawObj(rawChat);
@@ -46,7 +60,7 @@ window.WAPI.serializeChat = function(rawChat) {
  * @param sender Sender object
  * @returns {{}}
  */
-window.WAPI.serializeMessage = function(rawMessage, sender) {
+window.WAPI.serializeMessage = function (rawMessage, sender) {
     let message = {};
     message.content = rawMessage.__x_body;
     message.timestamp = rawMessage.__x_t;
@@ -61,7 +75,7 @@ window.WAPI.serializeMessage = function(rawMessage, sender) {
  *
  * @returns {Array}
  */
-window.WAPI.getContacts = function() {
+window.WAPI.getContacts = function () {
     const contacts = window.Store.Contact.models;
 
     let output = [];
@@ -82,11 +96,50 @@ window.WAPI.getContacts = function() {
  *
  * @returns {{}}
  */
-window.WAPI.getMe = function() {
+window.WAPI.getMe = function () {
     const contacts = window.Store.Contact.models;
 
     const rawMe = contacts.find((contact, _, __) => contact.__x_formattedName === "You", contacts);
-    console.log(rawMe);
 
     return WAPI.serializeChat(rawMe);
+};
+
+window.WAPI._getChat = function(id) {
+    const chats = Store.Chat.models;
+
+    return chats.find((contact, _, __) => contact.__x_id === id, chats);
+};
+
+window.WAPI.getChat = (id) => WAPI.serializeChat(WAPI._getChat(id));
+
+window.WAPI.getAllMessagesInChat = function (id, includeMe) {
+    const chat = WAPI._getChat(id);
+
+    let output = [];
+
+    const messages = chat.msgs.models;
+    for (const i in messages) {
+        if (i === "remove") {
+            continue;
+        }
+
+        const messageObj = messages[i];
+
+        if (messageObj.__x_isNotification) {
+            // System message
+            // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
+            continue;
+        }
+
+        if (messageObj.id.fromMe === false || includeMe) {
+            let sender = WAPI.serializeChat(messageObj.__x_senderObj);
+            let message = WAPI.serializeMessage(messageObj, sender);
+
+            output.push(message);
+        }
+    }
+
+    last_read[chat.__x_formattedTitle] = Math.floor(Date.now() / 1000);
+
+    return output;
 };

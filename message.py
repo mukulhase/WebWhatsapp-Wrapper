@@ -1,8 +1,39 @@
 from datetime import datetime
+import mimetypes
+import os
+
+from chat import Chat
+
+
+class MessageMetaClass(type):
+    """
+    Message type factory
+    """
+
+    def __call__(cls, js_obj):
+        """
+        Responsible for returning correct Message subtype
+
+        :param js_obj: Raw message JS
+        :return: Instance of appropriate message type
+        :rtype: MediaMessage | Message | MMSMessage | VCardMessage
+        """
+        if js_obj["_raw"]["wapi___x_isMedia"]:
+            return type.__call__(MediaMessage, js_obj)
+
+        if js_obj["_raw"]["wapi___x_isMMS"]:
+            return type.__call__(MMSMessage, js_obj)
+
+        if js_obj["_raw"]["wapi___x_type"] in ["vcard", "multi_vcard"]:
+            return type.__call__(VCardMessage, js_obj)
+
+        return type.__call__(Message, js_obj)
 
 
 class Message(object):
-    def __init__(self, sender, js_obj):
+    __metaclass__ = MessageMetaClass
+
+    def __init__(self, js_obj):
         """
         Constructor
 
@@ -11,9 +42,10 @@ class Message(object):
         :param js_obj: Raw JS message obj
         :type js_obj: dict
         """
-        self.sender = sender
+        self.sender = Chat(js_obj["sender"])
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.content = js_obj["content"]
+        self.raw_js_obj = js_obj["_raw"]
 
     def __repr__(self):
         try:
@@ -22,12 +54,68 @@ class Message(object):
             safe_content = "(unicode content)"
 
         truncation_length = 20
-        truncated_content = safe_content[:truncation_length] + (safe_content[truncation_length:] and "...")
+        safe_content = safe_content[:truncation_length] + (safe_content[truncation_length:] and "...")
 
         return "<Message - from {sender} at {timestamp}: {content}>".format(
             sender=self.sender.name,
             timestamp=self.timestamp,
-            content=truncated_content)
+            content=safe_content)
+
+
+class MediaMessage(Message):
+    def __init__(self, js_obj):
+        super(MediaMessage, self).__init__(js_obj)
+
+        self.type = self.raw_js_obj["wapi___x_type"]
+        self.size = self.raw_js_obj["wapi___x_size"]
+        self.mime = self.raw_js_obj["wapi___x_mimetype"]
+
+    def save_media(self, path):
+        extension = mimetypes.guess_extension(self.mime)
+        filename = "{0}{1}".format(self.raw_js_obj["wapi___x_filehash"], extension)
+
+        with file(os.path.join(path, filename), "wb") as output:
+            output.write(self.content.decode("base64"))
+
+    def __repr__(self):
+        return "<MediaMessage - {type} from {sender} at {timestamp}>".format(
+            type=self.type,
+            sender=self.sender.name,
+            timestamp=self.timestamp
+        )
+
+
+class MMSMessage(MediaMessage):
+    """
+    Represents MMS messages
+
+    Example of an MMS message: "ptt" (push to talk), voice memo
+    """
+    def __init__(self, js_obj):
+        super(MMSMessage, self).__init__(js_obj)
+
+    def __repr__(self):
+        return "<MMSMessage - {type} from {sender} at {timestamp}>".format(
+            type=self.type,
+            sender=self.sender.name,
+            timestamp=self.timestamp
+        )
+
+
+class VCardMessage(Message):
+    def __init__(self, js_obj):
+        super(VCardMessage, self).__init__(js_obj)
+
+        self.type = self.raw_js_obj["wapi___x_type"]
+        self.contacts = self.raw_js_obj["wapi___x_subtype"].encode("ascii", "ignore")
+
+    def __repr__(self):
+        return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
+            type=self.type,
+            sender=self.sender.name,
+            timestamp=self.timestamp,
+            contacts=self.contacts
+        )
 
 
 class MessageGroup(object):

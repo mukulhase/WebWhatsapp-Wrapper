@@ -1,5 +1,6 @@
 URL = "http://web.whatsapp.com"
 
+
 class Selectors(object):
     FIRST_RUN = "#wrapper"
     QR_CODE = ".qrcode > img:nth-child(4)"
@@ -27,6 +28,7 @@ class Classes(object):
 
 
 class JSFunctions(object):
-    GET_CONTACTS = "return WAPI.getContacts();"
-    RESET_UNREAD_MESSAGES = "window.last_read = {};"
-    GET_ME = "return WAPI.getMe();"
+    GET_CONTACTS = "getContacts"
+    GET_ME = "getMe"
+    GET_ALL_MESSAGES = "getAllMessagesInChat"
+    GET_CHAT = "getChat"

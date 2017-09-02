@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from message import Message, MessageGroup
 from chat import Chat
 from consts import Selectors, URL, JSFunctions
+from js_arg import JSArg
 
 
 class WhatsAPIDriver(object):
@@ -55,6 +56,17 @@ class WhatsAPIDriver(object):
         with file(WhatsAPIDriver._get_script_path(script_name + ".js"), "rb") as script:
             return self._driver.execute_script(script.read(), *args)
 
+    def _call_js_function(self, function_name, *args):
+        if len(args):
+            command = "return WAPI.{0}({1})".format(function_name, ",".join([str(JSArg(arg)) for arg in args]))
+        else:
+            command = "return WAPI.{0}()".format(function_name)
+
+        print args
+        print command
+
+        return self._driver.execute_script(command)
+
     def first_run(self):
         if "Click to reload QR code" in self._driver.page_source:
             self._reload_qr_code()
@@ -70,7 +82,7 @@ class WhatsAPIDriver(object):
         :return: List of contacts
         :rtype: list[Chat]
         """
-        raw_contacts = self._driver.execute_script(JSFunctions.GET_CONTACTS)
+        raw_contacts = self._call_js_function(JSFunctions.GET_CONTACTS)
 
         contacts = []
         for contact in raw_contacts:
@@ -82,9 +94,9 @@ class WhatsAPIDriver(object):
         """
         Resets unread messages list
         """
-        self._driver.execute_script(JSFunctions.RESET_UNREAD_MESSAGES)
+        self._driver.execute_script("window.last_read = {}")
 
-    def view_unread(self):
+    def get_unread(self):
         """
         Fetches unread messages
 
@@ -97,14 +109,37 @@ class WhatsAPIDriver(object):
         for raw_message_group in raw_message_groups:
             chat = Chat(raw_message_group)
 
-            messages = [
-                Message(Chat(raw_message["sender"]), raw_message)
-                for raw_message in raw_message_group["messages"]
-            ]
+            messages = []
+            for raw_message in raw_message_group["messages"]:
+                message = Message(raw_message)
+                messages.append(message)
 
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
+
+    def get_all_messages(self, chat, include_me=False):
+        group_objs = self._call_js_function(JSFunctions.GET_ALL_MESSAGES, chat.chat_id, include_me)
+
+        groups = []
+        for group_obj in group_objs:
+
+            group_messages = []
+            for message in group_obj["messages"]:
+                group_messages.append(Message(message))
+
+            groups.append(MessageGroup(Chat(group_obj), group_messages))
+
+        return groups
+
+    def get_all_messages_in_chat(self, chat, include_me=False):
+        message_objs = self._call_js_function(JSFunctions.GET_ALL_MESSAGES, chat.chat_id, include_me)
+
+        messages = []
+        for message in message_objs:
+            messages.append(Message(message))
+
+        return messages
 
     def send_message(self, chat, message):
         """
@@ -119,10 +154,7 @@ class WhatsAPIDriver(object):
         return self._execute_script("send_message_to_whatsapp_id", chat.chat_id, message)
 
     def get_chat_from_id(self, uid):
-        contacts = self.get_contacts()
-
-        chat = next((contact for contact in contacts if contact.chat_id == uid), None)
-        return chat
+        return Chat(self._call_js_function(JSFunctions.GET_CHAT, uid))
 
     def get_chat_from_phone_number(self, number):
         """
@@ -149,7 +181,7 @@ class WhatsAPIDriver(object):
     def create_callback(self, callback_function):
         try:
             while True:
-                messages = self.view_unread()
+                messages = self.get_unread()
                 if messages:
                     callback_function(messages)
                 time.sleep(5)
