@@ -1,4 +1,1 @@
-*.pyc
-.idea
-geckodriver.log
-venv/
+*.egg-info/
