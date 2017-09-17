@@ -1,14 +1,28 @@
 # [WIP] WhatsAPI (Based on web.whatsapp)
 
+## What is it?
+This package is used to provide a python interface for interacting with WhatsAPP Web to send and recieve Whatsapp messages.
+
+
 ## Installation
 
-use `pip install -r requirements.txt' to install the required packages.
+#### From Source
+- Clone the Repo
+- Use `pip install -r requirements.txt' to install the required packages.
+
+#### From PyPI
+- Star the repo :)
+- Install from pip
+
+`pip install webwhatsapi`
+
 You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) separately, if using firefox, which is the default.
+
 
 ## Usage:
 - Import library
 
-` from webwhatsapp import WhatsAPIDriver `
+` from webwhatsapi import WhatsAPIDriver `
 
 - Instantiate driver and set username
 
@@ -18,7 +32,7 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 
 ` driver.firstrun() `
 
-If not, you can skip the above step, and directly scan the QR with your phone.
+If not, you can skip the above step, and directly scan the QR with your phone from the opened Firefox Tab.
 
 - And now, the fun part, sending messages.
 
@@ -33,10 +47,6 @@ If not, you can skip the above step, and directly scan the QR with your phone.
 For scripting, to set a function to be called whenever a message is received, use the create_callback method, and pass as the only argument, a function. The function must accept an argument, which is the received messages as a list.
 
 ## TODO:
-- Add to PyPi as a package
-
-` pip install webwhatsapi`
-
 - Add 'get profile picture' accessor
 
 ## Use Cases:
@@ -49,3 +59,6 @@ For scripting, to set a function to be called whenever a message is received, us
 -- User can access and send messages from anywhere without scanning qr anymore, just simple user login and password
 
 ` Limitation:- Phone has to be ON and connected to the internet `
+
+
+This is the README file for the project.
