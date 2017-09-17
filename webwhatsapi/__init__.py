@@ -13,35 +13,34 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 
 class WhatsAPIDriver(object):
-
     _PROXY = None
 
     _URL = "http://web.whatsapp.com"
 
     _SELECTORS = {
-        'firstrun':"#wrapper",
-        'qrCode':".qrcode > img:nth-child(4)",
-        'mainPage':".app.two",
-        'chatList':".infinite-list-viewport",
-        'messageList':"#main > div > div:nth-child(1) > div > div.message-list",
-        'unreadMessageBar':"#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
-        'searchBar':".input",
-        'searchCancel':".icon-search-morph",
-        'chats':".infinite-list-item",
-        'chatBar':'div.input',
-        'sendButton':'button.icon:nth-child(3)',
-        'LoadHistory':'.btn-more',
-        'UnreadBadge':'.icon-meta',
-        'UnreadChatBanner':'.message-list',
-        'ReconnectLink':'.action',
-        'WhatsappQrIcon':'span.icon:nth-child(2)',
-        'QRReloader':'.qr-wrapper-container'
+        'firstrun': "#wrapper",
+        'qrCode': ".qrcode > img:nth-child(4)",
+        'mainPage': ".app.two",
+        'chatList': ".infinite-list-viewport",
+        'messageList': "#main > div > div:nth-child(1) > div > div.message-list",
+        'unreadMessageBar': "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
+        'searchBar': ".input",
+        'searchCancel': ".icon-search-morph",
+        'chats': ".infinite-list-item",
+        'chatBar': 'div.input',
+        'sendButton': 'button.icon:nth-child(3)',
+        'LoadHistory': '.btn-more',
+        'UnreadBadge': '.icon-meta',
+        'UnreadChatBanner': '.message-list',
+        'ReconnectLink': '.action',
+        'WhatsappQrIcon': 'span.icon:nth-child(2)',
+        'QRReloader': '.qr-wrapper-container'
     }
 
     _CLASSES = {
-        'unreadBadge':'icon-meta',
-        'messageContent':"message-text",
-        'messageList':"msg"
+        'unreadBadge': 'icon-meta',
+        'messageContent': "message-text",
+        'messageList': "msg"
     }
 
     driver = None
@@ -56,7 +55,7 @@ class WhatsAPIDriver(object):
         #     'ftpProxy': os.environ.get("ftp_proxy"),
         # }
         # self._PROXY = Proxy(env_proxy)
-        self.driver = webdriver.Firefox()# trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
+        self.driver = webdriver.Firefox()  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
         self.username = username
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
@@ -66,8 +65,9 @@ class WhatsAPIDriver(object):
         if "Click to reload QR code" in self.driver.page_source:
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        qr.screenshot(self.username+'.png')
-        WebDriverWait(self.driver, 30).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
+        qr.screenshot(self.username + '.png')
+        WebDriverWait(self.driver, 30).until(
+            EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
 
     def view_unread(self):
         try:
@@ -114,4 +114,4 @@ class WhatsAPIDriver(object):
                 time.sleep(5)
         except KeyboardInterrupt:
             print "Exited"
-        
+

@@ -30,10 +30,12 @@ setup(
 
     # The project's main homepage.
     url='https://github.com/mukulhase/WhatsAPI',
+    download_url='https://github.com/mukulhase/WhatsAPI/archive/0.1.tar.gz',  # I'll explain this in a second
 
     # Author details
     author='Mukul Hase',
     author_email='mukulhase@gmail.com',
+    include_package_data=True,
 
     # Choose your license
     license='MIT',
@@ -48,7 +50,7 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Chat Tools :: Whatsapp',
+        'Topic :: Communications :: Chat',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -64,15 +66,6 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-
-    # Alternatively, if you want to distribute just a my_module.py, uncomment
-    # this:
-    #   py_modules=["my_module"],
-
-    # List run-time dependencies here.  These will be installed by pip when
-    # your project is installed. For an analysis of "install_requires" vs pip's
-    # requirements files see:
-    # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'beautifulsoup4>=4.6.0',
         'bs4>=0.0.1',
@@ -80,23 +73,6 @@ setup(
         'selenium>=3.4.3',
         'six>=1.10.0',
     ],
-
-    # List additional groups of dependencies here (e.g. development
-    # dependencies). You can install these using the following syntax,
-    # for example:
-    # $ pip install -e .[dev,test]
     extras_require={
-    },
-
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
-    # have to be included in MANIFEST.in as well.
-    package_data={
-        'js_script': [
-            'contactfromnumber.js',
-            'get_unread_messages.js',
-            'send_message_to_phone_number.js',
-            'send_message_to_whatsapp_id.js',
-        ],
     },
 )
