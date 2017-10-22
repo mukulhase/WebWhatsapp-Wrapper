@@ -9,23 +9,20 @@ for (chat in Chats) {
     temp.id = Chats[chat].__x_id;
     temp.messages = [];
     var messages = Chats[chat].msgs.models;
-    for (var i=messages.length-1;i>=0;i--) {
+    for (var i = messages.length - 1; i >= 0; i--) {
         if (!messages[i].__x_isNewMsg) {
-            console.log("no");
             break;
         } else {
-            console.log("yes");
             messages[i].__x_isNewMsg = false;
-            temp.messages.push(
-                {
-                    message: messages[i].__x_body,
-                    timestamp: messages[i].__x_t
-                }
-            );
+            temp.messages.push({
+                message: messages[i].__x_body,
+                timestamp: messages[i].__x_t
+            });
         }
     }
-    if(temp.messages.length>0)
+    if(temp.messages.length > 0) {
         Output.push(temp);
+    }
 }
-console.log("hi", Output);
+console.log("Unread messages: ", Output);
 return Output;
