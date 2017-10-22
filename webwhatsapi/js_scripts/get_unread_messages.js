@@ -2,6 +2,9 @@ var Chats = Store.Chat.models;
 var Output = [];
 
 function isChatMessage(message) {
+    if (message.__x_isSentByMe) {
+        return false;
+    }
     if (message.__x_isNotification) {
         return false;
     }
