@@ -1,5 +1,16 @@
 var Chats = Store.Chat.models;
 var Output = [];
+
+function isChatMessage(message) {
+    if (message.__x_isNotification) {
+        return false;
+    }
+    if (!message.__x_isUserCreatedType) {
+        return false;
+    }
+    return true;
+}
+
 for (chat in Chats) {
     if (isNaN(chat)) {
         continue;
@@ -13,6 +24,9 @@ for (chat in Chats) {
         if (!messages[i].__x_isNewMsg) {
             break;
         } else {
+            if (!isChatMessage(messages[i])) {
+                continue
+            }
             messages[i].__x_isNewMsg = false;
             temp.messages.push({
                 message: messages[i].__x_body,
