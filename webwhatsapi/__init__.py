@@ -2,6 +2,8 @@
 WhatsAPI module
 """
 
+from __future__ import print_function
+
 import datetime
 import os
 import time
@@ -115,5 +117,4 @@ class WhatsAPIDriver(object):
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
-            print "Exited"
-
+            print("Exited")
