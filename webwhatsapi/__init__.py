@@ -135,4 +135,4 @@ class WhatsAPIDriver(object):
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
-            print "Exited"
+            print("Exited")
