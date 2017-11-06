@@ -2,11 +2,13 @@
 WhatsAPI module
 """
 
+
 from __future__ import print_function
 
 import datetime
-import os
 import time
+import os
+import sys
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -14,6 +16,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 
 
 class WhatsAPIDriver(object):
@@ -49,7 +52,7 @@ class WhatsAPIDriver(object):
 
     driver = None
 
-    def __init__(self, username="API"):
+    def __init__(self, browser='firefox', username="API"):
         "Initialises the browser"
         ## Proxy support not currently working
         # env_proxy = {
@@ -59,7 +62,13 @@ class WhatsAPIDriver(object):
         #     'ftpProxy': os.environ.get("ftp_proxy"),
         # }
         # self._PROXY = Proxy(env_proxy)
-        self.driver = webdriver.Firefox()  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
+        if browser.lower() == 'firefox':
+            self.driver = webdriver.Firefox()  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
+        if browser.lower() == 'chrome':
+            self.chrome_options = Options()
+            self.chrome_options.add_argument("user-data-dir=" + os.path.dirname(sys.argv[0]) + 'chrome_cache' + '/' +  username )
+            self.driver = webdriver.Chrome(chrome_options=self.chrome_options)
+
         self.username = username
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
@@ -100,6 +109,15 @@ class WhatsAPIDriver(object):
         success = self.driver.execute_script(script, pno, message)
         return success
 
+    def get_groups(self):
+        try:
+            script_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            script_path = os.getcwd()
+        script = open(os.path.join(script_path, "js_scripts/get_groups.js"), "r").read()
+        success = self.driver.execute_script(script)
+        return success
+
     def __unicode__(self):
         return self.username
 
@@ -117,4 +135,4 @@ class WhatsAPIDriver(object):
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
-            print("Exited")
+            print "Exited"
