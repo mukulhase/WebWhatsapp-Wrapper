@@ -19,9 +19,10 @@ from consts import Selectors, URL
 
 class WhatsAPIDriver(object):
     def __init__(self, browser='firefox', username="API"):
+        self.username = username
         if browser.lower() == 'firefox':
             # from https://github.com/siddhant-varma/WhatsAPI/blob/master/webwhatsapi/__init__.py
-            self.path = os.path.dirname(sys.argv[0]) + 'firefox_cache' + '/' + username
+            self.path = os.path.dirname(sys.argv[0]) + 'firefox_cache' + '/' + self.username
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
             self.profile = webdriver.FirefoxProfile(self.path)
@@ -29,7 +30,8 @@ class WhatsAPIDriver(object):
             self._driver = webdriver.Firefox(self.profile)
         if browser.lower() == 'chrome':
             self.chrome_options = Options()
-            self.chrome_options.add_argument("user-data-dir=" + os.path.dirname(sys.argv[0]) + 'chrome_cache' + '/' +  username )
+            self.chrome_options.add_argument("user-data-dir=" + os.path.dirname(sys.argv[0]) + 'chrome_cache' + '/' +
+                                             self.username )
             self._driver = webdriver.Chrome(chrome_options=self.chrome_options)
 
 
