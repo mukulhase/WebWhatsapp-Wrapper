@@ -17,9 +17,6 @@ class Contact(WhatsappObject):
     def get_chat(self):
         return self._driver.get_chat_from_id(self.id)
 
-    def __eq__(self, other):
-        return self.id == other.id
-
     def __repr__(self):
         try:
             safe_name = (self.name or self.push_name or self.formatted_name).decode("ascii")

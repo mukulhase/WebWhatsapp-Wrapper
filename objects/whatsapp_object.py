@@ -40,3 +40,9 @@ class WhatsappObject(object):
 
         self._js_obj = js_obj
         self._driver = driver
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return self.id == other.id
