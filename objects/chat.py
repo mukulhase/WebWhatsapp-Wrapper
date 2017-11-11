@@ -43,7 +43,7 @@ class UserChat(Chat):
         except UnicodeEncodeError:
             safe_name = "(unicode name)"
 
-        return "<Direct chat - {name}: {id}>".format(
+        return "<User chat - {name}: {id}>".format(
             name=safe_name,
             id=self.id)
 
@@ -72,7 +72,7 @@ class GroupChat(Chat):
 
         admins = []
         for admin_id in admin_ids:
-            admins.append(self._driver.get_chat_from_id(admin_id))
+            admins.append(self._driver.get_contact_from_id(admin_id))
 
         return admins
 
