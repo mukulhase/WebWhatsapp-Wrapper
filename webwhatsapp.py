@@ -1,9 +1,12 @@
 import time
+import os
+import sys
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.options import Options
 
 from message import Message, MessageGroup
 from chat import Chat
@@ -12,10 +15,24 @@ from consts import Selectors, URL
 
 
 class WhatsAPIDriver(object):
-    def __init__(self, username="API"):
-        self._driver = webdriver.Firefox()
-        self.wapi_functions = WapiJsWrapper(self._driver)
+    def __init__(self, browser='firefox', username="API"):
         self.username = username
+        self.browser_type = browser
+        if self.browser_type.lower() == 'firefox':
+            # from https://github.com/siddhant-varma/WhatsAPI/blob/master/webwhatsapi/__init__.py
+            self.path = os.path.join(os.path.dirname(sys.argv[0]), 'firefox_cache', self.username)
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+            self._firefox_profile = webdriver.FirefoxProfile(self.path)
+            self._driver = webdriver.Firefox(self._firefox_profile)
+
+        if self.browser_type.lower() == 'chrome':
+            self._chrome_options = Options()
+            self._chrome_options.add_argument("user-data-dir=" + os.path.join(os.path.dirname(sys.argv[0]), 'chrome_cache',
+                                             self.username))
+            self._driver = webdriver.Chrome(chrome_options=self._chrome_options)
+
+        self.wapi_functions = WapiJsWrapper(self._driver)
 
         # Open page
         self._driver.get(URL)
