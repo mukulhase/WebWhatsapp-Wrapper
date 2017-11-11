@@ -1,12 +1,12 @@
 import time
 
+from objects.message import Message, MessageGroup
+from objects.chat import Chat
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
-from message import Message, MessageGroup
-from chat import Chat
 from wapi_js_wrapper import WapiJsWrapper
 from consts import Selectors, URL
 
