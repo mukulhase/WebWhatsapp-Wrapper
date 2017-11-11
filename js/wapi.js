@@ -10,8 +10,10 @@ window.WAPI = {
 /**
  * Serializes a raw object
  *
- * Selenium likes to strip "private" properties (not sure why)
- * This function adds a wapi_ prefix to all property names so they don't disappear
+ * Basically just clones the object into a new object
+ *
+ * We need to clone because a lot of properties are non enumerable but we still need them
+ * The cloning operation effectively turns all non enumerable fields into enumerable ones
  *
  * This function naively ignores non primitive types
  *
@@ -19,16 +21,16 @@ window.WAPI = {
  * @returns {{}}
  * @private
  */
-window.WAPI._serializeRawObj = function (rawObj) {
-    let obj = {};
-    for (const property in rawObj) {
-        if (rawObj[property] !== Object(rawObj[property])) {
-            obj["wapi_" + property] = rawObj[property];
-        }
-    }
-
-    return obj;
-};
+// window.WAPI._serializeRawObj = function (rawObj) {
+//     let obj = {};
+//     for (const property in rawObj) {
+//         if (rawObj[property] !== Object(rawObj[property])) {
+//             obj[property] = rawObj[property];
+//         }
+//     }
+//
+//     return obj;
+// };
 
 /**
  * Serializes a chat object
@@ -36,29 +38,29 @@ window.WAPI._serializeRawObj = function (rawObj) {
  * @param rawChat Chat object
  * @returns {{}}
  */
-window.WAPI.serializeChat = function (rawChat) {
-    let chat = {};
-
-    let name = null;
-    if (rawChat.__x_name !== undefined) {
-        name = rawChat.__x_name;
-    } else {
-        if (rawChat.__x_formattedName !== undefined) {
-            name = rawChat.__x_formattedName;
-        } else {
-            if (rawChat.__x_formattedTitle !== undefined) {
-                name = rawChat.__x_formattedTitle;
-            }
-        }
-    }
-
-    chat.name = name;
-    chat.id = rawChat.__x_id;
-    chat.isGroup = rawChat.isGroup;
-    chat._raw = WAPI._serializeRawObj(rawChat);
-
-    return chat;
-};
+// window.WAPI.serializeChat = function (rawChat) {
+//     let chat = {};
+//
+//     let name = null;
+//     if (rawChat.__x_name !== undefined) {
+//         name = rawChat.__x_name;
+//     } else {
+//         if (rawChat.__x_formattedName !== undefined) {
+//             name = rawChat.__x_formattedName;
+//         } else {
+//             if (rawChat.__x_formattedTitle !== undefined) {
+//                 name = rawChat.__x_formattedTitle;
+//             }
+//         }
+//     }
+//
+//     chat.name = name;
+//     chat.id = rawChat.__x_id;
+//     chat.isGroup = rawChat.isGroup;
+//     chat._raw = WAPI._serializeRawObj(rawChat);
+//
+//     return chat;
+// };
 
 /**
  * Serializes a message object
@@ -67,14 +69,58 @@ window.WAPI.serializeChat = function (rawChat) {
  * @param sender Sender object
  * @returns {{}}
  */
-window.WAPI.serializeMessage = function (rawMessage, sender) {
-    let message = {};
-    message.content = rawMessage.__x_body;
-    message.timestamp = rawMessage.__x_t;
-    message.sender = sender;
-    message._raw = WAPI._serializeRawObj(rawMessage);
+// window.WAPI.serializeMessage = function (rawMessage, sender) {
+//     let message = {};
+//     message.content = rawMessage.__x_body;
+//     message.timestamp = rawMessage.__x_t;
+//     message.sender = sender;
+//     message._raw = WAPI._serializeRawObj(rawMessage);
+//
+//     return message;
+// };
 
-    return message;
+window.WAPI.getAllContacts = function (done) {
+    const contacts = Store.Contact.models.map((contact) => contact.all);
+
+    if (done !== undefined) {
+        done(contacts);
+    } else {
+        return contacts;
+    }
+};
+
+window.WAPI.getContact = function(id, done) {
+    const found = Store.Contact.models.find((contact) => contact.id === id);
+
+    if (done !== undefined) {
+        done(found);
+    } else {
+        return found;
+    }
+};
+
+window.WAPI.getAllChats = function (done) {
+    const chats = Store.Chat.models.map((chat) => chat.all);
+
+    if (done !== undefined) {
+        done(chats);
+    } else {
+        return chats;
+    }
+};
+
+window.WAPI.getChat = function(id, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+
+    if (done !== undefined) {
+        done(found);
+    } else {
+        return found;
+    }
+};
+
+window.WAPI.getAllGroupMetadata = function() {
+    return Store.GroupMetadata.models.map((groupData) => WAPI._serializeRawObj(groupData));
 };
 
 /**
@@ -89,11 +135,9 @@ window.WAPI.getContacts = function () {
 
     for (const contact in contacts) {
         if (contacts[contact].isMyContact === true) {
-            output.push(WAPI.serializeChat(contacts[contact]));
+            output.push(WAPI._serializeRawObj(contacts[contact]));
         }
     }
-
-    console.log(output[0]._raw);
 
     return output;
 };
@@ -108,16 +152,16 @@ window.WAPI.getMe = function () {
 
     const rawMe = contacts.find((contact, _, __) => contact.__x_formattedName === "You", contacts);
 
-    return WAPI.serializeChat(rawMe);
+    return WAPI._serializeRawObj(rawMe);
 };
 
-window.WAPI._getChat = function(id) {
+window.WAPI._getChat = function (id) {
     const chats = Store.Chat.models;
 
     return chats.find((contact, _, __) => contact.__x_id === id, chats);
 };
 
-window.WAPI.getChat = (id) => WAPI.serializeChat(WAPI._getChat(id));
+window.WAPI.getChat = (id) => WAPI._serializeRawObj(WAPI._getChat(id));
 
 window.WAPI.getAllMessagesInChat = function (id, includeMe) {
     const chat = WAPI._getChat(id);
@@ -139,8 +183,7 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe) {
         }
 
         if (messageObj.id.fromMe === false || includeMe) {
-            let sender = WAPI.serializeChat(messageObj.__x_senderObj);
-            let message = WAPI.serializeMessage(messageObj, sender);
+            let message = WAPI._serializeRawObj(messageObj);
 
             output.push(message);
         }
@@ -208,8 +251,7 @@ window.WAPI.getUnreadMessages = function () {
             if (messageObj.__x_t <= WAPI.lastRead[messageGroupObj.__x_formattedTitle] || messageObj.id.fromMe === true) {
                 break;
             } else {
-                let sender = WAPI.serializeChat(messageObj.__x_senderObj);
-                let message = WAPI.serializeMessage(messageObj, sender);
+                let message = WAPI._serializeRawObj(messageObj);
 
                 messageGroup.messages.push(message);
             }
@@ -225,6 +267,47 @@ window.WAPI.getUnreadMessages = function () {
     return output;
 };
 
-window.WAPI.getAllChats = function() {
-    return Store.Chat.models.map((chat) => WAPI.serializeChat(chat));
+window.WAPI._getGroupMetadata = async function (id) {
+    const metadata = Store.GroupMetadata.models.find((group, _, __) => group.__x_id === id);
+
+    if (metadata !== undefined) {
+        if (metadata.stale) {
+            await metadata.update();
+        }
+    }
+
+    return metadata;
 };
+
+window.WAPI._getGroupParticipants = async function(id) {
+    const metadata = await WAPI._getGroupMetadata(id);
+    return metadata.participants;
+};
+
+window.WAPI.getGroupParticipants = async function(id, done) {
+    const participants = await WAPI._getGroupParticipants(id);
+
+    const ids = participants.map((participant) => participant.id);
+
+    if (done !== undefined) {
+        done(ids);
+    } else {
+        return ids;
+    }
+};
+
+window.WAPI.getGroupAdmins = async function(id) {
+    const participants = WAPI._getGroupParticipants(id);
+    return participants
+        .filter((participant) => participant.isAdmin)
+        .map((admin) => admin.id);
+};
+
+window.WAPI.getGroupOwner = async function(id) {
+    return WAPI._getGroupMetadata(id).owner.id;
+};
+
+window.WAPI.getCommonGroups = function(id) {
+    // return
+};
+
