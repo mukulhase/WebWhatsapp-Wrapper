@@ -8,77 +8,11 @@ window.WAPI = {
 };
 
 /**
- * Serializes a raw object
+ * Fetches all contact objects from store
  *
- * Basically just clones the object into a new object
- *
- * We need to clone because a lot of properties are non enumerable but we still need them
- * The cloning operation effectively turns all non enumerable fields into enumerable ones
- *
- * This function naively ignores non primitive types
- *
- * @param rawObj Object to serialize
- * @returns {{}}
- * @private
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of contacts
  */
-// window.WAPI._serializeRawObj = function (rawObj) {
-//     let obj = {};
-//     for (const property in rawObj) {
-//         if (rawObj[property] !== Object(rawObj[property])) {
-//             obj[property] = rawObj[property];
-//         }
-//     }
-//
-//     return obj;
-// };
-
-/**
- * Serializes a chat object
- *
- * @param rawChat Chat object
- * @returns {{}}
- */
-// window.WAPI.serializeChat = function (rawChat) {
-//     let chat = {};
-//
-//     let name = null;
-//     if (rawChat.__x_name !== undefined) {
-//         name = rawChat.__x_name;
-//     } else {
-//         if (rawChat.__x_formattedName !== undefined) {
-//             name = rawChat.__x_formattedName;
-//         } else {
-//             if (rawChat.__x_formattedTitle !== undefined) {
-//                 name = rawChat.__x_formattedTitle;
-//             }
-//         }
-//     }
-//
-//     chat.name = name;
-//     chat.id = rawChat.__x_id;
-//     chat.isGroup = rawChat.isGroup;
-//     chat._raw = WAPI._serializeRawObj(rawChat);
-//
-//     return chat;
-// };
-
-/**
- * Serializes a message object
- *
- * @param rawMessage Message object
- * @param sender Sender object
- * @returns {{}}
- */
-// window.WAPI.serializeMessage = function (rawMessage, sender) {
-//     let message = {};
-//     message.content = rawMessage.__x_body;
-//     message.timestamp = rawMessage.__x_t;
-//     message.sender = sender;
-//     message._raw = WAPI._serializeRawObj(rawMessage);
-//
-//     return message;
-// };
-
 window.WAPI.getAllContacts = function (done) {
     const contacts = Store.Contact.models.map((contact) => contact.all);
 
@@ -89,6 +23,13 @@ window.WAPI.getAllContacts = function (done) {
     }
 };
 
+/**
+ * Fetches contact object from store by ID
+ *
+ * @param id ID of contact
+ * @param done Optional callback function for async execution
+ * @returns {T|*} Contact object
+ */
 window.WAPI.getContact = function(id, done) {
     const found = Store.Contact.models.find((contact) => contact.id === id);
 
@@ -99,6 +40,12 @@ window.WAPI.getContact = function(id, done) {
     }
 };
 
+/**
+ * Fetches all chat objects from store
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of chats
+ */
 window.WAPI.getAllChats = function (done) {
     const chats = Store.Chat.models.map((chat) => chat.all);
 
@@ -109,6 +56,13 @@ window.WAPI.getAllChats = function (done) {
     }
 };
 
+/**
+ * Fetches chat object from store by ID
+ *
+ * @param id ID of chat
+ * @param done Optional callback function for async execution
+ * @returns {T|*} Chat object
+ */
 window.WAPI.getChat = function(id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
 
@@ -119,28 +73,76 @@ window.WAPI.getChat = function(id, done) {
     }
 };
 
-window.WAPI.getAllGroupMetadata = function() {
-    return Store.GroupMetadata.models.map((groupData) => WAPI._serializeRawObj(groupData));
+/**
+ * Fetches all group metadata objects from store
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of group metadata
+ */
+window.WAPI.getAllGroupMetadata = function(done) {
+    const groupData = Store.GroupMetadata.models.map((groupData) => groupData.all);
+
+    if (done !== undefined) {
+        done(groupData);
+    } else {
+        return groupData;
+    }
 };
 
 /**
- * Gets list of contacts
+ * Fetches group metadata object from store by ID
  *
- * @returns {Array}
+ * @param id ID of group
+ * @param done Optional callback function for async execution
+ * @returns {T|*} Group metadata object
  */
-window.WAPI.getContacts = function () {
-    const contacts = window.Store.Contact.models;
+window.WAPI.getGroupMetadata = async function(id, done) {
+    let found = Store.GroupMetadata.models.find((groupData) => groupData.id === id);
 
-    let output = [];
-
-    for (const contact in contacts) {
-        if (contacts[contact].isMyContact === true) {
-            output.push(WAPI._serializeRawObj(contacts[contact]));
+    if (found !== undefined) {
+        if (found.stale) {
+            await found.update();
         }
     }
 
-    return output;
+    if (done !== undefined) {
+        done(found);
+    } else {
+        return found;
+    }
 };
+
+window.WAPI._getGroupParticipants = async function(id) {
+    const metadata = await WAPI.getGroupMetadata(id);
+    return metadata.participants;
+};
+
+window.WAPI.getGroupParticipants = async function(id, done) {
+    const participants = await WAPI._getGroupParticipants(id);
+
+    const ids = participants.map((participant) => participant.id);
+
+    if (done !== undefined) {
+        done(ids);
+    } else {
+        return ids;
+    }
+};
+
+window.WAPI.getGroupAdmins = async function(id) {
+    const participants = await WAPI._getGroupParticipants(id);
+    console.log(participants);
+    return participants
+        .filter((participant) => participant.isAdmin)
+        .map((admin) => admin.id);
+};
+
+window.WAPI.getGroupOwner = async function(id) {
+    return WAPI._getGroupMetadata(id).owner.id;
+};
+
+
+// FUNCTIONS UNDER THIS LINE ARE UNSTABLE
 
 /**
  * Gets object representing the logged in user
@@ -265,46 +267,6 @@ window.WAPI.getUnreadMessages = function () {
     }
 
     return output;
-};
-
-window.WAPI._getGroupMetadata = async function (id) {
-    const metadata = Store.GroupMetadata.models.find((group, _, __) => group.__x_id === id);
-
-    if (metadata !== undefined) {
-        if (metadata.stale) {
-            await metadata.update();
-        }
-    }
-
-    return metadata;
-};
-
-window.WAPI._getGroupParticipants = async function(id) {
-    const metadata = await WAPI._getGroupMetadata(id);
-    return metadata.participants;
-};
-
-window.WAPI.getGroupParticipants = async function(id, done) {
-    const participants = await WAPI._getGroupParticipants(id);
-
-    const ids = participants.map((participant) => participant.id);
-
-    if (done !== undefined) {
-        done(ids);
-    } else {
-        return ids;
-    }
-};
-
-window.WAPI.getGroupAdmins = async function(id) {
-    const participants = WAPI._getGroupParticipants(id);
-    return participants
-        .filter((participant) => participant.isAdmin)
-        .map((admin) => admin.id);
-};
-
-window.WAPI.getGroupOwner = async function(id) {
-    return WAPI._getGroupMetadata(id).owner.id;
 };
 
 window.WAPI.getCommonGroups = function(id) {
