@@ -1,5 +1,12 @@
 import os
 
+from selenium.common.exceptions import WebDriverException
+
+
+class JsException(Exception):
+    def __init__(self, message=None):
+        super(Exception, self).__init__(message)
+
 
 class WapiJsWrapper(object):
     """
@@ -74,9 +81,15 @@ class JsFunction(object):
         self.function_name = function_name
 
     def __call__(self, *args, **kwargs):
+        # Selenium's execute_async_script passes a callback function that should be called when the JS operation is done
+        # It is passed to the WAPI function using arguments[0]
         if len(args):
-            command = "return WAPI.{0}({1})".format(self.function_name, ",".join([str(JsArg(arg)) for arg in args]))
+            command = "return WAPI.{0}({1}, arguments[0])"\
+                .format(self.function_name, ",".join([str(JsArg(arg)) for arg in args]))
         else:
-            command = "return WAPI.{0}()".format(self.function_name)
+            command = "return WAPI.{0}(arguments[0])".format(self.function_name)
 
-        return self.driver.execute_script(command)
+        try:
+            return self.driver.execute_script(command)
+        except WebDriverException as e:
+            raise JsException("Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
