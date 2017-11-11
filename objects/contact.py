@@ -7,6 +7,7 @@ class Contact(WhatsappObject):
 
         self.short_name = js_obj["shortName"]
         self.push_name = js_obj["pushname"]
+        self.formatted_name = js_obj["formattedName"]
 
     @driver_needed
     def get_common_groups(self):
@@ -21,7 +22,7 @@ class Contact(WhatsappObject):
 
     def __repr__(self):
         try:
-            safe_name = (self.name or self.push_name).decode("ascii")
+            safe_name = (self.name or self.push_name or self.formatted_name).decode("ascii")
         except UnicodeEncodeError:
             safe_name = "(unicode name)"
 

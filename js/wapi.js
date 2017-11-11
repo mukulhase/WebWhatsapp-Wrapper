@@ -34,9 +34,9 @@ window.WAPI.getContact = function(id, done) {
     const found = Store.Contact.models.find((contact) => contact.id === id);
 
     if (done !== undefined) {
-        done(found);
+        done(found.all);
     } else {
-        return found;
+        return found.all;
     }
 };
 
@@ -67,9 +67,9 @@ window.WAPI.getChat = function(id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
 
     if (done !== undefined) {
-        done(found);
+        done(found.all);
     } else {
-        return found;
+        return found.all;
     }
 };
 
