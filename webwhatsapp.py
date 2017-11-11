@@ -1,13 +1,16 @@
 import time
 
+from objects.contact import Contact
 from objects.message import Message, MessageGroup
 from objects.chat import Chat
+
+from wapi_js_wrapper import WapiJsWrapper
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
-from wapi_js_wrapper import WapiJsWrapper
 from consts import Selectors, URL
 
 
@@ -20,6 +23,11 @@ class WhatsAPIDriver(object):
         # Open page
         self._driver.get(URL)
         self._driver.implicitly_wait(10)
+
+        self._driver.set_script_timeout(5)
+
+        WebDriverWait(self._driver, 30).until(
+            ec.invisibility_of_element_located((By.CSS_SELECTOR, Selectors.QR_CODE)))
 
     def first_run(self):
         if "Click to reload QR code" in self._driver.page_source:
@@ -39,10 +47,11 @@ class WhatsAPIDriver(object):
         :return: List of contacts
         :rtype: list[Chat]
         """
-        return [Chat(contact) for contact in self.wapi_functions.getContacts()]
+        all_contacts = self.wapi_functions.getAllContacts()
+        return [Contact(contact, self) for contact in all_contacts]
 
     def get_all_chats(self):
-        return [Chat(chat) for chat in self.wapi_functions.getAllChats()]
+        return [Chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
     def reset_unread(self):
         """
@@ -88,10 +97,24 @@ class WhatsAPIDriver(object):
         :return: True if succeeded, else False
         :rtype: bool
         """
-        return self.wapi_functions.sendMessage(chat.chat_id, message)
+        return self.wapi_functions.sendMessage(chat.id, message)
 
-    def get_chat_from_id(self, uid):
-        return Chat(self.wapi_functions.getChat(uid))
+    def get_contact_from_id(self, contact_id):
+        contact = self.wapi_functions.getContact(contact_id)
+
+        assert contact, "Contact {0} not found".format(contact_id)
+
+        return Contact(contact)
+
+    def get_chat_from_id(self, chat_id):
+        chats = filter(
+            lambda chat: chat["id"] == chat_id,
+            self.wapi_functions.getAllChats()
+        )
+
+        assert len(chats) == 1, "Chat {0} not found".format(chat_id)
+
+        return Chat(chats[0], self)
 
     def get_chat_from_phone_number(self, number):
         """
@@ -109,7 +132,7 @@ class WhatsAPIDriver(object):
         """
         chats = filter(lambda chat: not chat.is_group, self.get_all_chats())
 
-        return next((contact for contact in chats if contact.chat_id.startswith(number)), None)
+        return next((contact for contact in chats if contact.id.startswith(number)), None)
 
     def _reload_qr_code(self):
         self._driver.find_element_by_css_selector(Selectors.QR_RELOADER).click()
