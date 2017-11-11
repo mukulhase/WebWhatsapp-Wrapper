@@ -131,7 +131,6 @@ window.WAPI.getGroupParticipants = async function(id, done) {
 
 window.WAPI.getGroupAdmins = async function(id) {
     const participants = await WAPI._getGroupParticipants(id);
-    console.log(participants);
     return participants
         .filter((participant) => participant.isAdmin)
         .map((admin) => admin.id);
