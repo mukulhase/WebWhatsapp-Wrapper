@@ -54,7 +54,7 @@ class GroupChat(Chat):
 
     @driver_needed
     def get_participants_ids(self):
-        return self._driver.wapi_functions.getGroupParticipants(self.id)
+        return self._driver.wapi_functions.getGroupParticipantIDs(self.id)
 
     @driver_needed
     def get_participants(self):

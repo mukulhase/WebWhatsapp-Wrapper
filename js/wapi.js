@@ -112,12 +112,26 @@ window.WAPI.getGroupMetadata = async function(id, done) {
     }
 };
 
+/**
+ * Fetches group participants
+ *
+ * @param id ID of group
+ * @returns {Promise.<*>} Yields group metadata
+ * @private
+ */
 window.WAPI._getGroupParticipants = async function(id) {
     const metadata = await WAPI.getGroupMetadata(id);
     return metadata.participants;
 };
 
-window.WAPI.getGroupParticipants = async function(id, done) {
+/**
+ * Fetches IDs of group participants
+ *
+ * @param id ID of group
+ * @param done Optional callback function for async execution
+ * @returns {Promise.<Array|*>} Yields list of IDs
+ */
+window.WAPI.getGroupParticipantIDs = async function(id, done) {
     const participants = await WAPI._getGroupParticipants(id);
 
     const ids = participants.map((participant) => participant.id);
@@ -136,33 +150,21 @@ window.WAPI.getGroupAdmins = async function(id) {
         .map((admin) => admin.id);
 };
 
-window.WAPI.getGroupOwner = async function(id) {
-    return WAPI._getGroupMetadata(id).owner.id;
-};
-
-
-// FUNCTIONS UNDER THIS LINE ARE UNSTABLE
-
 /**
  * Gets object representing the logged in user
  *
- * @returns {{}}
+ * @returns {Array|*|$q.all}
  */
 window.WAPI.getMe = function () {
     const contacts = window.Store.Contact.models;
 
-    const rawMe = contacts.find((contact, _, __) => contact.__x_formattedName === "You", contacts);
+    const rawMe = contacts.find((contact) => contact.all.isMe, contacts);
 
-    return WAPI._serializeRawObj(rawMe);
+    return rawMe.all;
 };
 
-window.WAPI._getChat = function (id) {
-    const chats = Store.Chat.models;
 
-    return chats.find((contact, _, __) => contact.__x_id === id, chats);
-};
-
-window.WAPI.getChat = (id) => WAPI._serializeRawObj(WAPI._getChat(id));
+// FUNCTIONS UNDER THIS LINE ARE UNSTABLE
 
 window.WAPI.getAllMessagesInChat = function (id, includeMe) {
     const chat = WAPI._getChat(id);
@@ -272,3 +274,6 @@ window.WAPI.getCommonGroups = function(id) {
     // return
 };
 
+window.WAPI.getGroupOwnerID = async function(id) {
+    return WAPI.getGroupMetadata(id).owner.id;
+};
