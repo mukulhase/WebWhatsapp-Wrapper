@@ -107,18 +107,6 @@ class WhatsAPIDriver(object):
 
         return messages
 
-    def send_message(self, chat, message):
-        """
-        Sends message using Whatsapp ID
-
-        :param chat: Whatsapp ID
-        :type chat: Chat
-        :param message: Message to send
-        :return: True if succeeded, else False
-        :rtype: bool
-        """
-        return self.wapi_functions.sendMessage(chat.id, message)
-
     def get_contact_from_id(self, contact_id):
         contact = self.wapi_functions.getContact(contact_id)
 
