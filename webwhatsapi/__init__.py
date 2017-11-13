@@ -23,7 +23,7 @@ class WhatsAPIDriver(object):
 
     _SELECTORS = {
         'firstrun': "#wrapper",
-        'qrCode': ".qrcode > img:nth-child(4)",
+        'qrCode': "img[alt=\"Scan me !\"]",
         'mainPage': ".app.two",
         'chatList': ".infinite-list-viewport",
         'messageList': "#main > div > div:nth-child(1) > div > div.message-list",
