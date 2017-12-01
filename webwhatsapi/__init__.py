@@ -79,8 +79,9 @@ class WhatsAPIDriver(object):
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         qr.screenshot(self.username + '.png')
-        WebDriverWait(self.driver, 30).until(
-            EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
+        WebDriverWait(self.driver, 90).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
+        )
 
     def view_unread(self):
         return self.view_messages(unread_only=True)
