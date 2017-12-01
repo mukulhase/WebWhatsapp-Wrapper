@@ -34,12 +34,14 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 
 ` driver = WhatsAPIDriver(username="mkhase", browser="chrome") `
 
-#### Optional Parameters
+#### Optional driver instantiation parameters
 
 ` username="username" `
+
 Default value is "API"
 
 ` browser="browser" `
+
 Default value is "firefox"
 
 ` driver_executable_path="/Path/to/driver/executable" `
