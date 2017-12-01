@@ -83,12 +83,15 @@ class WhatsAPIDriver(object):
             EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
 
     def view_unread(self):
+        return self.view_messages(unread_only=True)
+
+    def view_messages(self, unread_only=False):
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
             script_path = os.getcwd()
-        script = open(os.path.join(script_path, "js_scripts/get_unread_messages.js"), "r").read()
-        Store = self.driver.execute_script(script)
+        script = open(os.path.join(script_path, "js_scripts/get_messages.js"), "r").read()
+        Store = self.driver.execute_script(script, unread_only)
         return Store
 
     def send_to_whatsapp_id(self, id, message):
