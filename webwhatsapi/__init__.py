@@ -76,8 +76,8 @@ class WhatsAPIDriver(object):
             self._driver = webdriver.Firefox(self._firefox_profile)  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
             
         if browser.lower() == 'chrome':
-            self.chrome_options = Options()
-            self.chrome_options.add_argument(
+            self._chrome_options = Options()
+            self._chrome_options.add_argument(
                 "user-data-dir=" + os.path.join(os.path.dirname(sys.argv[0]), "chrome_cache", self.username))
             if driver_executable_path:
                 self._driver = webdriver.Chrome(self.driver_executable_path, chrome_options=self._chrome_options)
