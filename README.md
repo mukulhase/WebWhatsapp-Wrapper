@@ -26,7 +26,25 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 
 - Instantiate driver and set username
 
-` driver = WhatsAPIDriver("mkhase") `
+#### Firefox
+
+` driver = WhatsAPIDriver(username="mkhase") `
+
+#### Chrome
+
+` driver = WhatsAPIDriver(username="mkhase", browser="chrome") `
+
+#### Optional Parameters
+
+` username="username" `
+Default value is "API"
+
+` browser="browser" `
+Default value is "firefox"
+
+` driver_executable_path="/Path/to/driver/executable" `
+
+Default value is "None", driver has to be in path or script directory
 
 - If the module is to be used as part of a script, and you need an image of the QR code, run the firstrun method. This saves the QR as username.png in, stored in the same directory after running command.
 
