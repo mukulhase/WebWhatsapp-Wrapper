@@ -73,15 +73,16 @@ class WhatsAPIDriver(object):
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
 
-    def firstrun(self):
+    def firstrun(self, wait_for_page=False):
         "Saves QRCode and waits for it to go away"
         if "Click to reload QR code" in self.driver.page_source:
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         qr.screenshot(self.username + '.png')
-        WebDriverWait(self.driver, 90).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
-        )
+        if wait_for_page:
+            WebDriverWait(self.driver, 90).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
+            )
 
     def view_unread(self):
         return self.view_messages(unread_only=True)
