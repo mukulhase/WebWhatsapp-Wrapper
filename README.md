@@ -36,17 +36,19 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 
 #### Optional driver instantiation parameters
 
-` username="username" `
+``` python
+# Default value is "API"
+username="username"
+```
+``` python
+# Default value is "firefox"
+browser="browser" 
+```
 
-Default value is "API"
-
-` browser="browser" `
-
-Default value is "firefox"
-
-` driver_executable_path="/Path/to/driver/executable" `
-
-Default value is "None", driver has to be in path or script directory.
+``` python
+# Default value is "None", driver has to be in path or script directory.
+driver_executable_path="/Path/to/driver/executable" 
+```
 
 - If the module is to be used as part of a script, and you need an image of the QR code, run the firstrun method. This saves the QR as username.png in, stored in the same directory after running command.
 
