@@ -5,7 +5,7 @@ print("waiting for QR")
 driver = WhatsAPIDriver()
 driver.firstrun()
 driver.view_unread()
-print "bot started"
+print("bot started")
 while True:
     time.sleep(1)
     print('checking for more messages')
