@@ -89,11 +89,11 @@ class WhatsAPIDriver(object):
 
     def firstrun(self):
         "Saves QRCode and waits for it to go away"
-        if "Click to reload QR code" in self.driver.page_source:
+        if "Click to reload QR code" in self._driver.page_source:
             self.reloadQRCode()
-        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+        qr = self._driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         qr.screenshot(self.username + '.png')
-        WebDriverWait(self.driver, 30).until(
+        WebDriverWait(self._driver, 30).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
 
     def view_unread(self):
@@ -102,7 +102,7 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
         script = open(os.path.join(script_path, "js_scripts/get_unread_messages.js"), "r").read()
-        Store = self.driver.execute_script(script)
+        Store = self._driver.execute_script(script)
         return Store
 
     def send_to_whatsapp_id(self, id, message):
@@ -111,7 +111,7 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
         script = open(os.path.join(script_path, "js_scripts/send_message_to_whatsapp_id.js"), "r").read()
-        success = self.driver.execute_script(script, id, message)
+        success = self._driver.execute_script(script, id, message)
         return success
 
     def send_to_phone_number(self, pno, message):
@@ -120,7 +120,7 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
         script = open(os.path.join(script_path, "js_scripts/send_message_to_phone_number.js"), "r").read()
-        success = self.driver.execute_script(script, pno, message)
+        success = self._driver.execute_script(script, pno, message)
         return success
 
     def get_groups(self):
@@ -129,7 +129,7 @@ class WhatsAPIDriver(object):
         except NameError:
             script_path = os.getcwd()
         script = open(os.path.join(script_path, "js_scripts/get_groups.js"), "r").read()
-        success = self.driver.execute_script(script)
+        success = self._driver.execute_script(script)
         return success
 
     def __unicode__(self):
@@ -139,7 +139,7 @@ class WhatsAPIDriver(object):
         return self.__unicode__()
 
     def reloadQRCode(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS['QRReloader']).click()
+        self._driver.find_element_by_css_selector(self._SELECTORS['QRReloader']).click()
 
     def create_callback(self, callback_function):
         try:
