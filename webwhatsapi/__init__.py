@@ -18,7 +18,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 
-
 class WhatsAPIDriver(object):
     _PROXY = None
 
@@ -52,8 +51,12 @@ class WhatsAPIDriver(object):
 
     driver = None
 
-    def __init__(self, browser='firefox', username="API"):
+    def __init__(self, browser='firefox', driver_executable_path = None, username="API"):
         "Initialises the browser"
+        self.username = username
+        self.browser_type = browser
+        self.driver_executable_path = driver_executable_path
+
         ## Proxy support not currently working
         # env_proxy = {
         #     'proxyType': ProxyType.MANUAL,
@@ -63,15 +66,26 @@ class WhatsAPIDriver(object):
         # }
         # self._PROXY = Proxy(env_proxy)
         if browser.lower() == 'firefox':
-            self.driver = webdriver.Firefox()  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
+            # from https://github.com/siddhant-varma/WhatsAPI/blob/master/webwhatsapi/__init__.py
+            self.path = os.path.join(os.path.dirname(sys.argv[0]), "firefox_cache", self.username)
+            
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+            
+            self._firefox_profile = webdriver.FirefoxProfile(self.path)
+            self._driver = webdriver.Firefox(self._firefox_profile)  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
+            
         if browser.lower() == 'chrome':
-            self.chrome_options = Options()
-            self.chrome_options.add_argument("user-data-dir=" + os.path.dirname(sys.argv[0]) + 'chrome_cache' + '/' +  username )
-            self.driver = webdriver.Chrome(chrome_options=self.chrome_options)
+            self._chrome_options = Options()
+            self._chrome_options.add_argument(
+                "user-data-dir=" + os.path.join(os.path.dirname(sys.argv[0]), "chrome_cache", self.username))
+            if driver_executable_path:
+                self._driver = webdriver.Chrome(self.driver_executable_path, chrome_options=self._chrome_options)
+            else:
+                self._driver = webdriver.Chrome(chrome_options=self._chrome_options)
 
-        self.username = username
-        self.driver.get(self._URL)
-        self.driver.implicitly_wait(10)
+        self._driver.get(self._URL)
+        self._driver.implicitly_wait(10)
 
     def firstrun(self):
         "Saves QRCode and waits for it to go away"
