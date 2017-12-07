@@ -72,7 +72,7 @@ For scripting, to set a function to be called whenever a message is received, us
 
 #### Using Firefox with Persistent Session
 
-Gecko Driver must already be installed and working!
+Firefox and Gecko Driver must already be installed and working!
 
 ```in: python_interpreter```
 1. Run this python code once
