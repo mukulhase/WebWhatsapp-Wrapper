@@ -2,13 +2,12 @@
 WhatsAPI module
 """
 
-
-from __future__ import print_function
-
 import datetime
 import time
 import os
 import sys
+import logging
+import pickle
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -50,14 +49,19 @@ class WhatsAPIDriver(object):
         'messageList': "msg"
     }
 
+    logger = logging.getLogger("whatsapi")
     driver = None
     profile = None
 
     def save_firefox_profile(self):
         "Function to save the firefox profile to the permanant one"
+        self.logger.info("Saving profile from %s to %s" % (self.profile.path, self.profile_path))
         os.system("cp -R " + self.profile.path + " "+ self.profile_path)
+        cookie_file = os.path.join(self.profile_path, "cookies.pkl")
+        pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
 
     def set_proxy(self, proxy):
+        self.logger.info("Setting proxy to %s" % proxy)
         proxy_address, proxy_port = proxy.split(":")
         self.profile.set_preference("network.proxy.type", 1)
         self.profile.set_preference("network.proxy.http", proxy_address)
@@ -65,29 +69,43 @@ class WhatsAPIDriver(object):
         self.profile.set_preference("network.proxy.ssl", proxy_address)
         self.profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, browser='firefox', username="API", proxy=None):
+    def __init__(self, browser="firefox", username="API", proxy=None):
         """
-        Initialises the browser
-        It also checks for a already existing firefox profile and loads one if it finds it.
-        Else, it creates a new profile and saves it.
+        Initialises the webdriver
         """
 
+        # Get the name of the config folder
         self.config_dir = os.path.join(os.path.expanduser("~"), ".whatsapi")
 
-        if not os.path.exists(self.config_dir):
-            os.makedirs(self.config_dir)
+        try:
+            if not os.path.exists(self.config_dir):
+                os.makedirs(self.config_dir)
+        except OSError:
+            print("Error: Could not create config dir")
+            exit(-1)
 
+        self.logger.setLevel(logging.DEBUG)
+
+        # Setting the log message format and log file
+        log_file_handler = logging.FileHandler(os.path.join(self.config_dir, "whatsapi.log"))
+        log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+        self.logger.addHandler(log_file_handler)
+
+        # Check if profile exists and create it if it doesn't
         self.profile_path = os.path.join(self.config_dir, "profile")
-
+        self.logger.info("Checking for profile at %s" % self.profile_path)
         if not os.path.exists(self.profile_path):
+            self.logger.info("Profile not found. Creating profile")
             self.profile = webdriver.FirefoxProfile()
             self.save_firefox_profile()
         else:
+            self.logger.info("Profile found")
             self.profile = webdriver.FirefoxProfile(self.profile_path)
 
         if proxy is not None:
             self.set_proxy(proxy)
 
+        self.logger.info("Starting webdriver")
         self.driver = webdriver.Firefox(self.profile)
         self.username = username
         self.driver.get(self._URL)
@@ -101,7 +119,7 @@ class WhatsAPIDriver(object):
         qr.screenshot(self.username + '.png')
         WebDriverWait(self.driver, 30).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
-        print("QR just scanned")
+        # logger.debug("QR just scanned")
 
     def view_unread(self):
         try:
@@ -165,4 +183,4 @@ class WhatsAPIDriver(object):
                     callback_function(messages)
                 time.sleep(5)
         except KeyboardInterrupt:
-            print("Exited")
+            logger.debug("Exited")
