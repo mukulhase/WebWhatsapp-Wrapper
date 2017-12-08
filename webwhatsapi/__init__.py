@@ -15,7 +15,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 
 
 class WhatsAPIDriver(object):
@@ -70,9 +69,7 @@ class WhatsAPIDriver(object):
         self.profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def __init__(self, browser="firefox", username="API", proxy=None):
-        """
-        Initialises the webdriver
-        """
+        "Initialises the webdriver"
 
         # Get the name of the config folder
         self.config_dir = os.path.join(os.path.expanduser("~"), ".whatsapi")
@@ -91,22 +88,33 @@ class WhatsAPIDriver(object):
         log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
         self.logger.addHandler(log_file_handler)
 
-        # Check if profile exists and create it if it doesn't
-        self.profile_path = os.path.join(self.config_dir, "profile")
-        self.logger.info("Checking for profile at %s" % self.profile_path)
-        if not os.path.exists(self.profile_path):
-            self.logger.info("Profile not found. Creating profile")
-            self.profile = webdriver.FirefoxProfile()
-            self.save_firefox_profile()
+        self.browser = browser.lower()
+        if self.browser == "firefox":
+            # TODO: Finish persistant sessions. As of now, persistant sessions do not work for Firefox. You will need to scan each time.
+            self.profile_path = os.path.join(self.config_dir, "profile")
+            self.logger.info("Checking for profile at %s" % self.profile_path)
+            if not os.path.exists(self.profile_path):
+                self.logger.info("Profile not found. Creating profile")
+                self.profile = webdriver.FirefoxProfile()
+                self.save_firefox_profile()
+            else:
+                self.logger.info("Profile found")
+                self.profile = webdriver.FirefoxProfile(self.profile_path)
+
+            if proxy is not None:
+                self.set_proxy(proxy)
+            self.logger.info("Starting webdriver")
+            self.driver = webdriver.Firefox(self.profile)
+        elif self.browser == "chrome":
+            self.profile = webdriver.chrome.options.Options()
+            self.profile_path = os.path.join(self.config_dir, 'chrome_cache')
+            self.profile.add_argument("user-data-dir=%s" % self.profile_path)
+            if proxy is not None:
+                profile.add_argument('--proxy-server=%s' % proxy)
+            self.driver = webdriver.Chrome(chrome_options=self.profile)
         else:
-            self.logger.info("Profile found")
-            self.profile = webdriver.FirefoxProfile(self.profile_path)
-
-        if proxy is not None:
-            self.set_proxy(proxy)
-
-        self.logger.info("Starting webdriver")
-        self.driver = webdriver.Firefox(self.profile)
+            logger.error("Invalid browser: %s" % browser)
+            print("Only firefox and chrome work as browser")
         self.username = username
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
