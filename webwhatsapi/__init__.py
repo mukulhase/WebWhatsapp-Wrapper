@@ -22,7 +22,7 @@ from selenium.webdriver.chrome.options import Options
 class WhatsAPIDriver(object):
     _PROXY = None
 
-    _URL = "http://web.whatsapp.com"
+    _URL = "https://web.whatsapp.com"
 
     _SELECTORS = {
         'firstrun': "#wrapper",
@@ -51,24 +51,44 @@ class WhatsAPIDriver(object):
     }
 
     driver = None
+    profile = None
 
-    def __init__(self, browser='firefox', username="API"):
-        "Initialises the browser"
-        ## Proxy support not currently working
-        # env_proxy = {
-        #     'proxyType': ProxyType.MANUAL,
-        #     'httpProxy': os.environ.get("http_proxy"),
-        #     'httpsProxy': os.environ.get("https_proxy"),
-        #     'ftpProxy': os.environ.get("ftp_proxy"),
-        # }
-        # self._PROXY = Proxy(env_proxy)
-        if browser.lower() == 'firefox':
-            self.driver = webdriver.Firefox()  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
-        if browser.lower() == 'chrome':
-            self.chrome_options = Options()
-            self.chrome_options.add_argument("user-data-dir=" + os.path.dirname(sys.argv[0]) + 'chrome_cache' + '/' +  username )
-            self.driver = webdriver.Chrome(chrome_options=self.chrome_options)
+    def save_firefox_profile(self):
+        "Function to save the firefox profile to the permanant one"
+        os.system("cp -R " + self.profile.path + " "+ self.profile_path)
 
+    def set_proxy(self, proxy):
+        proxy_address, proxy_port = proxy.split(":")
+        self.profile.set_preference("network.proxy.type", 1)
+        self.profile.set_preference("network.proxy.http", proxy_address)
+        self.profile.set_preference("network.proxy.http_port", int(proxy_port))
+        self.profile.set_preference("network.proxy.ssl", proxy_address)
+        self.profile.set_preference("network.proxy.ssl_port", int(proxy_port))
+
+    def __init__(self, browser='firefox', username="API", proxy=None):
+        """
+        Initialises the browser
+        It also checks for a already existing firefox profile and loads one if it finds it.
+        Else, it creates a new profile and saves it.
+        """
+
+        self.config_dir = os.path.join(os.path.expanduser("~"), ".whatsapi")
+
+        if not os.path.exists(self.config_dir):
+            os.makedirs(self.config_dir)
+
+        self.profile_path = os.path.join(self.config_dir, "profile")
+
+        if not os.path.exists(self.profile_path):
+            self.profile = webdriver.FirefoxProfile()
+            self.save_firefox_profile()
+        else:
+            self.profile = webdriver.FirefoxProfile(self.profile_path)
+
+        if proxy is not None:
+            self.set_proxy(proxy)
+
+        self.driver = webdriver.Firefox(self.profile)
         self.username = username
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
@@ -81,6 +101,7 @@ class WhatsAPIDriver(object):
         qr.screenshot(self.username + '.png')
         WebDriverWait(self.driver, 30).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['qrCode'])))
+        print("QR just scanned")
 
     def view_unread(self):
         try:
@@ -99,9 +120,6 @@ class WhatsAPIDriver(object):
         script = open(os.path.join(script_path, "js_scripts/send_message_to_whatsapp_id.js"), "r").read()
         success = self.driver.execute_script(script, id, message)
         return success
-
-    # def send_to_contact(self, id, message):
-    #     return success
 
     def get_id_from_number(self, name):
         try:
@@ -136,8 +154,8 @@ class WhatsAPIDriver(object):
     def __str__(self):
         return self.__unicode__()
 
-    def reloadQRCode(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS['QRReloader']).click()
+    def reload_QR(self):
+        self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
 
     def create_callback(self, callback_function):
         try:
