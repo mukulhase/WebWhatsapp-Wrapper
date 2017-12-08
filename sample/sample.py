@@ -1,3 +1,5 @@
+# Currently not working. New sample script will be updated as soon as API is updated in a few days
+
 import time
 from webwhatsapi import WhatsAPIDriver
 print "waiting for QR"

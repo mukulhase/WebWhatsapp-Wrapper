@@ -50,13 +50,15 @@ class WhatsAPIDriver(object):
 
     logger = logging.getLogger("whatsapi")
     driver = None
+
+    # Profile points to the Firefox profile for firefox and Chrome cache for chrome
     profile = None
 
     def save_firefox_profile(self):
         "Function to save the firefox profile to the permanant one"
-        self.logger.info("Saving profile from %s to %s" % (self.profile.path, self.profile_path))
-        os.system("cp -R " + self.profile.path + " "+ self.profile_path)
-        cookie_file = os.path.join(self.profile_path, "cookies.pkl")
+        self.logger.info("Saving profile from %s to %s" % (self.profile.path, self._profile_path))
+        os.system("cp -R " + self.profile.path + " "+ self._profile_path)
+        cookie_file = os.path.join(self._profile_path, "cookies.pkl")
         pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
 
     def set_proxy(self, proxy):
@@ -91,15 +93,15 @@ class WhatsAPIDriver(object):
         self.browser = browser.lower()
         if self.browser == "firefox":
             # TODO: Finish persistant sessions. As of now, persistant sessions do not work for Firefox. You will need to scan each time.
-            self.profile_path = os.path.join(self.config_dir, "profile")
-            self.logger.info("Checking for profile at %s" % self.profile_path)
-            if not os.path.exists(self.profile_path):
+            self._profile_path = os.path.join(self.config_dir, "profile")
+            self.logger.info("Checking for profile at %s" % self._profile_path)
+            if not os.path.exists(self._profile_path):
                 self.logger.info("Profile not found. Creating profile")
                 self.profile = webdriver.FirefoxProfile()
                 self.save_firefox_profile()
             else:
                 self.logger.info("Profile found")
-                self.profile = webdriver.FirefoxProfile(self.profile_path)
+                self.profile = webdriver.FirefoxProfile(self._profile_path)
 
             if proxy is not None:
                 self.set_proxy(proxy)
@@ -107,8 +109,8 @@ class WhatsAPIDriver(object):
             self.driver = webdriver.Firefox(self.profile)
         elif self.browser == "chrome":
             self.profile = webdriver.chrome.options.Options()
-            self.profile_path = os.path.join(self.config_dir, 'chrome_cache')
-            self.profile.add_argument("user-data-dir=%s" % self.profile_path)
+            self._profile_path = os.path.join(self.config_dir, 'chrome_cache')
+            self.profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
             self.driver = webdriver.Chrome(chrome_options=self.profile)
