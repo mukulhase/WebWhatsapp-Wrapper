@@ -59,7 +59,8 @@ class WhatsAPIDriver(object):
         self.logger.info("Saving profile from %s to %s" % (self.profile.path, self._profile_path))
         os.system("cp -R " + self.profile.path + " "+ self._profile_path)
         cookie_file = os.path.join(self._profile_path, "cookies.pkl")
-        pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
+        if self.driver:
+            pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
 
     def set_proxy(self, proxy):
         self.logger.info("Setting proxy to %s" % proxy)
