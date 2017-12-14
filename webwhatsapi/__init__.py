@@ -91,6 +91,9 @@ class WhatsAPIDriver(object):
                 EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
             )
 
+    def screenshot(self,filename):
+        self.driver.get_screenshot_as_file( filename )
+
     def view_unread(self):
         return self.view_messages(unread_only=True)
 
