@@ -115,6 +115,18 @@ class WhatsAPIDriver(object):
         success = self.driver.execute_script(script, id, message)
         return success
 
+    # def send_to_contact(self, id, message):
+    #     return success
+
+    def get_id_from_number(self, name):
+        try:
+            script_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            script_path = os.getcwd()
+        script = open(os.path.join(script_path, "js_scripts/id_from_name.js"), "r").read()
+        id = self.driver.execute_script(script, name)
+        return id
+
     def send_to_phone_number(self, pno, message):
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
