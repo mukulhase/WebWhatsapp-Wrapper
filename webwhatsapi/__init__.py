@@ -12,6 +12,7 @@ import sys
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support.ui import WebDriverWait
@@ -52,8 +53,8 @@ class WhatsAPIDriver(object):
 
     driver = None
 
-    def __init__(self, browser='firefox', username="API"):
-        "Initialises the browser"
+    def __init__(self, client='firefox', username="API", command_executor=None):
+        "Initialises the client"
         ## Proxy support not currently working
         # env_proxy = {
         #     'proxyType': ProxyType.MANUAL,
@@ -62,12 +63,18 @@ class WhatsAPIDriver(object):
         #     'ftpProxy': os.environ.get("ftp_proxy"),
         # }
         # self._PROXY = Proxy(env_proxy)
-        if browser.lower() == 'firefox':
+        if client.lower() == 'firefox':
             self.driver = webdriver.Firefox()  # trying to add proxy support: webdriver.FirefoxProfile().set_proxy()) #self._PROXY))
-        if browser.lower() == 'chrome':
+        elif client.lower() == 'chrome':
             self.chrome_options = Options()
             self.chrome_options.add_argument("user-data-dir=" + os.path.dirname(sys.argv[0]) + 'chrome_cache' + '/' +  username )
             self.driver = webdriver.Chrome(chrome_options=self.chrome_options)
+        elif client.lower() == 'remote':
+            capabilities = DesiredCapabilities.FIREFOX.copy()
+            self.driver = webdriver.Remote(
+                command_executor=command_executor,
+                desired_capabilities=capabilities
+            )
 
         self.username = username
         self.driver.get(self._URL)
