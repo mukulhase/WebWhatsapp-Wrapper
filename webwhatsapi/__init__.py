@@ -181,7 +181,7 @@ class WhatsAPIDriver(object):
         except KeyboardInterrupt:
             print("Exited")
 
-        def get_status(self):
+    def get_status(self):
         if self.driver is None:
             return self.status[ 'NotConnected' ]
         if self.driver.session_id is None:
