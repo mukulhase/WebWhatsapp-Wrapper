@@ -1,5 +1,2 @@
-*.egg-info/
-build/
-dist/
-*.log
-*.pyc
+**/.DS_Store
+**/*.pyc
