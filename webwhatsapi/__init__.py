@@ -19,6 +19,7 @@ from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 
 
 class WhatsAPIDriver(object):
@@ -50,6 +51,14 @@ class WhatsAPIDriver(object):
         'unreadBadge': 'icon-meta',
         'messageContent': "message-text",
         'messageList': "msg"
+    }
+
+    status = {
+        'Unknown' : 'Unknown',
+        'NoDriver' : 'NoDriver',
+        'NotConnected' : 'NotConnected',
+        'NotLoggedIn' : 'NotLoggedIn',
+        'LoggedIn' : 'LoggedIn'
     }
 
     driver = None
@@ -87,13 +96,14 @@ class WhatsAPIDriver(object):
         WebDriverWait(self.driver, 90).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
-            
+    
     def get_qrcode(self):
         """Get pairing QR code from browser"""
         if "Click to reload QR code" in self.driver.page_source:
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        fd, fn_png = tempfile.mkstemp(suffix=self.username, prefix='png')
+        fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        print( fn_png )
         qr.screenshot(fn_png)
         os.close(fd)
         return fn_png
@@ -170,3 +180,21 @@ class WhatsAPIDriver(object):
                 time.sleep(5)
         except KeyboardInterrupt:
             print("Exited")
+
+        def get_status(self):
+        if self.driver is None:
+            return self.status[ 'NotConnected' ]
+        if self.driver.session_id is None:
+            return self.status[ 'NotConnected' ]
+        try:
+            self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
+            return self.status[ 'LoggedIn' ]
+        except NoSuchElementException:
+            pass
+        try:
+            self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+            return self.status[ 'NotLoggedIn' ]
+        except NoSuchElementException:
+            pass
+        return self.status[ 'Unknown' ]
+
