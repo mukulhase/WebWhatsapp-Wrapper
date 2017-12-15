@@ -9,6 +9,7 @@ import datetime
 import time
 import os
 import sys
+import tempfile
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -92,8 +93,9 @@ class WhatsAPIDriver(object):
         if "Click to reload QR code" in self.driver.page_source:
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        fn_png = self.username + '.png'
+        fd, fn_png = tempfile.mkstemp(suffix=self.username, prefix='png')
         qr.screenshot(fn_png)
+        os.close(fd)
         return fn_png
 
     def screenshot(self,filename):
