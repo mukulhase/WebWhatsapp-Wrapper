@@ -85,11 +85,13 @@ class WhatsAPIDriver(object):
         if "Click to reload QR code" in self.driver.page_source:
             self.reloadQRCode()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        qr.screenshot(self.username + '.png')
+        fn_png = self.username + '.png'
+        qr.screenshot(fn_png)
         if wait_for_page:
             WebDriverWait(self.driver, 90).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
             )
+        return fn_png
 
     def screenshot(self,filename):
         self.driver.get_screenshot_as_file( filename )
