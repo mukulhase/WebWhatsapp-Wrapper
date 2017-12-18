@@ -22,6 +22,14 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
 
+class WhatsAPIDriverStatus(object):
+    Unknown = 'Unknown'
+    NoDriver = 'NoDriver'
+    NotConnected = 'NotConnected'
+    NotLoggedIn = 'NotLoggedIn'
+    LoggedIn = 'LoggedIn'
+
+
 class WhatsAPIDriver(object):
     _PROXY = None
 
@@ -51,14 +59,6 @@ class WhatsAPIDriver(object):
         'unreadBadge': 'icon-meta',
         'messageContent': "message-text",
         'messageList': "msg"
-    }
-
-    status = {
-        'Unknown' : 'Unknown',
-        'NoDriver' : 'NoDriver',
-        'NotConnected' : 'NotConnected',
-        'NotLoggedIn' : 'NotLoggedIn',
-        'LoggedIn' : 'LoggedIn'
     }
 
     driver = None
@@ -183,18 +183,18 @@ class WhatsAPIDriver(object):
 
     def get_status(self):
         if self.driver is None:
-            return self.status[ 'NotConnected' ]
+            return WhatsAPIDriverStatus.NotConnected
         if self.driver.session_id is None:
-            return self.status[ 'NotConnected' ]
+            return WhatsAPIDriverStatus.NotConnected
         try:
             self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
-            return self.status[ 'LoggedIn' ]
+            return WhatsAPIDriverStatus.LoggedIn
         except NoSuchElementException:
             pass
         try:
             self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-            return self.status[ 'NotLoggedIn' ]
+            return WhatsAPIDriverStatus.NotLoggedIn
         except NoSuchElementException:
             pass
-        return self.status[ 'Unknown' ]
+        return WhatsAPIDriverStatus.Unknown
 
