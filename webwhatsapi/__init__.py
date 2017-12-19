@@ -143,17 +143,16 @@ class WhatsAPIDriver(object):
         self.driver.get(self._URL)
         self.driver.implicitly_wait(10)
 
-    def firstrun(self):
-        """Saves QRCode and waits for it to go away"""
-        self.get_qrcode()
+    def wait_till_login(self):
+        """Waits for the QR to go away"""
         WebDriverWait(self.driver, 90).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
-    
-    def get_qrcode(self):
+
+    def get_qr(self):
         """Get pairing QR code from client"""
         if "Click to reload QR code" in self.driver.page_source:
-            self.reloadQRCode()
+            self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         self.logger.debug("QRcode image saved at %s" % fn_png)
@@ -219,7 +218,7 @@ class WhatsAPIDriver(object):
     def __str__(self):
         return self.__unicode__()
 
-    def reload_QR(self):
+    def reload_qr(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
 
     def create_callback(self, callback_function):

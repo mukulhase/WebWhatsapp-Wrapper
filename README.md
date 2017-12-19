@@ -10,16 +10,15 @@ This package is used to provide a python interface for interacting with WhatsAPP
 You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) separately, if using firefox, which is the default.
 
 #### From Source
-- Clone the Repo
+- Clone the repository
 - Use `pip install -r requirements.txt' to install the required packages.
 
 #### From PyPI
-- Star the repo :)
 - Install from pip
 
 `pip install webwhatsapi`
 
-## Usage:
+## Usage
 - Import library
 
 ` from webwhatsapi import WhatsAPIDriver `
@@ -28,11 +27,13 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 
 ` driver = WhatsAPIDriver(username="mkhase", browser="firefox", proxy=None) `
 
-- If the module is to be used as part of a script, and you need an image of the QR code, run the firstrun method. This saves the QR as username.png in, stored in the same directory after running command.
+- Use the get_qrcode() function to save the QR code in a file, for remote clients, so that you can access them easily. Scan the QR code either from the file, or directly from the client to log in.
 
-` driver.firstrun() `
+` driver.get_qr() `
 
-If not, you can skip the above step, and directly scan the QR with your phone from the opened Firefox Tab.
+In case the QR code expires, you can use the reload_qr function to reload it
+
+` driver.reload_qr() `
 
 - And now, the fun part, sending messages.
 
@@ -42,17 +43,16 @@ If not, you can skip the above step, and directly scan the QR with your phone fr
 
 ` driver.view_unread() `
 
-- Callback on receiving messages
+- Callback on receiving messages, used for bots. This feature will be added in the upcoming commit.
 
-For scripting, to set a function to be called whenever a message is received, use the create_callback method, and pass as the only argument, a function. The function must accept an argument, which is the received messages as a list.
-
-## Use Cases:
+## Use Cases
 - Auto Reply bot for whatsapp, “I am away from phone”
 - Can use whatsapp on phone and this api at the same time, (unlike the other whatsapp APIs, since this uses web.whatsapp)
 - No need for number registration
 - Hackathons, very easy to setup a whatsapp messaging service.
 - API for custom bot making
-- Whatsapp cloud( A service):-
+- Whatsapp cloud(A service):-
 -- User can access and send messages from anywhere without scanning qr anymore, just simple user login and password
 
-` Limitation:- Phone has to be ON and connected to the internet `
+## Limitation
+Phone has to be ON and connected to the internet `
