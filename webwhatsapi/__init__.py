@@ -64,12 +64,13 @@ class WhatsAPIDriver(object):
     driver = None
 
     # Profile points to the Firefox profile for firefox and Chrome cache for chrome
-    profile = None
+    # Do not alter this
+    _profile = None
 
     def save_firefox_profile(self):
         "Function to save the firefox profile to the permanant one"
-        self.logger.info("Saving profile from %s to %s" % (self.profile.path, self._profile_path))
-        os.system("cp -R " + self.profile.path + " "+ self._profile_path)
+        self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
+        os.system("cp -R " + self._profile.path + " "+ self._profile_path)
         cookie_file = os.path.join(self._profile_path, "cookies.pkl")
         if self.driver:
             pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
@@ -77,11 +78,11 @@ class WhatsAPIDriver(object):
     def set_proxy(self, proxy):
         self.logger.info("Setting proxy to %s" % proxy)
         proxy_address, proxy_port = proxy.split(":")
-        self.profile.set_preference("network.proxy.type", 1)
-        self.profile.set_preference("network.proxy.http", proxy_address)
-        self.profile.set_preference("network.proxy.http_port", int(proxy_port))
-        self.profile.set_preference("network.proxy.ssl", proxy_address)
-        self.profile.set_preference("network.proxy.ssl_port", int(proxy_port))
+        self._profile.set_preference("network.proxy.type", 1)
+        self._profile.set_preference("network.proxy.http", proxy_address)
+        self._profile.set_preference("network.proxy.http_port", int(proxy_port))
+        self._profile.set_preference("network.proxy.ssl", proxy_address)
+        self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor = None):
         "Initialises the webdriver"
@@ -110,23 +111,23 @@ class WhatsAPIDriver(object):
             self.logger.info("Checking for profile at %s" % self._profile_path)
             if not os.path.exists(self._profile_path):
                 self.logger.info("Profile not found. Creating profile")
-                self.profile = webdriver.FirefoxProfile()
+                self._profile = webdriver.FirefoxProfile()
                 self.save_firefox_profile()
             else:
                 self.logger.info("Profile found")
-                self.profile = webdriver.FirefoxProfile(self._profile_path)
+                self._profile = webdriver.FirefoxProfile(self._profile_path)
             if proxy is not None:
                 self.set_proxy(proxy)
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(self.profile)
+            self.driver = webdriver.Firefox(self._profile)
 
         elif self.client == "chrome":
-            self.profile = webdriver.chrome.options.Options()
+            self._profile = webdriver.chrome.options.Options()
             self._profile_path = os.path.join(self.config_dir, 'chrome_cache')
-            self.profile.add_argument("user-data-dir=%s" % self._profile_path)
+            self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
-            self.driver = webdriver.Chrome(chrome_options=self.profile)
+            self.driver = webdriver.Chrome(chrome_options=self._profile)
 
         elif client == 'remote':
             capabilities = DesiredCapabilities.FIREFOX.copy()
