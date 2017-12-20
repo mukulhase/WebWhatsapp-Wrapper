@@ -3,3 +3,6 @@ build/
 dist/
 *.log
 *.pyc
+firefox_cache/
+chrome_cache/
+*.png
