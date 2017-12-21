@@ -1,6 +1,4 @@
 from whatsapp_object import WhatsappObject, driver_needed
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
 
 class ChatMetaClass(type):
     """
@@ -15,7 +13,6 @@ class ChatMetaClass(type):
         :return: Instance of appropriate chat type
         :rtype: Chat | GroupChat
         """
-        pp.pprint(js_obj)
         assert js_obj["kind"] in ["chat", "group"], "Expected chat or group object, got {0}".format(js_obj["kind"])
 
         if js_obj["isGroup"]:
