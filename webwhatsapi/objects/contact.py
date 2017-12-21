@@ -19,7 +19,7 @@ class Contact(WhatsappObject):
 
     def __repr__(self):
         try:
-            safe_name = (self.name or self.push_name or self.formatted_name).decode("ascii")
+            safe_name = (self.name or self.push_name or self.formatted_name or "None").decode("ascii")
         except UnicodeEncodeError:
             safe_name = "(unicode name)"
 
