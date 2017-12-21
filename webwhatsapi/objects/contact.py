@@ -4,7 +4,6 @@ from whatsapp_object import WhatsappObject, driver_needed
 class Contact(WhatsappObject):
     def __init__(self, js_obj, driver=None):
         super(Contact, self).__init__(js_obj, driver)
-
         self.short_name = js_obj["shortName"]
         self.push_name = js_obj["pushname"]
         self.formatted_name = js_obj["formattedName"]
@@ -19,8 +18,10 @@ class Contact(WhatsappObject):
 
     def __repr__(self):
         try:
-            safe_name = (self.name or self.push_name or self.formatted_name or "None").decode("ascii")
+            safe_name = (self.name or self.push_name or self.formatted_name)
         except UnicodeEncodeError:
             safe_name = "(unicode name)"
+        except:
+            safe_name = "Unknown"
 
         return "<Contact {0} ({1})>".format(safe_name, self.id)

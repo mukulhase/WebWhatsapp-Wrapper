@@ -40,7 +40,7 @@ window.WAPI._serializeContactObj = (obj) => ({
     isVerified: obj.__x_isVerified,
     isWAContact: obj.__x_isWAContact,
     name: obj.__x_name,
-    profilePicThumb: obj.__x_profilePicThumb.imgFull,
+    profilePicThumb: obj.__x_profilePicThumb?obj.__x_profilePicThumb.__x_imgFull:"none",
     statusMute: obj.__x_statusMute,
     pushname: obj.__x_pushname
 });
@@ -66,7 +66,7 @@ window.WAPI._serializeMessageObj = (obj) => ({
  * @returns {Array|*} List of contacts
  */
 window.WAPI.getAllContacts = function (done) {
-    const contacts = Store.Contact.models.map((contact) => contact.all);
+    const contacts = Store.Contact.models.map((contact) => WAPI._serializeContactObj(contact));
 
     if (done !== undefined) {
         done(contacts);
@@ -99,7 +99,7 @@ window.WAPI.getContact = function(id, done) {
  * @returns {Array|*} List of chats
  */
 window.WAPI.getAllChats = function (done) {
-    const chats = Store.Chat.models.map((chat) => chat.all);
+    const chats = Store.Chat.models.map((chat) => WAPI.serializeChat(chat));
 
     if (done !== undefined) {
         done(chats);
