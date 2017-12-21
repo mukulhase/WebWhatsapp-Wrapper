@@ -14,31 +14,51 @@ window.WAPI = {
  * @param rawChat Chat object
  * @returns {{}}
  */
-window.WAPI.serializeChat = function (rawChat) {
-    let chat = {};
-
-    let name = null;
-    if (rawChat.__x_name !== undefined) {
-        name = rawChat.__x_name;
-    } else {
-        if (rawChat.__x_formattedName !== undefined) {
-            name = rawChat.__x_formattedName;
-        } else {
-            if (rawChat.__x_formattedTitle !== undefined) {
-                name = rawChat.__x_formattedTitle;
-            }
-        }
-    }
-    chat = rawChat.all;
-    chat.name = name;
-    chat.id = rawChat.__x_id;
-    chat.isGroup = rawChat.isGroup;
-    return chat;
-};
+window.WAPI.serializeChat = (obj) => ({
+        name: obj.__x_name || obj.__x_formattedName || obj.__x_formattedTitle || "None",
+        id: obj.__x_id,
+        isGroup: obj.isGroup,
+        kind: obj.kind,
+});
 
 window.WAPI._serializeRawObj = (obj) => {
     return obj.all;
-}
+};
+
+window.WAPI._serializeContactObj = (obj) => ({
+    formattedName: obj.__x_formattedName,
+    formattedShortName: obj.__x_formattedShortName,
+    shortName: obj.__x_formattedShortName,
+    formattedShortNameWithNonBreakingSpaces: obj.__x_formattedShortNameWithNonBreakingSpaces,
+    formattedUser: obj.__x_formattedUser,
+    id: obj.__x_id,
+    isHighLevelVerified: obj.__x_isHighLevelVerified,
+    isMe: obj.__x_isMe,
+    isMyContact: obj.__x_isMyContact,
+    isPSA: obj.__x_isPSA,
+    isUser: obj.__x_isUser,
+    isVerified: obj.__x_isVerified,
+    isWAContact: obj.__x_isWAContact,
+    name: obj.__x_name,
+    profilePicThumb: obj.__x_profilePicThumb.imgFull,
+    statusMute: obj.__x_statusMute,
+    pushname: obj.__x_pushname
+});
+
+window.WAPI._serializeMessageObj = (obj) => ({
+    sender: WAPI._serializeContactObj(obj["senderObj"]),
+    timestamp: obj["t"],
+    content: obj["body"],
+    isGroupMsg: obj.__x_isGroupMsg,
+    isLink: obj.__x_isLink,
+    isMMS: obj.__x_isMMS,
+    isMedia: obj.__x_isMedia,
+    isNotification: obj.__x_isNotification,
+    isPSA: obj.__x_isPSA,
+    type: obj.__x_type,
+    size: obj.__x_size,
+    mime: obj.__x_mimetype,
+});
 /**
  * Fetches all contact objects from store
  *
@@ -101,7 +121,7 @@ window.WAPI.getChat = function(id, done) {
     if (done !== undefined) {
         done(found.all);
     } else {
-        return found.all;
+        return found;
     }
 };
 
@@ -199,10 +219,8 @@ window.WAPI.getMe = function () {
 // FUNCTIONS UNDER THIS LINE ARE UNSTABLE
 
 window.WAPI.getAllMessagesInChat = function (id, includeMe) {
-    const chat = WAPI._getChat(id);
-
+    const chat = WAPI.getChat(id);
     let output = [];
-
     const messages = chat.msgs.models;
     for (const i in messages) {
         if (i === "remove") {
@@ -218,8 +236,7 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe) {
         }
 
         if (messageObj.id.fromMe === false || includeMe) {
-            let message = WAPI._serializeRawObj(messageObj);
-
+            let message = WAPI._serializeMessageObj(messageObj);
             output.push(message);
         }
     }
@@ -242,7 +259,6 @@ window.WAPI.sendMessage = function (id, message) {
         temp.id = Chats[chat].__x_id;
         if (temp.id === id) {
             Chats[chat].sendMessage(message);
-
             return true;
         }
     }
@@ -287,8 +303,7 @@ window.WAPI.getUnreadMessages = function () {
                     continue;
                 }
                 messageObj.__x_isNewMsg = false;
-                console.log(messageObj);
-                messageGroup.messages.push(WAPI._serializeRawObj(messageObj));
+                messageGroup.messages.push(WAPI._serializeMessageObj(messageObj));
             }
         }
 

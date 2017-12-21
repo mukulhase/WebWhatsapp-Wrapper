@@ -5,6 +5,7 @@ import pprint
 pprint = pprint.PrettyPrinter(indent=4).pprint
 
 from chat import Chat
+from contact import Contact
 
 
 class MessageMetaClass(type):
@@ -20,13 +21,13 @@ class MessageMetaClass(type):
         :return: Instance of appropriate message type
         :rtype: MediaMessage | Message | MMSMessage | VCardMessage
         """
-        if js_obj["__x_isMedia"]:
+        if js_obj["isMedia"]:
             return type.__call__(MediaMessage, js_obj)
 
-        if js_obj["__x_isMMS"]:
+        if js_obj["isMMS"]:
             return type.__call__(MMSMessage, js_obj)
 
-        if js_obj["__x_type"] in ["vcard", "multi_vcard"]:
+        if js_obj["type"] in ["vcard", "multi_vcard"]:
             return type.__call__(VCardMessage, js_obj)
 
         return type.__call__(Message, js_obj)
@@ -42,7 +43,7 @@ class Message(object):
         :param js_obj: Raw JS message obj
         :type js_obj: dict
         """
-        self.sender = Chat(js_obj["sender"])
+        self.sender = Contact(js_obj["sender"])
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.content = js_obj["content"]
         self.js_obj = js_obj
@@ -66,9 +67,9 @@ class MediaMessage(Message):
     def __init__(self, js_obj):
         super(MediaMessage, self).__init__(js_obj)
 
-        self.type = self.js_obj["__x_type"]
-        self.size = self.js_obj["__x_size"]
-        self.mime = self.js_obj["__x_mimetype"]
+        self.type = self.js_obj["type"]
+        self.size = self.js_obj["size"]
+        self.mime = self.js_obj["mime"]
 
     def save_media(self, path):
         extension = mimetypes.guess_extension(self.mime)
