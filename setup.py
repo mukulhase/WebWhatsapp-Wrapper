@@ -23,14 +23,14 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.0',
+    version='2.0.0',
 
     description='A python interface for Whatsapp Web',
     long_description=long_description,
 
     # The project's main homepage.
     url='https://github.com/mukulhase/WhatsAPI',
-    download_url='https://github.com/mukulhase/WhatsAPI/archive/0.1.2.tar.gz',  # I'll explain this in a second
+    download_url='https://github.com/mukulhase/WhatsAPI/archive/2.0.0.tar.gz',
 
     # Author details
     author='Mukul Hase',
@@ -67,8 +67,6 @@ setup(
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
-        'beautifulsoup4>=4.6.0',
-        'bs4>=0.0.1',
         'python-dateutil>=2.6.0',
         'selenium>=3.4.3',
         'six>=1.10.0',
