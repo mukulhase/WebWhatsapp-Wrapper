@@ -1,3 +1,5 @@
+# Not recent. Will be updated after changes
+
 import time
 from webwhatsapi import WhatsAPIDriver
 
