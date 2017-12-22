@@ -133,7 +133,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 class WhatsAPIDriver(object):
-    def __init__(self, browser="firefox", username="API"):
+    def __init__(self, browser="firefox", username="API", loadstyles=False):
         self.username = username
         self.browser_type = browser
 
@@ -142,15 +142,15 @@ class WhatsAPIDriver(object):
 
             if not os.path.exists(self.path):
                 os.makedirs(self.path)
-
             self._firefox_profile = webdriver.FirefoxProfile(self.path)
-            ## Disable CSS
-            self._firefox_profile.set_preference('permissions.default.stylesheet', 2)
-            ## Disable images
-            self._firefox_profile.set_preference('permissions.default.image', 2)
-            ## Disable Flash
-            self._firefox_profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                          'false')
+            if loadstyles == False:
+                ## Disable CSS
+                self._firefox_profile.set_preference('permissions.default.stylesheet', 2)
+                ## Disable images
+                self._firefox_profile.set_preference('permissions.default.image', 2)
+                ## Disable Flash
+                self._firefox_profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
+                                              'false')
             self._driver = webdriver.Firefox(self._firefox_profile)
 
         if self.browser_type.lower() == "chrome":
