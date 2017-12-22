@@ -94,7 +94,7 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor = None):
+    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False):
         "Initialises the webdriver"
 
         # Get the name of the config folder
@@ -126,12 +126,14 @@ class WhatsAPIDriver(object):
             else:
                 self.logger.info("Profile found")
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
-            self._profile.set_preference('permissions.default.stylesheet', 2)
-            ## Disable images
-            self._profile.set_preference('permissions.default.image', 2)
-            ## Disable Flash
-            self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                          'false')
+            if loadstyles == False:
+                # Disable CSS
+                self._profile.set_preference('permissions.default.stylesheet', 2)
+                ## Disable images
+                self._profile.set_preference('permissions.default.image', 2)
+                ## Disable Flash
+                self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
+                                              'false')
             if proxy is not None:
                 self.set_proxy(proxy)
             self.logger.info("Starting webdriver")

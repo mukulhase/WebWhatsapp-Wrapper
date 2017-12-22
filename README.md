@@ -25,7 +25,7 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 
 - Instantiate driver and set username
 
-` driver = WhatsAPIDriver(username="mkhase", browser="firefox", proxy=None) `
+` driver = WhatsAPIDriver(username="mkhase", client="firefox", proxy=None) `
 
 - Use the get_qrcode() function to save the QR code in a file, for remote clients, so that you can access them easily. Scan the QR code either from the file, or directly from the client to log in.
 
@@ -55,4 +55,4 @@ In case the QR code expires, you can use the reload_qr function to reload it
 -- User can access and send messages from anywhere without scanning qr anymore, just simple user login and password
 
 ## Limitation
-Phone has to be ON and connected to the internet `
+Phone has to be ON and connected to the internet
