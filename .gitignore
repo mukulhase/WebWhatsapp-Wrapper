@@ -6,3 +6,5 @@ dist/
 firefox_cache/
 chrome_cache/
 *.png
+**/.DS_Store
+**/*.pyc
