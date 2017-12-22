@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 from consts import Selectors, URL
-from objects.chat import Chat
+from objects.chat import Chat, GroupChat, UserChat
 # def get_groups(self):
 #     try:
 #         script_path = os.path.dirname(os.path.abspath(__file__))

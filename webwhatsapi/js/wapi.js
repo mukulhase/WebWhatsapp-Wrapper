@@ -185,7 +185,6 @@ window.WAPI._getGroupParticipants = async function(id) {
  */
 window.WAPI.getGroupParticipantIDs = async function(id, done) {
     const participants = await WAPI._getGroupParticipants(id);
-
     const ids = participants.map((participant) => participant.id);
 
     if (done !== undefined) {
