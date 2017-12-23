@@ -46,30 +46,17 @@ class Message(object):
         self.sender = Contact(js_obj["sender"])
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.content = js_obj["content"]
+        try:
+            self.safe_content = self.content.decode("ascii")
+        except UnicodeEncodeError:
+            self.safe_content = "(unicode content)"
         self.js_obj = js_obj
 
     def __repr__(self):
-        try:
-            safe_content = self.content.decode("ascii")
-        except UnicodeEncodeError:
-            safe_content = "(unicode content)"
-
-        truncation_length = 20
-        safe_content = safe_content[:truncation_length] + (safe_content[truncation_length:] and "...")
-
         return "<Message - from {sender} at {timestamp}: {content}>".format(
             sender=self.sender.name,
             timestamp=self.timestamp,
-            content=safe_content)
-
-    def __str__(self):
-        try:
-            safe_content = self.content.decode("ascii")
-        except UnicodeEncodeError:
-            safe_content = "(unicode content)"
-        truncation_length = 20
-        safe_content = safe_content[:truncation_length] + (safe_content[truncation_length:] and "...")
-        return safe_content
+            content=self.safe_content)
 
 
 class MediaMessage(Message):

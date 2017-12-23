@@ -185,54 +185,6 @@ class WhatsAPIDriver(object):
     def screenshot(self, filename):
         self.driver.get_screenshot_as_file(filename)
 
-    # def view_unread(self):
-    #     return self.view_messages(unread_only=True)
-    #
-    # def view_messages(self, unread_only=False):
-    #     try:
-    #         script_path = os.path.dirname(os.path.abspath(__file__))
-    #     except NameError:
-    #         script_path = os.getcwd()
-    #     script = open(os.path.join(script_path, "js_scripts/get_messages.js"), "r").read()
-    #     Store = self.driver.execute_script(script, unread_only)
-    #     return Store
-    #
-    # def send_to_whatsapp_id(self, id, message):
-    #     try:
-    #         script_path = os.path.dirname(os.path.abspath(__file__))
-    #     except NameError:
-    #         script_path = os.getcwd()
-    #     script = open(os.path.join(script_path, "js_scripts/send_message_to_whatsapp_id.js"), "r").read()
-    #     success = self.driver.execute_script(script, id, message)
-    #     return success
-    #
-    # def get_id_from_number(self, name):
-    #     try:
-    #         script_path = os.path.dirname(os.path.abspath(__file__))
-    #     except NameError:
-    #         script_path = os.getcwd()
-    #     script = open(os.path.join(script_path, "js_scripts/id_from_name.js"), "r").read()
-    #     id = self.driver.execute_script(script, name)
-    #     return id
-    #
-    # def send_to_phone_number(self, pno, message):
-    #     try:
-    #         script_path = os.path.dirname(os.path.abspath(__file__))
-    #     except NameError:
-    #         script_path = os.getcwd()
-    #     script = open(os.path.join(script_path, "js_scripts/send_message_to_phone_number.js"), "r").read()
-    #     success = self.driver.execute_script(script, pno, message)
-    #     return success
-    #
-    # def get_groups(self):
-    #     try:
-    #         script_path = os.path.dirname(os.path.abspath(__file__))
-    #     except NameError:
-    #         script_path = os.getcwd()
-    #     script = open(os.path.join(script_path, "js_scripts/get_groups.js"), "r").read()
-    #     success = self.driver.execute_script(script)
-    #     return success
-
     def get_contacts(self):
         """
         Fetches list of all contacts
@@ -321,8 +273,6 @@ class WhatsAPIDriver(object):
         """
         chats = filter(lambda chat: not chat.is_group, self.get_all_chats())
         return next((contact for contact in chats if contact.id.startswith(number)), None)
-
-
 
     def reload_qr(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
