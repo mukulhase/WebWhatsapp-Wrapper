@@ -18,7 +18,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 
@@ -164,7 +164,7 @@ class WhatsAPIDriver(object):
         self.driver.implicitly_wait(10)
         self.driver.get(self._URL)
 
-    def wait_till_login(self):
+    def wait_for_login(self):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, 90).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
@@ -271,6 +271,9 @@ class WhatsAPIDriver(object):
             messages = [Message(message) for message in raw_message_group["messages"]]
             unread_messages.append(MessageGroup(chat, messages))
 
+        for message in unread_messages:
+            message.chat.driver = self
+
         return unread_messages
 
     def get_all_messages_in_chat(self, chat, include_me=False):
@@ -279,6 +282,9 @@ class WhatsAPIDriver(object):
         messages = []
         for message in message_objs:
             messages.append(Message(message))
+
+        for message in unread_messages:
+            message.chat.driver = self
 
         return messages
 

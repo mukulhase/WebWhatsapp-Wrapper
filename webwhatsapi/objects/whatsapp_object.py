@@ -8,7 +8,7 @@ def driver_needed(func):
     :return: Wrapped method
     """
     def wrapped(self, *args):
-        if not self._driver:
+        if not self.driver:
             raise AttributeError("No driver passed to object")
 
         return func(self, *args)
@@ -39,7 +39,7 @@ class WhatsappObject(object):
         self.name = js_obj["name"]
 
         self._js_obj = js_obj
-        self._driver = driver
+        self.driver = driver
 
     def __hash__(self):
         return hash(self.id)

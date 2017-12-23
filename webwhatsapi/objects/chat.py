@@ -32,7 +32,7 @@ class Chat(WhatsappObject):
 
     @driver_needed
     def send_message(self, message):
-        return self._driver.wapi_functions.sendMessage(self.id, message)
+        return self.driver.wapi_functions.sendMessage(self.id, message)
 
 
 class UserChat(Chat):
@@ -58,7 +58,7 @@ class GroupChat(Chat):
 
     @driver_needed
     def get_participants_ids(self):
-        return self._driver.wapi_functions.getGroupParticipantIDs(self.id)
+        return self.driver.wapi_functions.getGroupParticipantIDs(self.id)
 
     @driver_needed
     def get_participants(self):
@@ -66,17 +66,17 @@ class GroupChat(Chat):
 
         participants = []
         for participant_id in participant_ids:
-            participants.append(self._driver.get_contact_from_id(participant_id))
+            participants.append(self.driver.get_contact_from_id(participant_id))
 
         return participants
 
     @driver_needed
     def get_admins(self):
-        admin_ids = self._driver.wapi_functions.getGroupAdmins(self.id)
+        admin_ids = self.driver.wapi_functions.getGroupAdmins(self.id)
 
         admins = []
         for admin_id in admin_ids:
-            admins.append(self._driver.get_contact_from_id(admin_id))
+            admins.append(self.driver.get_contact_from_id(admin_id))
 
         return admins
 

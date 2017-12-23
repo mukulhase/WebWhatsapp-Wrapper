@@ -62,6 +62,15 @@ class Message(object):
             timestamp=self.timestamp,
             content=safe_content)
 
+    def __str__(self):
+        try:
+            safe_content = self.content.decode("ascii")
+        except UnicodeEncodeError:
+            safe_content = "(unicode content)"
+        truncation_length = 20
+        safe_content = safe_content[:truncation_length] + (safe_content[truncation_length:] and "...")
+        return safe_content
+
 
 class MediaMessage(Message):
     def __init__(self, js_obj):

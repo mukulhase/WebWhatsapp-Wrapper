@@ -10,11 +10,11 @@ class Contact(WhatsappObject):
 
     @driver_needed
     def get_common_groups(self):
-        return self._driver.wapi_functions.getCommonGroups(self.id)
+        return self.driver.wapi_functions.getCommonGroups(self.id)
 
     @driver_needed
     def get_chat(self):
-        return self._driver.get_chat_from_id(self.id)
+        return self.driver.get_chat_from_id(self.id)
 
     def __repr__(self):
         try:
