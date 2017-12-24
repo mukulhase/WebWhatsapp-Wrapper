@@ -48,11 +48,12 @@ class Message(object):
         """
         self.sender = False if js_obj["sender"] == False else Contact(js_obj["sender"])
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
-        self.content = js_obj["content"]
-        try:
-            self.safe_content = self.content.decode("ascii")
-        except UnicodeEncodeError:
-            self.safe_content = "(unicode content)"
+        if js_obj["content"]:
+            self.content = js_obj["content"]
+            try:
+                self.safe_content = self.content.decode("ascii")
+            except UnicodeEncodeError:
+                self.safe_content = "(unicode content)"
         self.js_obj = js_obj
 
     def __repr__(self):
@@ -141,13 +142,12 @@ class NotificationMessage(Message):
                 'leave': "Left the group"
             }
         }
-        print(self.type, self.subtype)
-        sender = "" if not self.sender else ("from" + str(self.sender.name))
-        return "<NotificationMessage - {type} {recip} from {sender} at {timestamp}>".format(
+        sender = "" if not self.sender else ("from " + str(self.sender.name))
+        return "<NotificationMessage - {type} {recip} {sender} at {timestamp}>".format(
             type=readable[self.type][self.subtype],
             sender= sender,
             timestamp=self.timestamp,
-            recip=", ".join(self.recipients),
+            recip="" if not self.recipients else "".join(self.recipients),
         )
 
 
