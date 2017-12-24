@@ -1,5 +1,5 @@
 
-# [WIP] WhatsAPI (Based on web.whatsapp)
+# WebWhatsAPI (Based on web.whatsapp.com)
 
 ## What is it?
 This package is used to provide a python interface for interacting with WhatsAPP Web to send and receive Whatsapp messages.
@@ -65,7 +65,9 @@ There are issues with asynchronous calls in Chrome. Primary support of this api 
 ### Known issues with chrome:
  - Group Metadata
  
- 
+### For more queries, contact: mukulhase@gmail.com
+
+
 ## Use Cases
 - Auto Reply bot for whatsapp, “I am away from phone”
 - Can use whatsapp on phone and this api at the same time, (unlike the other whatsapp APIs, since this uses web.whatsapp)
