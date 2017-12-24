@@ -239,7 +239,7 @@ class WhatsAPIDriver(object):
         for message in message_objs:
             messages.append(Message(message))
 
-        for message in unread_messages:
+        for message in messages:
             message.chat.driver = self
 
         return messages
