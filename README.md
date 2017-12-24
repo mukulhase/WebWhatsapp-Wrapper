@@ -29,6 +29,7 @@ Possible arguments for constructor:
     - proxy: The proxy server to configure selenium to. Format is "<proxy>:<portnumber>"
     - command executor: Passed directly as an argument to Remote Selenium. Ignore if not using it.
     - loadstyle: Default is true. If true, doesn't load the styling in the browser.
+	- profile: Pass the full path to the profile to load it. Profile folder will be end in ".default". For persistent login, open a normal firefox tab, log in to whatsapp, then pass the profile as an argument.
 
 
 3. Use the get_qrcode() function to save the QR code in a file, for remote clients, so that you can access them easily. Scan the QR code either from the file, or directly from the client to log in.

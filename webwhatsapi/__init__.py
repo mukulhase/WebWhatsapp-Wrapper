@@ -94,7 +94,7 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False):
+    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False, profile=None):
         "Initialises the webdriver"
 
         # Get the name of the config folder
@@ -114,18 +114,22 @@ class WhatsAPIDriver(object):
         log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
         self.logger.addHandler(log_file_handler)
 
-        self.client = client.lower()
-        if self.client == "firefox":
-            # TODO: Finish persistant sessions. As of now, persistant sessions do not work for Firefox. You will need to scan each time.
-            self._profile_path = os.path.join(self.config_dir, "profile")
+        if profile is not None:
+            self._profile_path = profile
             self.logger.info("Checking for profile at %s" % self._profile_path)
             if not os.path.exists(self._profile_path):
-                self.logger.info("Profile not found. Creating profile")
-                self._profile = webdriver.FirefoxProfile()
-                self.save_firefox_profile()
-            else:
-                self.logger.info("Profile found")
+                print("Could not find profile at %s" % profile)
+                self.logger.error("Could not find profile at %s" % profile)
+                exit(-1)
+        else:
+            self._profile_path = None
+
+        self.client = client.lower()
+        if self.client == "firefox":
+            if self._profile_path is not None:
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
+            else:
+                self._profile = webdriver.FirefoxProfile()
             if loadstyles == False:
                 # Disable CSS
                 self._profile.set_preference('permissions.default.stylesheet', 2)
@@ -141,8 +145,8 @@ class WhatsAPIDriver(object):
 
         elif self.client == "chrome":
             self._profile = webdriver.chrome.options.Options()
-            self._profile_path = os.path.join(self.config_dir, 'chrome_cache')
-            self._profile.add_argument("user-data-dir=%s" % self._profile_path)
+            if self._profile_path is not None:
+                self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
             self.driver = webdriver.Chrome(chrome_options=self._profile)
