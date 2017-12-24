@@ -1,8 +1,10 @@
 from whatsapp_object import WhatsappObject, driver_needed
 
+
+##TODO: Fix relative imports for Python3
 class ChatMetaClass(type):
     """
-    Message type factory
+    Chat type factory
     """
 
     def __call__(cls, js_obj, driver=None):
@@ -11,16 +13,17 @@ class ChatMetaClass(type):
 
         :param js_obj: Raw message JS
         :return: Instance of appropriate chat type
-        :rtype: Chat | GroupChat
+        :rtype: Chat | UserChat | GroupChat | BroadcastChat
         """
-        assert js_obj["kind"] in ["chat", "group", "broadcast"], "Expected chat or group object, got {0}".format(js_obj["kind"])
+        assert js_obj["kind"] in ["chat", "group", "broadcast"], "Expected chat or group object, got {0}".format(
+            js_obj["kind"])
 
         if js_obj["isGroup"]:
             return type.__call__(GroupChat, js_obj, driver)
-        #
-        # if js_obj["isBroadcast"]:
-        #     return type.__call__(GroupChat, js_obj, driver)
-        #
+
+        if js_obj["kind"] == "broadcast":
+            return type.__call__(BroadcastChat, js_obj, driver)
+
         return type.__call__(UserChat, js_obj, driver)
 
 
@@ -33,6 +36,8 @@ class Chat(WhatsappObject):
     @driver_needed
     def send_message(self, message):
         return self._driver.wapi_functions.sendMessage(self.id, message)
+
+        ## TODO: Get messages directly
 
 
 class UserChat(Chat):
@@ -48,6 +53,23 @@ class UserChat(Chat):
             safe_name = "(none)"
 
         return "<User chat - {name}: {id}>".format(
+            name=safe_name,
+            id=self.id)
+
+
+class BroadcastChat(Chat):
+    def __init__(self, js_obj, driver=None):
+        super(BroadcastChat, self).__init__(js_obj, driver)
+
+    def __repr__(self):
+        try:
+            safe_name = self.name.decode("ascii")
+        except UnicodeEncodeError:
+            safe_name = "(unicode name)"
+        except AttributeError:
+            safe_name = "(none)"
+
+        return "<Broadcast chat - {name}: {id}>".format(
             name=safe_name,
             id=self.id)
 

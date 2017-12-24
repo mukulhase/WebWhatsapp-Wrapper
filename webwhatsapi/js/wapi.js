@@ -45,6 +45,21 @@ window.WAPI._serializeContactObj = (obj) => ({
     pushname: obj.__x_pushname
 });
 
+window.WAPI._serializeNotificationObj = (obj) => ({
+    sender: obj["senderObj"]?WAPI._serializeContactObj(obj["senderObj"]):false,
+    isGroupMsg: obj.__x_isGroupMsg,
+    content: obj["body"],
+    isLink: obj.__x_isLink,
+    isMMS: obj.__x_isMMS,
+    isMedia: obj.__x_isMedia,
+    isNotification: obj.__x_isNotification,
+    timestamp: obj["t"],
+    type: obj.__x_type,
+    subtype: obj.__x_subtype,
+    recipients: obj.__x_recipients,
+});
+
+//TODO: Add chat ref
 window.WAPI._serializeMessageObj = (obj) => ({
     sender: WAPI._serializeContactObj(obj["senderObj"]),
     timestamp: obj["t"],
@@ -59,6 +74,7 @@ window.WAPI._serializeMessageObj = (obj) => ({
     size: obj.__x_size,
     mime: obj.__x_mimetype,
 });
+
 /**
  * Fetches all contact objects from store
  *
@@ -214,10 +230,8 @@ window.WAPI.getMe = function () {
     return rawMe.all;
 };
 
-
-// FUNCTIONS UNDER THIS LINE ARE UNSTABLE
-
-window.WAPI.getAllMessagesInChat = function (id, includeMe) {
+//TODO: Combine code AND Remove lastread
+window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications) {
     const chat = WAPI.getChat(id);
     let output = [];
     const messages = chat.msgs.models;
@@ -225,10 +239,12 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe) {
         if (i === "remove") {
             continue;
         }
-
         const messageObj = messages[i];
-
         if (messageObj.__x_isNotification) {
+            if(includeNotifications){
+                let message = WAPI._serializeNotificationObj(messageObj);
+                output.push(message);
+            }
             // System message
             // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
             continue;
@@ -310,15 +326,15 @@ window.WAPI.getUnreadMessages = function () {
             output.push(messageGroup);
         }
     }
-    console.log("OUTPUT-----------------");
-    console.log(output);
     return output;
-};
-
-window.WAPI.getCommonGroups = function(id) {
-    // return
 };
 
 window.WAPI.getGroupOwnerID = async function(id) {
     return WAPI.getGroupMetadata(id).owner.id;
+};
+
+// FUNCTIONS UNDER THIS LINE ARE UNSTABLE
+
+window.WAPI.getCommonGroups = function(id) {
+    // return
 };

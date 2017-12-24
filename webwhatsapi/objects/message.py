@@ -24,6 +24,9 @@ class MessageMetaClass(type):
         if js_obj["isMedia"]:
             return type.__call__(MediaMessage, js_obj)
 
+        if js_obj["isNotification"]:
+            return type.__call__(NotificationMessage, js_obj)
+
         if js_obj["isMMS"]:
             return type.__call__(MMSMessage, js_obj)
 
@@ -43,7 +46,7 @@ class Message(object):
         :param js_obj: Raw JS message obj
         :type js_obj: dict
         """
-        self.sender = Contact(js_obj["sender"])
+        self.sender = False if js_obj["sender"] == False else Contact(js_obj["sender"])
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.content = js_obj["content"]
         self.js_obj = js_obj
@@ -107,8 +110,8 @@ class VCardMessage(Message):
     def __init__(self, js_obj):
         super(VCardMessage, self).__init__(js_obj)
 
-        self.type = self["__x_type"]
-        self.contacts = self["__x_subtype"].encode("ascii", "ignore")
+        self.type = js_obj["type"]
+        self.contacts = js_obj["subtype"].encode("ascii", "ignore")
 
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
@@ -116,6 +119,39 @@ class VCardMessage(Message):
             sender=self.sender.name,
             timestamp=self.timestamp,
             contacts=self.contacts
+        )
+
+
+class NotificationMessage(Message):
+    def __init__(self, js_obj):
+        super(NotificationMessage, self).__init__(js_obj)
+
+        self.type = js_obj["type"]
+        self.subtype = js_obj["subtype"].encode("ascii", "ignore")
+        self.recipients = js_obj["recipients"]
+
+    def __repr__(self):
+        readable = {
+            'call_log':{
+                'miss': "Missed Call",
+            },
+            'e2e_notification':{
+                'encrypt': "Messages now Encrypted"
+            },
+            'gp2':{
+                'create': "Created group",
+                'add': "Added to group",
+                'remove': "Removed from group",
+                'leave': "Left the group"
+            }
+        }
+        print(self.type, self.subtype)
+        sender = "" if not self.sender else ("from" + str(self.sender.name))
+        return "<NotificationMessage - {type} {recip} from {sender} at {timestamp}>".format(
+            type=readable[self.type][self.subtype],
+            sender= sender,
+            timestamp=self.timestamp,
+            recip=", ".join(self.recipients),
         )
 
 
