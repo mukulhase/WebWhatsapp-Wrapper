@@ -272,8 +272,8 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
-        chats = filter(lambda chat: not chat.is_group, self.get_all_chats())
-        return next((contact for contact in chats if contact.id.startswith(number)), None)
+        chats = filter(lambda chat:(type(chat) is UserChat), self.get_all_chats())
+        return next((contact for contact in chats if (number in contact.id)), None)
 
     def reload_qr(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
