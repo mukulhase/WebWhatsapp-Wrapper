@@ -15,10 +15,10 @@ window.WAPI = {
  * @returns {{}}
  */
 window.WAPI.serializeChat = (obj) => ({
-        name: obj.__x_name || obj.__x_formattedName || obj.__x_formattedTitle || "None",
-        id: obj.__x_id,
-        isGroup: obj.isGroup,
-        kind: obj.kind,
+    name: obj.__x_name || obj.__x_formattedName || obj.__x_formattedTitle || "None",
+    id: obj.__x_id,
+    isGroup: obj.isGroup,
+    kind: obj.kind,
 });
 
 window.WAPI._serializeRawObj = (obj) => {
@@ -40,13 +40,13 @@ window.WAPI._serializeContactObj = (obj) => ({
     isVerified: obj.__x_isVerified,
     isWAContact: obj.__x_isWAContact,
     name: obj.__x_name,
-    profilePicThumb: obj.__x_profilePicThumb?obj.__x_profilePicThumb.__x_imgFull:"none",
+    profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
     statusMute: obj.__x_statusMute,
     pushname: obj.__x_pushname
 });
 
 window.WAPI._serializeNotificationObj = (obj) => ({
-    sender: obj["senderObj"]?WAPI._serializeContactObj(obj["senderObj"]):false,
+    sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
     isGroupMsg: obj.__x_isGroupMsg,
     content: obj["body"],
     isLink: obj.__x_isLink,
@@ -98,7 +98,7 @@ window.WAPI.getAllContacts = function (done) {
  * @param done Optional callback function for async execution
  * @returns {T|*} Contact object
  */
-window.WAPI.getContact = function(id, done) {
+window.WAPI.getContact = function (id, done) {
     const found = Store.Contact.models.find((contact) => contact.id === id);
 
     if (done !== undefined) {
@@ -131,7 +131,7 @@ window.WAPI.getAllChats = function (done) {
  * @param done Optional callback function for async execution
  * @returns {T|*} Chat object
  */
-window.WAPI.getChat = function(id, done) {
+window.WAPI.getChat = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
 
     if (done !== undefined) {
@@ -147,7 +147,7 @@ window.WAPI.getChat = function(id, done) {
  * @param done Optional callback function for async execution
  * @returns {Array|*} List of group metadata
  */
-window.WAPI.getAllGroupMetadata = function(done) {
+window.WAPI.getAllGroupMetadata = function (done) {
     const groupData = Store.GroupMetadata.models.map((groupData) => groupData.all);
 
     if (done !== undefined) {
@@ -164,7 +164,7 @@ window.WAPI.getAllGroupMetadata = function(done) {
  * @param done Optional callback function for async execution
  * @returns {T|*} Group metadata object
  */
-window.WAPI.getGroupMetadata = async function(id, done) {
+window.WAPI.getGroupMetadata = async function (id, done) {
     let found = Store.GroupMetadata.models.find((groupData) => groupData.id === id);
 
     if (found !== undefined) {
@@ -187,7 +187,7 @@ window.WAPI.getGroupMetadata = async function(id, done) {
  * @returns {Promise.<*>} Yields group metadata
  * @private
  */
-window.WAPI._getGroupParticipants = async function(id) {
+window.WAPI._getGroupParticipants = async function (id) {
     const metadata = await WAPI.getGroupMetadata(id);
     return metadata.participants;
 };
@@ -199,7 +199,7 @@ window.WAPI._getGroupParticipants = async function(id) {
  * @param done Optional callback function for async execution
  * @returns {Promise.<Array|*>} Yields list of IDs
  */
-window.WAPI.getGroupParticipantIDs = async function(id, done) {
+window.WAPI.getGroupParticipantIDs = async function (id, done) {
     const participants = await WAPI._getGroupParticipants(id);
     const ids = participants.map((participant) => participant.id);
 
@@ -210,7 +210,7 @@ window.WAPI.getGroupParticipantIDs = async function(id, done) {
     }
 };
 
-window.WAPI.getGroupAdmins = async function(id) {
+window.WAPI.getGroupAdmins = async function (id) {
     const participants = await WAPI._getGroupParticipants(id);
     return participants
         .filter((participant) => participant.isAdmin)
@@ -230,12 +230,12 @@ window.WAPI.getMe = function () {
     return rawMe.all;
 };
 
-window.WAPI.processMessageObj = function (messageObj, includeNotifications, includeMe){
+window.WAPI.processMessageObj = function (messageObj, includeNotifications, includeMe) {
     if (messageObj.__x_isNotification && includeNotifications) {
         return WAPI._serializeNotificationObj(messageObj);
         // System message
         // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
-    }else if (messageObj.id.fromMe === false || includeMe) {
+    } else if (messageObj.id.fromMe === false || includeMe) {
         return WAPI._serializeMessageObj(messageObj);
     }
     return none;
@@ -319,12 +319,12 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications) {
     return output;
 };
 
-window.WAPI.getGroupOwnerID = async function(id) {
+window.WAPI.getGroupOwnerID = async function (id) {
     return WAPI.getGroupMetadata(id).owner.id;
 };
 
 // FUNCTIONS UNDER THIS LINE ARE UNSTABLE
 
-window.WAPI.getCommonGroups = function(id) {
+window.WAPI.getCommonGroups = function (id) {
     // return
 };
