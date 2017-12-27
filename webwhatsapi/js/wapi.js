@@ -230,7 +230,7 @@ window.WAPI.getMe = function () {
     return rawMe.all;
 };
 
-window.WAPI.processMessageObj = function (messageObj, includeNotifications, includeMe) {
+window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifications) {
     if (messageObj.__x_isNotification && includeNotifications) {
         return WAPI._serializeNotificationObj(messageObj);
         // System message
@@ -238,7 +238,7 @@ window.WAPI.processMessageObj = function (messageObj, includeNotifications, incl
     } else if (messageObj.id.fromMe === false || includeMe) {
         return WAPI._serializeMessageObj(messageObj);
     }
-    return none;
+    return;
 };
 
 window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications) {
@@ -250,7 +250,8 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
             continue;
         }
         const messageObj = messages[i];
-        output.push(WAPI.processMessageObj(messageObj, includeNotifications, includeMe))
+        let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications)
+        if (message)output.push(message);
     }
     return output;
 };
@@ -308,7 +309,10 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications) {
                 break;
             } else {
                 messageObj.__x_isNewMsg = false;
-                messageGroup.messages.push(WAPI.processMessageObj(messageObj, includeNotifications, includeMe))
+                let message = WAPI.processMessageObj(messageObj, includeMe,  includeNotifications);
+                if(message){
+                    messageGroup.messages.push(message);
+                }
             }
         }
 

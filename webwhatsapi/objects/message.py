@@ -57,7 +57,7 @@ class Message(object):
 
     def __repr__(self):
         return "<Message - from {sender} at {timestamp}: {content}>".format(
-            sender=safe_str(self.sender.name),
+            sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
             content=self.safe_content)
 
@@ -80,7 +80,7 @@ class MediaMessage(Message):
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
-            sender=safe_str(self.sender.name),
+            sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp
         )
 
@@ -97,7 +97,7 @@ class MMSMessage(MediaMessage):
     def __repr__(self):
         return "<MMSMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
-            sender=safe_str(self.sender.name),
+            sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp
         )
 
@@ -112,7 +112,7 @@ class VCardMessage(Message):
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
             type=self.type,
-            sender=safe_str(self.sender.name),
+            sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
             contacts=self.contacts
         )
@@ -141,7 +141,7 @@ class NotificationMessage(Message):
                 'leave': "Left the group"
             }
         }
-        sender = "" if not self.sender else ("from " + str(safe_str(self.sender.name)))
+        sender = "" if not self.sender else ("from " + str(safe_str(self.sender.get_safe_name())))
         return "<NotificationMessage - {type} {recip} {sender} at {timestamp}>".format(
             type=readable[self.type][self.subtype],
             sender = sender,
