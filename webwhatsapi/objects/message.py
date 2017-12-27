@@ -2,6 +2,8 @@ from datetime import datetime
 import mimetypes
 import os
 import pprint
+from webwhatsapi.helper import safe_str
+
 pprint = pprint.PrettyPrinter(indent=4).pprint
 
 from chat import Chat
@@ -50,15 +52,12 @@ class Message(object):
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         if js_obj["content"]:
             self.content = js_obj["content"]
-            try:
-                self.safe_content = self.content.decode("ascii")
-            except UnicodeEncodeError:
-                self.safe_content = "(unicode content)"
+            self.safe_content = safe_str(self.content)
         self.js_obj = js_obj
 
     def __repr__(self):
         return "<Message - from {sender} at {timestamp}: {content}>".format(
-            sender=self.sender.name,
+            sender=safe_str(self.sender.name),
             timestamp=self.timestamp,
             content=self.safe_content)
 
@@ -81,7 +80,7 @@ class MediaMessage(Message):
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
-            sender=self.sender.name,
+            sender=safe_str(self.sender.name),
             timestamp=self.timestamp
         )
 
@@ -98,7 +97,7 @@ class MMSMessage(MediaMessage):
     def __repr__(self):
         return "<MMSMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
-            sender=self.sender.name,
+            sender=safe_str(self.sender.name),
             timestamp=self.timestamp
         )
 
@@ -113,7 +112,7 @@ class VCardMessage(Message):
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
             type=self.type,
-            sender=self.sender.name,
+            sender=safe_str(self.sender.name),
             timestamp=self.timestamp,
             contacts=self.contacts
         )
@@ -142,12 +141,12 @@ class NotificationMessage(Message):
                 'leave': "Left the group"
             }
         }
-        sender = "" if not self.sender else ("from " + str(self.sender.name))
+        sender = "" if not self.sender else ("from " + str(safe_str(self.sender.name)))
         return "<NotificationMessage - {type} {recip} {sender} at {timestamp}>".format(
             type=readable[self.type][self.subtype],
-            sender= sender,
+            sender = sender,
             timestamp=self.timestamp,
-            recip="" if not self.recipients else "".join(self.recipients),
+            recip="" if not self.recipients else "".join([safe_str(x) for x in self.recipients]),
         )
 
 
@@ -165,11 +164,7 @@ class MessageGroup(object):
         self.messages = messages
 
     def __repr__(self):
-        try:
-            safe_chat_name = self.chat.name.decode("ascii")
-        except UnicodeEncodeError:
-            safe_chat_name = "(unicode name)"
-
+        safe_chat_name = safe_str(self.chat.name)
         return "<MessageGroup - {num} {messages} in {chat}>".format(
             num=len(self.messages),
             messages="message" if len(self.messages) == 1 else "messages",

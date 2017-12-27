@@ -1,5 +1,5 @@
 from whatsapp_object import WhatsappObject, driver_needed
-
+from webwhatsapi.helper import safe_str
 
 ##TODO: Fix relative imports for Python3
 class ChatMetaClass(type):
@@ -45,12 +45,7 @@ class UserChat(Chat):
         super(UserChat, self).__init__(js_obj, driver)
 
     def __repr__(self):
-        try:
-            safe_name = self.name.decode("ascii")
-        except UnicodeEncodeError:
-            safe_name = "(unicode name)"
-        except AttributeError:
-            safe_name = "(none)"
+        safe_name = safe_str(self.name)
 
         return "<User chat - {name}: {id}>".format(
             name=safe_name,
@@ -62,13 +57,7 @@ class BroadcastChat(Chat):
         super(BroadcastChat, self).__init__(js_obj, driver)
 
     def __repr__(self):
-        try:
-            safe_name = self.name.decode("ascii")
-        except UnicodeEncodeError:
-            safe_name = "(unicode name)"
-        except AttributeError:
-            safe_name = "(none)"
-
+        safe_name = safe_str(self.name)
         return "<Broadcast chat - {name}: {id}>".format(
             name=safe_name,
             id=self.id)
@@ -103,12 +92,7 @@ class GroupChat(Chat):
         return admins
 
     def __repr__(self):
-        try:
-            safe_name = self.name.decode("ascii")
-        except UnicodeEncodeError:
-            safe_name = "(unicode name)"
-        except AttributeError:
-            safe_name = "(none)"
+        safe_name = safe_str(self.name)
         return "<Group chat - {name}: {id}, {participants} participants>".format(
             name=safe_name,
             id=self.id,
