@@ -36,8 +36,9 @@ from objects.contact import Contact
 from objects.message import Message, MessageGroup
 from webwhatsapi.wapi_js_wrapper import WapiJsWrapper
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
+if __debug__:
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
 
 class WhatsAPIDriver(object):
     _PROXY = None
@@ -211,19 +212,18 @@ class WhatsAPIDriver(object):
         """
         self.driver.execute_script("window.WAPI.lastRead = {}")
 
-    def get_unread(self):
+    def get_unread(self, include_me=False, include_notifications=False):
         """
         Fetches unread messages
 
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages()
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = Chat(raw_message_group)
-            pp.pprint(raw_message_group)
             messages = [Message(message) for message in raw_message_group["messages"]]
             unread_messages.append(MessageGroup(chat, messages))
 

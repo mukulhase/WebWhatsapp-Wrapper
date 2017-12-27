@@ -230,7 +230,17 @@ window.WAPI.getMe = function () {
     return rawMe.all;
 };
 
-//TODO: Combine code AND Remove lastread
+window.WAPI.processMessageObj = function (messageObj, includeNotifications, includeMe){
+    if (messageObj.__x_isNotification && includeNotifications) {
+        return WAPI._serializeNotificationObj(messageObj);
+        // System message
+        // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
+    }else if (messageObj.id.fromMe === false || includeMe) {
+        return WAPI._serializeMessageObj(messageObj);
+    }
+    return none;
+};
+
 window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications) {
     const chat = WAPI.getChat(id);
     let output = [];
@@ -240,24 +250,8 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
             continue;
         }
         const messageObj = messages[i];
-        if (messageObj.__x_isNotification) {
-            if(includeNotifications){
-                let message = WAPI._serializeNotificationObj(messageObj);
-                output.push(message);
-            }
-            // System message
-            // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
-            continue;
-        }
-
-        if (messageObj.id.fromMe === false || includeMe) {
-            let message = WAPI._serializeMessageObj(messageObj);
-            output.push(message);
-        }
+        output.push(WAPI.processMessageObj(messageObj, includeNotifications, includeMe))
     }
-
-    WAPI.lastRead[chat.__x_formattedTitle] = Math.floor(Date.now() / 1000);
-
     return output;
 };
 
@@ -295,7 +289,7 @@ function isChatMessage(message) {
 }
 
 
-window.WAPI.getUnreadMessages = function () {
+window.WAPI.getUnreadMessages = function (includeMe, includeNotifications) {
     const chats = Store.Chat.models;
     let output = [];
     for (let chat in chats) {
@@ -304,7 +298,6 @@ window.WAPI.getUnreadMessages = function () {
         }
 
         let messageGroupObj = chats[chat];
-
         let messageGroup = WAPI.serializeChat(messageGroupObj);
         messageGroup.messages = [];
 
@@ -314,11 +307,8 @@ window.WAPI.getUnreadMessages = function () {
             if (!messageObj.__x_isNewMsg) {
                 break;
             } else {
-                if (!isChatMessage(messageObj)) {
-                    continue;
-                }
                 messageObj.__x_isNewMsg = false;
-                messageGroup.messages.push(WAPI._serializeMessageObj(messageObj));
+                messageGroup.messages.push(WAPI.processMessageObj(messageObj, includeNotifications, includeMe))
             }
         }
 
