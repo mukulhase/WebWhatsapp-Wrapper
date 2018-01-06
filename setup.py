@@ -23,14 +23,14 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='2.0.0',
+    version='2.0.1',
 
     description='A python interface for Whatsapp Web',
     long_description=long_description,
 
     # The project's main homepage.
     url='https://github.com/mukulhase/WhatsAPI',
-    download_url='https://github.com/mukulhase/WhatsAPI/archive/2.0.0.tar.gz',
+    download_url='https://github.com/mukulhase/WhatsAPI/archive/2.0.1.tar.gz',
 
     # Author details
     author='Mukul Hase',
