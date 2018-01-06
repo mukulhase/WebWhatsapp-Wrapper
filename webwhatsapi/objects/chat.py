@@ -1,5 +1,6 @@
-from whatsapp_object import WhatsappObject, driver_needed
+from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
 from webwhatsapi.helper import safe_str
+from webwhatsapi.objects.message import Message
 
 ##TODO: Fix relative imports for Python3
 class ChatMetaClass(type):
@@ -37,8 +38,19 @@ class Chat(WhatsappObject):
     def send_message(self, message):
         return self.driver.wapi_functions.sendMessage(self.id, message)
 
-        ## TODO: Get messages directly
+    def get_messages(self, include_me=False, include_notifications=False):
+        message_objs = self.driver.wapi_functions.getAllMessagesInChat(self.id, include_me, include_notifications)
+        messages = []
+        for message in message_objs:
+            messages.append(Message(message, self.driver))
 
+        return messages
+
+    def load_earlier_messages(self):
+        self.driver.wapi_functions.loadEarlierMessages(self.id)
+
+    def load_all_earlier_messages(self):
+        self.driver.wapi_functions.loadAllEarlierMessages(self.id)
 
 class UserChat(Chat):
     def __init__(self, js_obj, driver=None):

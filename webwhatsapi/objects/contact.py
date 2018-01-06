@@ -1,4 +1,4 @@
-from whatsapp_object import WhatsappObject, driver_needed
+from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
 from webwhatsapi.helper import safe_str
 import six
 

@@ -165,7 +165,7 @@ class WhatsAPIDriver(object):
         self.username = username
         self.wapi_functions = WapiJsWrapper(self.driver)
 
-        self.driver.set_script_timeout(5)
+        self.driver.set_script_timeout(500)
         self.driver.implicitly_wait(10)
         self.driver.get(self._URL)
 
@@ -198,14 +198,22 @@ class WhatsAPIDriver(object):
         Use get_all_chats for all chats
 
         :return: List of contacts
-        :rtype: list[Chat]
+        :rtype: list[Contact]
         """
         all_contacts = self.wapi_functions.getAllContacts()
         return [Contact(contact, self) for contact in all_contacts]
 
     def get_all_chats(self):
+        # type: (Chat ,bool, bool) -> list(Message)
+        """
+        Fetches all chats
+
+        :return: List of chats
+        :rtype: list[Chat]
+        """
         return [Chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
+    # TODO: Check if deprecated
     def reset_unread(self):
         """
         Resets unread messages list
@@ -213,6 +221,7 @@ class WhatsAPIDriver(object):
         self.driver.execute_script("window.WAPI.lastRead = {}")
 
     def get_unread(self, include_me=False, include_notifications=False):
+        # type: (bool, bool) -> list(MessageGroup)
         """
         Fetches unread messages
 
@@ -224,7 +233,7 @@ class WhatsAPIDriver(object):
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = Chat(raw_message_group)
-            messages = [Message(message) for message in raw_message_group["messages"]]
+            messages = [Message(message, self) for message in raw_message_group['messages']]
             unread_messages.append(MessageGroup(chat, messages))
 
         for message in unread_messages:
@@ -233,11 +242,18 @@ class WhatsAPIDriver(object):
         return unread_messages
 
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
+        # type: (Chat ,bool, bool) -> list(Message)
+        """
+        Fetches messages in chat
+
+        :return: List of messages in chat
+        :rtype: list[Message]
+        """
         message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me, include_notifications)
 
         messages = []
         for message in message_objs:
-            messages.append(Message(message))
+            messages.append(Message(message, driver=self))
 
         return messages
 
@@ -246,7 +262,7 @@ class WhatsAPIDriver(object):
 
         assert contact, "Contact {0} not found".format(contact_id)
 
-        return Contact(contact)
+        return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
         chats = filter(
@@ -277,16 +293,6 @@ class WhatsAPIDriver(object):
 
     def reload_qr(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
-
-    def create_callback(self, callback_function):
-        try:
-            while True:
-                messages = self.get_unread()
-                if messages:
-                    callback_function(messages)
-                time.sleep(5)
-        except KeyboardInterrupt:
-            self.logger.debug("Exited")
 
     def get_status(self):
         if self.driver is None:

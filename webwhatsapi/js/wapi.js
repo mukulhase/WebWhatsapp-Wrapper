@@ -102,9 +102,9 @@ window.WAPI.getContact = function (id, done) {
     const found = Store.Contact.models.find((contact) => contact.id === id);
 
     if (done !== undefined) {
-        done(found.all);
+        done(window.WAPI._serializeContactObj(found));
     } else {
-        return found.all;
+        return window.WAPI._serializeContactObj(found);
     }
 };
 
@@ -133,13 +133,56 @@ window.WAPI.getAllChats = function (done) {
  */
 window.WAPI.getChat = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
-
     if (done !== undefined) {
-        done(found.all);
+        done(found);
     } else {
         return found;
     }
 };
+
+/**
+ * Load more messages in chat object from store by ID
+ *
+ * @param id ID of chat
+ * @param done Optional callback function for async execution
+ * @returns None
+ */
+window.WAPI.loadEarlierMessages = function (id, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+    if (done !== undefined) {
+        found.loadEarlierMsgs().then(function(){done()});
+    } else {
+        found.loadEarlierMsgs();
+    }
+};
+
+/**
+ * Load more messages in chat object from store by ID
+ *
+ * @param id ID of chat
+ * @param done Optional callback function for async execution
+ * @returns None
+ */
+// window.WAPI.recurseLoad = function (found, done){
+//     if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
+//         found.loadEarlierMessages().then(window.WAPI.recurse);
+//     }else {
+//         done();
+//     }
+// };
+
+window.WAPI.loadAllEarlierMessages = function (id, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+    x = function(){
+        if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
+            found.loadEarlierMsgs().then(x);
+        }else {
+            done();
+        }
+    };
+    x();
+};
+
 
 /**
  * Fetches all group metadata objects from store
@@ -222,17 +265,24 @@ window.WAPI.getGroupAdmins = async function (id) {
  *
  * @returns {Array|*|$q.all}
  */
-window.WAPI.getMe = function () {
+window.WAPI.getMe = function (done) {
     const contacts = window.Store.Contact.models;
 
     const rawMe = contacts.find((contact) => contact.all.isMe, contacts);
 
+    if (done !== undefined) {
+        done(rawMe.all);
+    } else {
+        return rawMe.all;
+    }
     return rawMe.all;
 };
 
 window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifications) {
-    if (messageObj.__x_isNotification && includeNotifications) {
-        return WAPI._serializeNotificationObj(messageObj);
+    if (messageObj.__x_isNotification) {
+        if(includeNotifications)
+            return WAPI._serializeNotificationObj(messageObj);
+        else return;
         // System message
         // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
     } else if (messageObj.id.fromMe === false || includeMe) {
@@ -241,7 +291,7 @@ window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifica
     return;
 };
 
-window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications) {
+window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications, done) {
     const chat = WAPI.getChat(id);
     let output = [];
     const messages = chat.msgs.models;
@@ -253,10 +303,14 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
         let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications)
         if (message)output.push(message);
     }
-    return output;
+    if (done !== undefined) {
+        done(output);
+    } else {
+        return output;
+    }
 };
 
-window.WAPI.sendMessage = function (id, message) {
+window.WAPI.sendMessage = function (id, message, done) {
     const Chats = Store.Chat.models;
 
     for (const chat in Chats) {
@@ -268,11 +322,22 @@ window.WAPI.sendMessage = function (id, message) {
         temp.name = Chats[chat].__x__formattedTitle;
         temp.id = Chats[chat].__x_id;
         if (temp.id === id) {
-            Chats[chat].sendMessage(message);
-            return true;
+            if (done !== undefined) {
+                Chats[chat].sendMessage(message).then(function () {
+                    done(true);
+                });
+                return true;
+            } else {
+                Chats[chat].sendMessage(message);
+                return true;
+            }
         }
     }
-
+    if (done !== undefined) {
+        done();
+    } else {
+        return false;
+    }
     return false;
 };
 
@@ -290,7 +355,7 @@ function isChatMessage(message) {
 }
 
 
-window.WAPI.getUnreadMessages = function (includeMe, includeNotifications) {
+window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done) {
     const chats = Store.Chat.models;
     let output = [];
     for (let chat in chats) {
@@ -319,6 +384,11 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications) {
         if (messageGroup.messages.length > 0) {
             output.push(messageGroup);
         }
+    }
+    if (done !== undefined) {
+        done(output);
+    } else {
+        return output;
     }
     return output;
 };
