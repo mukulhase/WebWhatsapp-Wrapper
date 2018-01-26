@@ -25,7 +25,7 @@ window.WAPI._serializeRawObj = (obj) => {
     return obj.all;
 };
 
-window.WAPI._serializeContactObj = (obj) => ({
+window.WAPI._serializeContactObj = (obj) => (obj?{
     formattedName: obj.__x_formattedName,
     formattedShortName: obj.__x_formattedShortName,
     shortName: obj.__x_formattedShortName,
@@ -43,7 +43,7 @@ window.WAPI._serializeContactObj = (obj) => ({
     profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
     statusMute: obj.__x_statusMute,
     pushname: obj.__x_pushname
-});
+}:null);
 
 window.WAPI._serializeNotificationObj = (obj) => ({
     sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
@@ -163,18 +163,32 @@ window.WAPI.loadEarlierMessages = function (id, done) {
  * @param done Optional callback function for async execution
  * @returns None
  */
-// window.WAPI.recurseLoad = function (found, done){
-//     if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
-//         found.loadEarlierMessages().then(window.WAPI.recurse);
-//     }else {
-//         done();
-//     }
-// };
 
 window.WAPI.loadAllEarlierMessages = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
     x = function(){
         if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
+            found.loadEarlierMsgs().then(x);
+        }else {
+            done();
+        }
+    };
+    x();
+};
+
+/**
+ * Load more messages in chat object from store by ID till a particular date
+ *
+ * @param id ID of chat
+ * @param lastMessage UTC timestamp of last message to be loaded
+ * @param done Optional callback function for async execution
+ * @returns None
+ */
+
+window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+    x = function(){
+        if(found.msgs.models[0].t>lastMessage){
             found.loadEarlierMsgs().then(x);
         }else {
             done();

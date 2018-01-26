@@ -1,3 +1,5 @@
+from datetime import datetime
+import time
 from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.message import Message
@@ -51,6 +53,18 @@ class Chat(WhatsappObject):
 
     def load_all_earlier_messages(self):
         self.driver.wapi_functions.loadAllEarlierMessages(self.id)
+
+    def load_earlier_messages_till(self, last):
+        """
+                Triggers loading of messages till a specific point in time
+
+                :param last: Datetime object for the last message to be loaded
+                :type last: datetime
+                :return: Nothing
+                :rtype: None
+                """
+        timestamp = time.mktime(last.timetuple())
+        self.driver.wapi_functions.loadEarlierMessagesTillDate(self.id, timestamp)
 
 class UserChat(Chat):
     def __init__(self, js_obj, driver=None):

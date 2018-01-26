@@ -7,6 +7,12 @@ pprint = pprint.PrettyPrinter(indent=4).pprint
 from webwhatsapi.objects.whatsapp_object import WhatsappObjectWithoutID, driver_needed
 from webwhatsapi.objects.contact import Contact
 
+def getContacts(x, driver):
+    try:
+        contact = driver.get_contact_from_id(x)
+        return contact
+    except:
+        return x
 
 class MessageMetaClass(type):
     """
@@ -123,7 +129,7 @@ class NotificationMessage(Message):
         self.type = js_obj["type"]
         self.subtype = js_obj["subtype"].encode("ascii", "ignore")
         if js_obj["recipients"]:
-            self.recipients = [self.driver.get_contact_from_id(x) for x in js_obj["recipients"]]
+            self.recipients = [getContacts(x, driver) for x in js_obj["recipients"]]
 
     def __repr__(self):
         readable = {
