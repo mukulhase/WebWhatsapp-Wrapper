@@ -62,7 +62,7 @@ class WhatsAPIDriver(object):
         'UnreadChatBanner': '.message-list',
         'ReconnectLink': '.action',
         'WhatsappQrIcon': 'span.icon:nth-child(2)',
-        'QRReloader': '.qr-wrapper-container'
+        'QRReloader': 'div > span > div[role=\"button\"]'
     }
 
     _CLASSES = {
