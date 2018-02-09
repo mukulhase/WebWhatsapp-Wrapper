@@ -49,6 +49,7 @@ class Message(WhatsappObjectWithoutID, metaclass=MessageMetaClass):
         super(Message, self).__init__(js_obj, driver)
         self.sender = False if js_obj["sender"] == False else Contact(js_obj["sender"], driver)
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
+        self.id = js_obj["id"]
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'

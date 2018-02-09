@@ -73,6 +73,7 @@ window.WAPI._serializeMessageObj = (obj) => ({
     type: obj.__x_type,
     size: obj.__x_size,
     mime: obj.__x_mimetype,
+    id: obj.__x_id.id,
 });
 
 /**
