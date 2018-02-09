@@ -1,6 +1,8 @@
-from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
-from webwhatsapi.helper import safe_str
 import six
+
+from webwhatsapi.helper import safe_str
+from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
+
 
 class Contact(WhatsappObject):
     def __init__(self, js_obj, driver=None):

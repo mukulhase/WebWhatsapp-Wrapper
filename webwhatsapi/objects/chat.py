@@ -1,6 +1,7 @@
-from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.message import Message
+from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
+
 
 ##TODO: Fix relative imports for Python3
 class ChatMetaClass(type):
@@ -16,7 +17,8 @@ class ChatMetaClass(type):
         :return: Instance of appropriate chat type
         :rtype: Chat | UserChat | GroupChat | BroadcastChat
         """
-        assert js_obj["kind"] in ["chat", "group", "broadcast"], "Expected chat or group object, got {0}".format(
+        assert js_obj["kind"] in ["chat", "group",
+                                  "broadcast"], "Expected chat or group object, got {0}".format(
             js_obj["kind"])
 
         if js_obj["isGroup"]:
@@ -28,9 +30,7 @@ class ChatMetaClass(type):
         return type.__call__(UserChat, js_obj, driver)
 
 
-class Chat(WhatsappObject):
-    __metaclass__ = ChatMetaClass
-
+class Chat(WhatsappObject, metaclass=ChatMetaClass):
     def __init__(self, js_obj, driver=None):
         super(Chat, self).__init__(js_obj, driver)
 
@@ -39,7 +39,8 @@ class Chat(WhatsappObject):
         return self.driver.wapi_functions.sendMessage(self.id, message)
 
     def get_messages(self, include_me=False, include_notifications=False):
-        message_objs = self.driver.wapi_functions.getAllMessagesInChat(self.id, include_me, include_notifications)
+        message_objs = self.driver.wapi_functions.getAllMessagesInChat(self.id, include_me,
+                                                                       include_notifications)
         messages = []
         for message in message_objs:
             messages.append(Message(message, self.driver))
@@ -51,6 +52,7 @@ class Chat(WhatsappObject):
 
     def load_all_earlier_messages(self):
         self.driver.wapi_functions.loadAllEarlierMessages(self.id)
+
 
 class UserChat(Chat):
     def __init__(self, js_obj, driver=None):

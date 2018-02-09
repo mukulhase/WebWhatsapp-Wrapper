@@ -41,10 +41,10 @@ class WapiJsWrapper(object):
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
             script_path = os.getcwd()
-        with file(os.path.join(script_path, "js", "wapi.js"), "rb") as script:
+        with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
             self.driver.execute_script(script.read())
 
-        return self.driver.execute_script("return window.WAPI").keys()
+        return list(self.driver.execute_script("return window.WAPI").keys())
 
 
 class JsArg(object):
@@ -66,7 +66,7 @@ class JsArg(object):
 
         :return: JS literal represented in a string
         """
-        if type(self.obj) in [str, unicode]:
+        if type(self.obj) in [str, str]:
             return repr(str(self.obj))
 
         if type(self.obj) == bool:
@@ -88,7 +88,7 @@ class JsFunction(object):
         # Selenium's execute_async_script passes a callback function that should be called when the JS operation is done
         # It is passed to the WAPI function using arguments[0]
         if len(args):
-            command = "return WAPI.{0}({1}, arguments[0])"\
+            command = "return WAPI.{0}({1}, arguments[0])" \
                 .format(self.function_name, ",".join([str(JsArg(arg)) for arg in args]))
         else:
             command = "return WAPI.{0}(arguments[0])".format(self.function_name)
@@ -98,4 +98,6 @@ class JsFunction(object):
         except WebDriverException as e:
             if e.msg == 'Timed out':
                 raise Exception("Phone not connected to Internet")
-            raise JsException("Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
+            raise JsException(
+                "Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg,
+                                                                   command))

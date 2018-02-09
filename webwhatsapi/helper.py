@@ -1,5 +1,6 @@
 import six
 
+
 def safe_str(text):
     if not text:
         return "(empty)"

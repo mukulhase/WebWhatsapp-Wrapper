@@ -7,6 +7,7 @@ def driver_needed(func):
     :param func: WhatsappObject method
     :return: Wrapped method
     """
+
     def wrapped(self, *args):
         if not self.driver:
             raise AttributeError("No driver passed to object")
@@ -46,6 +47,7 @@ class WhatsappObject(object):
 
     def __eq__(self, other):
         return self.id == other.id
+
 
 class WhatsappObjectWithoutID(object):
     """

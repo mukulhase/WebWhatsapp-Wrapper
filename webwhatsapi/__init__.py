@@ -2,25 +2,18 @@
 WhatsAPI module
 """
 
-
-from __future__ import print_function
-
-import sys
-import datetime
-import time
-import os
-import sys
 import logging
+import os
 import pickle
 import tempfile
 
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
 
 
 class WhatsAPIDriverStatus(object):
@@ -30,15 +23,18 @@ class WhatsAPIDriverStatus(object):
     NotLoggedIn = 'NotLoggedIn'
     LoggedIn = 'LoggedIn'
 
-from consts import Selectors, URL
-from objects.chat import Chat, GroupChat, UserChat
-from objects.contact import Contact
-from objects.message import Message, MessageGroup
+
+from .consts import Selectors, URL
+from .objects.chat import Chat, GroupChat, UserChat
+from .objects.contact import Contact
+from .objects.message import Message, MessageGroup
 from webwhatsapi.wapi_js_wrapper import WapiJsWrapper
 
 if __debug__:
     import pprint
+
     pp = pprint.PrettyPrinter(indent=4)
+
 
 class WhatsAPIDriver(object):
     _PROXY = None
@@ -81,10 +77,10 @@ class WhatsAPIDriver(object):
     def save_firefox_profile(self):
         "Function to save the firefox profile to the permanant one"
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
-        os.system("cp -R " + self._profile.path + " "+ self._profile_path)
+        os.system("cp -R " + self._profile.path + " " + self._profile_path)
         cookie_file = os.path.join(self._profile_path, "cookies.pkl")
         if self.driver:
-            pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
+            pickle.dump(self.driver.get_cookies(), open(cookie_file, "wb"))
 
     def set_proxy(self, proxy):
         self.logger.info("Setting proxy to %s" % proxy)
@@ -95,7 +91,8 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False, profile=None):
+    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None,
+                 loadstyles=False, profile=None):
         "Initialises the webdriver"
 
         # Get the name of the config folder
@@ -131,18 +128,19 @@ class WhatsAPIDriver(object):
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
             else:
                 self._profile = webdriver.FirefoxProfile()
-            if loadstyles == False:
+            if not loadstyles:
                 # Disable CSS
                 self._profile.set_preference('permissions.default.stylesheet', 2)
                 ## Disable images
                 self._profile.set_preference('permissions.default.image', 2)
                 ## Disable Flash
                 self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                              'false')
+                                             'false')
             if proxy is not None:
                 self.set_proxy(proxy)
             self.logger.info("Starting webdriver")
             self.driver = webdriver.Firefox(self._profile)
+                                            # firefox_binary="/Applications/FirefoxDeveloperEdition.app/Contents/MacOS/firefox-bin")
 
         elif self.client == "chrome":
             self._profile = webdriver.chrome.options.Options()
@@ -228,7 +226,8 @@ class WhatsAPIDriver(object):
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me,
+                                                                   include_notifications)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -249,7 +248,8 @@ class WhatsAPIDriver(object):
         :return: List of messages in chat
         :rtype: list[Message]
         """
-        message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me, include_notifications)
+        message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me,
+                                                                include_notifications)
 
         messages = []
         for message in message_objs:
@@ -265,10 +265,7 @@ class WhatsAPIDriver(object):
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
-        chats = filter(
-            lambda chat: chat["id"] == chat_id,
-            self.wapi_functions.getAllChats()
-        )
+        chats = [chat for chat in self.wapi_functions.getAllChats() if chat["id"] == chat_id]
 
         assert len(chats) == 1, "Chat {0} not found".format(chat_id)
 
@@ -288,7 +285,7 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
-        chats = filter(lambda chat:(type(chat) is UserChat), self.get_all_chats())
+        chats = [chat for chat in self.get_all_chats() if (type(chat) is UserChat)]
         return next((contact for contact in chats if (number in contact.id)), None)
 
     def reload_qr(self):
