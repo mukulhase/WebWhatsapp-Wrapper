@@ -307,3 +307,8 @@ class WhatsAPIDriver(object):
         except NoSuchElementException:
             pass
         return WhatsAPIDriverStatus.Unknown
+
+    def create_chat(self, number):
+        url = "{base_URL}/send?phone={phone_number}"\
+            .format(base_URL=self._URL, phone_number=number)
+        self.driver.get(url)
