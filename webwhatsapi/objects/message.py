@@ -1,11 +1,12 @@
-from datetime import datetime
 import mimetypes
+from datetime import datetime
+
 import os
-import pprint
+from six import with_metaclass
+
 from webwhatsapi.helper import safe_str
-pprint = pprint.PrettyPrinter(indent=4).pprint
-from webwhatsapi.objects.whatsapp_object import WhatsappObjectWithoutID, driver_needed
 from webwhatsapi.objects.contact import Contact
+from webwhatsapi.objects.whatsapp_object import WhatsappObjectWithoutID
 
 
 class MessageMetaClass(type):
@@ -36,8 +37,7 @@ class MessageMetaClass(type):
         return type.__call__(Message, js_obj, driver)
 
 
-class Message(WhatsappObjectWithoutID):
-    __metaclass__ = MessageMetaClass
+class Message(with_metaclass(MessageMetaClass, WhatsappObjectWithoutID)):
 
     def __init__(self, js_obj, driver=None):
         """
@@ -90,6 +90,7 @@ class MMSMessage(MediaMessage):
 
     Example of an MMS message: "ptt" (push to talk), voice memo
     """
+
     def __init__(self, js_obj, driver=None):
         super(MMSMessage, self).__init__(js_obj, driver)
 
@@ -127,13 +128,13 @@ class NotificationMessage(Message):
 
     def __repr__(self):
         readable = {
-            'call_log':{
+            'call_log': {
                 'miss': "Missed Call",
             },
-            'e2e_notification':{
+            'e2e_notification': {
                 'encrypt': "Messages now Encrypted"
             },
-            'gp2':{
+            'gp2': {
                 'create': "Created group",
                 'add': "Added to group",
                 'remove': "Removed from group",
@@ -143,9 +144,10 @@ class NotificationMessage(Message):
         sender = "" if not self.sender else ("from " + str(safe_str(self.sender.get_safe_name())))
         return "<NotificationMessage - {type} {recip} {sender} at {timestamp}>".format(
             type=readable[self.type][self.subtype],
-            sender = sender,
+            sender=sender,
             timestamp=self.timestamp,
-            recip="" if not hasattr(self, 'recipients') else "".join([safe_str(x.get_safe_name()) for x in self.recipients]),
+            recip="" if not hasattr(self, 'recipients') else "".join(
+                [safe_str(x.get_safe_name()) for x in self.recipients]),
         )
 
 
@@ -168,4 +170,3 @@ class MessageGroup(object):
             num=len(self.messages),
             messages="message" if len(self.messages) == 1 else "messages",
             chat=safe_chat_name)
-
