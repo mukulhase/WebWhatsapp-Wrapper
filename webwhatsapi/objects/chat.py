@@ -1,8 +1,10 @@
-from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
-from webwhatsapi.helper import safe_str
-from webwhatsapi.objects.message import Message
+from six import with_metaclass
 
-##TODO: Fix relative imports for Python3
+from .message import Message
+from .whatsapp_object import WhatsappObject, driver_needed
+from ..helper import safe_str
+
+
 class ChatMetaClass(type):
     """
     Chat type factory
@@ -28,8 +30,7 @@ class ChatMetaClass(type):
         return type.__call__(UserChat, js_obj, driver)
 
 
-class Chat(WhatsappObject):
-    __metaclass__ = ChatMetaClass
+class Chat(with_metaclass(ChatMetaClass, WhatsappObject)):
 
     def __init__(self, js_obj, driver=None):
         super(Chat, self).__init__(js_obj, driver)
@@ -51,6 +52,7 @@ class Chat(WhatsappObject):
 
     def load_all_earlier_messages(self):
         self.driver.wapi_functions.loadAllEarlierMessages(self.id)
+
 
 class UserChat(Chat):
     def __init__(self, js_obj, driver=None):
