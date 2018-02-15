@@ -1,6 +1,8 @@
-from webwhatsapi.objects.whatsapp_object import WhatsappObject, driver_needed
-from webwhatsapi.helper import safe_str
-import six
+from six import string_types
+
+from .whatsapp_object import WhatsappObject, driver_needed
+from ..helper import safe_str
+
 
 class Contact(WhatsappObject):
     def __init__(self, js_obj, driver=None):
@@ -19,7 +21,7 @@ class Contact(WhatsappObject):
 
     def get_safe_name(self):
         name = (self.name or self.push_name or self.formatted_name)
-        if (isinstance(name, six.string_types)):
+        if (isinstance(name, string_types)):
             safe_name = safe_str(name)
         else:
             safe_name = "Unknown"

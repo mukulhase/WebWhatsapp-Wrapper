@@ -5,16 +5,45 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-# Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+import ast
+
 # To use a consistent encoding
 from codecs import open
 from os import path
+# Always prefer setuptools over distutils
+from setuptools import setup
 
-here = path.abspath(path.dirname(__file__))
+PACKAGE_NAME = 'webwhatsapi'
+
+path = path.join(path.dirname(__file__), PACKAGE_NAME, '__init__.py')
+
+with open(path, 'r') as file:
+    t = compile(file.read(), path, 'exec', ast.PyCF_ONLY_AST)
+    for node in (n for n in t.body if isinstance(n, ast.Assign)):
+        if len(node.targets) != 1:
+            continue
+
+        name = node.targets[0]
+        if not isinstance(name, ast.Name) or \
+                name.id not in ('__version__', '__version_info__', 'VERSION'):
+            continue
+
+        v = node.value
+        if isinstance(v, ast.Str):
+            version = v.s
+            break
+        if isinstance(v, ast.Tuple):
+            r = []
+            for e in v.elts:
+                if isinstance(e, ast.Str):
+                    r.append(e.s)
+                elif isinstance(e, ast.Num):
+                    r.append(str(e.n))
+            version = '.'.join(r)
+            break
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(path.join(path.dirname(__file__), 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -23,14 +52,14 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='2.0.1',
+    version=version,
 
     description='A python interface for Whatsapp Web',
     long_description=long_description,
 
     # The project's main homepage.
     url='https://github.com/mukulhase/WhatsAPI',
-    download_url='https://github.com/mukulhase/WhatsAPI/archive/2.0.1.tar.gz',
+    download_url='https://github.com/mukulhase/WhatsAPI/archive/{}.tar.gz'.format(version),
 
     # Author details
     author='Mukul Hase',
@@ -58,6 +87,7 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -65,7 +95,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=PACKAGE_NAME,
     install_requires=[
         'python-dateutil>=2.6.0',
         'selenium>=3.4.3',

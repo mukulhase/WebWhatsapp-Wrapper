@@ -2,25 +2,27 @@
 WhatsAPI module
 """
 
-
-from __future__ import print_function
-
-import sys
-import datetime
-import time
-import os
-import sys
 import logging
-import pickle
-import tempfile
+from json import dumps, loads
 
+import os
+import tempfile
+import shutil
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
+
+from .consts import Selectors, URL
+from .objects.chat import Chat, GroupChat, UserChat
+from .objects.contact import Contact
+from .objects.message import Message, MessageGroup
+from .wapi_js_wrapper import WapiJsWrapper
+
+__version__ = '2.0.2'
 
 
 class WhatsAPIDriverStatus(object):
@@ -30,20 +32,17 @@ class WhatsAPIDriverStatus(object):
     NotLoggedIn = 'NotLoggedIn'
     LoggedIn = 'LoggedIn'
 
-from consts import Selectors, URL
-from objects.chat import Chat, GroupChat, UserChat
-from objects.contact import Contact
-from objects.message import Message, MessageGroup
-from webwhatsapi.wapi_js_wrapper import WapiJsWrapper
 
-if __debug__:
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
+class WhatsAPIException(Exception):
+    pass
+
 
 class WhatsAPIDriver(object):
     _PROXY = None
 
     _URL = "https://web.whatsapp.com"
+
+    _LOCAL_STORAGE_FILE = 'localStorage.json'
 
     _SELECTORS = {
         'firstrun': "#wrapper",
@@ -78,13 +77,40 @@ class WhatsAPIDriver(object):
     # Do not alter this
     _profile = None
 
-    def save_firefox_profile(self):
+    def get_local_storage(self):
+        return self.driver.execute_script('return window.localStorage;')
+
+    def set_local_storage(self, data):
+        self.driver.execute_script(''.join(["window.localStorage.setItem('{}', '{}');".format(k, v)
+                                            for k, v in data.items()]))
+
+    def save_firefox_profile(self, remove_old=False):
         "Function to save the firefox profile to the permanant one"
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
-        os.system("cp -R " + self._profile.path + " "+ self._profile_path)
-        cookie_file = os.path.join(self._profile_path, "cookies.pkl")
-        if self.driver:
-            pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
+
+        if remove_old:
+            if os.path.exists(self._profile_path):
+                try:
+                    shutil.rmtree(self._profile_path)
+                except OSError:
+                    pass
+
+            shutil.copytree(os.path.join(self._profile.path), self._profile_path,
+                            ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
+        else:
+            for item in os.listdir(self._profile.path):
+                if item in ["parent.lock", "lock", ".parentlock"]:
+                    continue
+                s = os.path.join(self._profile.path, item)
+                d = os.path.join(self._profile_path, item)
+                if os.path.isdir(s):
+                    shutil.copytree(s, d,
+                                    ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
+                else:
+                    shutil.copy2(s, d)
+
+        with open(os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE), 'w') as f:
+            f.write(dumps(self.get_local_storage()))
 
     def set_proxy(self, proxy):
         self.logger.info("Setting proxy to %s" % proxy)
@@ -95,7 +121,8 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False, profile=None):
+    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
+                 profile=None, headless=False):
         "Initialises the webdriver"
 
         # Get the name of the config folder
@@ -105,8 +132,8 @@ class WhatsAPIDriver(object):
             if not os.path.exists(self.config_dir):
                 os.makedirs(self.config_dir)
         except OSError:
-            print("Error: Could not create config dir")
-            exit(-1)
+            self.logger.critical("Error: Could not create config dir")
+            raise WhatsAPIException("Error: Could not create config dir")
 
         self.logger.setLevel(logging.DEBUG)
 
@@ -119,9 +146,8 @@ class WhatsAPIDriver(object):
             self._profile_path = profile
             self.logger.info("Checking for profile at %s" % self._profile_path)
             if not os.path.exists(self._profile_path):
-                print("Could not find profile at %s" % profile)
-                self.logger.error("Could not find profile at %s" % profile)
-                exit(-1)
+                self.logger.critical("Could not find profile at %s" % profile)
+                raise WhatsAPIException("Could not find profile at %s" % profile)
         else:
             self._profile_path = None
 
@@ -138,11 +164,22 @@ class WhatsAPIDriver(object):
                 self._profile.set_preference('permissions.default.image', 2)
                 ## Disable Flash
                 self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                              'false')
+                                             'false')
             if proxy is not None:
                 self.set_proxy(proxy)
+
+            options = Options()
+
+            if headless:
+                options.set_headless()
+
+            options.profile = self._profile
+
+            capabilities = DesiredCapabilities.FIREFOX.copy()
+            capabilities['webStorageEnabled'] = True
+
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(self._profile)
+            self.driver = webdriver.Firefox(capabilities=capabilities, options=options)
 
         elif self.client == "chrome":
             self._profile = webdriver.chrome.options.Options()
@@ -161,13 +198,19 @@ class WhatsAPIDriver(object):
 
         else:
             self.logger.error("Invalid client: %s" % client)
-            print("Enter a valid client name")
         self.username = username
         self.wapi_functions = WapiJsWrapper(self.driver)
 
         self.driver.set_script_timeout(500)
         self.driver.implicitly_wait(10)
         self.driver.get(self._URL)
+
+        local_storage_file = os.path.join(self._profile.path, self._LOCAL_STORAGE_FILE)
+        if os.path.exists(local_storage_file):
+            with open(local_storage_file) as f:
+                self.set_local_storage(loads(f.read()))
+
+            self.driver.refresh()
 
     def wait_for_login(self):
         """Waits for the QR to go away"""
@@ -182,7 +225,6 @@ class WhatsAPIDriver(object):
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         self.logger.debug("QRcode image saved at %s" % fn_png)
-        print(fn_png)
         qr.screenshot(fn_png)
         os.close(fd)
         return fn_png
@@ -288,7 +330,7 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
-        chats = filter(lambda chat:(type(chat) is UserChat), self.get_all_chats())
+        chats = filter(lambda chat: (type(chat) is UserChat), self.get_all_chats())
         return next((contact for contact in chats if (number in contact.id)), None)
 
     def reload_qr(self):
