@@ -14,4 +14,4 @@ while True:
     for contact in driver.get_unread():
         for message in contact.messages:
             if isinstance(message, Message):  # Currently works for text messages only.
-                contact.chat.chat_send_message(message.safe_content)
+                contact.chat.send_message(message.safe_content)
