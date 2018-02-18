@@ -6,8 +6,8 @@ import logging
 from json import dumps, loads
 
 import os
-import tempfile
 import shutil
+import tempfile
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -16,10 +16,10 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from webwhatsapi.objects.chat import factory_chat, UserChat
+from webwhatsapi.objects.message import factory_message, MessageGroup
 from .consts import Selectors, URL
-from .objects.chat import Chat, GroupChat, UserChat
 from .objects.contact import Contact
-from .objects.message import Message, MessageGroup
 from .wapi_js_wrapper import WapiJsWrapper
 
 __version__ = '2.0.2'
@@ -34,6 +34,14 @@ class WhatsAPIDriverStatus(object):
 
 
 class WhatsAPIException(Exception):
+    pass
+
+
+class ChatNotFoundError(WhatsAPIException):
+    pass
+
+
+class ContactNotFoundError(WhatsAPIException):
     pass
 
 
@@ -70,7 +78,7 @@ class WhatsAPIDriver(object):
         'messageList': "msg"
     }
 
-    logger = logging.getLogger("whatsapi")
+    logger = logging.getLogger(__name__)
     driver = None
 
     # Profile points to the Firefox profile for firefox and Chrome cache for chrome
@@ -122,25 +130,10 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False):
+                 profile=None, headless=False, autoconnect=True, logger=None):
         "Initialises the webdriver"
 
-        # Get the name of the config folder
-        self.config_dir = os.path.join(os.path.expanduser("~"), ".whatsapi")
-
-        try:
-            if not os.path.exists(self.config_dir):
-                os.makedirs(self.config_dir)
-        except OSError:
-            self.logger.critical("Error: Could not create config dir")
-            raise WhatsAPIException("Error: Could not create config dir")
-
-        self.logger.setLevel(logging.DEBUG)
-
-        # Setting the log message format and log file
-        log_file_handler = logging.FileHandler(os.path.join(self.config_dir, "whatsapi.log"))
-        log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
-        self.logger.addHandler(log_file_handler)
+        self.logger = logger or self.logger
 
         if profile is not None:
             self._profile_path = profile
@@ -160,9 +153,9 @@ class WhatsAPIDriver(object):
             if loadstyles == False:
                 # Disable CSS
                 self._profile.set_preference('permissions.default.stylesheet', 2)
-                ## Disable images
+                # Disable images
                 self._profile.set_preference('permissions.default.image', 2)
-                ## Disable Flash
+                # Disable Flash
                 self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
                                              'false')
             if proxy is not None:
@@ -203,6 +196,11 @@ class WhatsAPIDriver(object):
 
         self.driver.set_script_timeout(500)
         self.driver.implicitly_wait(10)
+
+        if autoconnect:
+            self.connect()
+
+    def connect(self):
         self.driver.get(self._URL)
 
         local_storage_file = os.path.join(self._profile.path, self._LOCAL_STORAGE_FILE)
@@ -246,14 +244,14 @@ class WhatsAPIDriver(object):
         return [Contact(contact, self) for contact in all_contacts]
 
     def get_all_chats(self):
-        # type: (Chat ,bool, bool) -> list(Message)
+        # type: () -> list(Chat)
         """
         Fetches all chats
 
         :return: List of chats
         :rtype: list[Chat]
         """
-        return [Chat(chat, self) for chat in self.wapi_functions.getAllChats()]
+        return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
     # TODO: Check if deprecated
     def reset_unread(self):
@@ -274,12 +272,9 @@ class WhatsAPIDriver(object):
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
-            chat = Chat(raw_message_group)
-            messages = [Message(message, self) for message in raw_message_group['messages']]
+            chat = factory_chat(raw_message_group, self)
+            messages = [factory_message(message, self) for message in raw_message_group['messages']]
             unread_messages.append(MessageGroup(chat, messages))
-
-        for message in unread_messages:
-            message.chat.driver = self
 
         return unread_messages
 
@@ -295,26 +290,24 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in message_objs:
-            messages.append(Message(message, driver=self))
+            messages.append(factory_message(message, self))
 
         return messages
 
     def get_contact_from_id(self, contact_id):
         contact = self.wapi_functions.getContact(contact_id)
 
-        assert contact, "Contact {0} not found".format(contact_id)
+        if contact is None:
+            raise ContactNotFoundError("Contact {0} not found".format(contact_id))
 
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
-        chats = filter(
-            lambda chat: chat["id"] == chat_id,
-            self.wapi_functions.getAllChats()
-        )
+        for chat in self.wapi_functions.getAllChats():
+            if chat["id"] == chat_id:
+                return factory_chat(chat, self)
 
-        assert len(chats) == 1, "Chat {0} not found".format(chat_id)
-
-        return Chat(chats[0], self)
+        raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
     def get_chat_from_phone_number(self, number):
         """
@@ -330,8 +323,12 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
-        chats = filter(lambda chat: (type(chat) is UserChat), self.get_all_chats())
-        return next((contact for contact in chats if (number in contact.id)), None)
+        for chat in self.get_all_chats():
+            if not isinstance(chat, UserChat) or number not in chat.id:
+                continue
+            return chat
+
+        raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
@@ -352,3 +349,42 @@ class WhatsAPIDriver(object):
         except NoSuchElementException:
             pass
         return WhatsAPIDriverStatus.Unknown
+
+    def contact_get_common_groups(self, contact_id):
+        for group in self.wapi_functions.getCommonGroups(contact_id):
+            yield factory_chat(group, self)
+
+    def chat_send_message(self, chat_id, message):
+        return self.wapi_functions.sendMessage(chat_id, message)
+
+    def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
+        message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
+        for message in message_objs:
+            yield factory_message(message, self)
+
+    def chat_load_earlier_messages(self, chat_id):
+        self.wapi_functions.loadEarlierMessages(chat_id)
+
+    def chat_load_all_earlier_messages(self, chat_id):
+        self.wapi_functions.loadAllEarlierMessages(chat_id)
+
+    def group_get_participants_ids(self, group_id):
+        return self.wapi_functions.getGroupParticipantIDs(group_id)
+
+    def group_get_participants(self, group_id):
+        participant_ids = self.group_get_participants_ids(group_id)
+
+        for participant_id in participant_ids:
+            yield self.get_contact_from_id(participant_id)
+
+    def group_get_admin_ids(self, group_id):
+        return self.wapi_functions.getGroupAdmins(group_id)
+
+    def group_get_admins(self, group_id):
+        admin_ids = self.group_get_admin_ids(group_id)
+
+        for admin_id in admin_ids:
+            yield self.get_contact_from_id(admin_id)
+
+    def quit(self):
+        self.driver.quit()

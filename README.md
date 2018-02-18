@@ -45,8 +45,8 @@ Possible arguments for constructor:
 6. Viewing all contacts
 ` driver.get_all_chats() `
 
-7. To send a message, get a Contact object, and call the send_message function with the message.
-`<Contact Object>.send_message("Hello")`
+7. To send a message, get a Contact object, and call the chat_send_message function with the message.
+`<Contact Object>.chat_send_message("Hello")`
 
 ## Limitation
 Phone has to be on and connected to the internet
