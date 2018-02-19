@@ -59,6 +59,9 @@ Phone has to be on and connected to the internet
  - Get List of Groups
  - Get information about Groups
  - Get various events. For example: Leaving, Joining, Missed Call etc.
+ - Download media messages
+ - Get List of common groups
+ - Asyncio driver version
 
 ## Note:
 There are issues with asynchronous calls in Chrome. Primary support of this api is for firefox. If something doesn't work in chrome, please try firefox.
