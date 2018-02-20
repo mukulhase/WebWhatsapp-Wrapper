@@ -9,7 +9,6 @@ import tempfile
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
@@ -36,10 +35,12 @@ if __debug__:
     pp = pprint.PrettyPrinter(indent=4)
 
 
-class WhatsAPIDriver(object):
+class WhatsAPI(object):
     _PROXY = None
 
     _URL = "https://web.whatsapp.com"
+
+    _logfile = "whatsapi.log"
 
     _SELECTORS = {
         'firstrun': "#wrapper",
@@ -58,7 +59,7 @@ class WhatsAPIDriver(object):
         'UnreadChatBanner': '.message-list',
         'ReconnectLink': '.action',
         'WhatsappQrIcon': 'span.icon:nth-child(2)',
-        'QRReloader': '.qr-wrapper-container'
+        'QRReloader': 'div > span > div[role=\"button\"]'
     }
 
     _CLASSES = {
@@ -74,8 +75,62 @@ class WhatsAPIDriver(object):
     # Do not alter this
     _profile = None
 
+    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None,
+                 load_styles=False, profile=None):
+        self.logger.setLevel(logging.DEBUG)
+
+        # Setting the log message format and log file
+        log_file_handler = logging.FileHandler("whatsapi.log")
+        log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+        self.logger.addHandler(log_file_handler)
+
+        self.client = client
+
+        if profile is not None:
+            self._profile_path = profile
+            self.logger.info("Checking for profile at %s" % self._profile_path)
+            if not os.path.exists(self._profile_path):
+                self.logger.error("Could not find profile at %s" % profile)
+                exit(-1)
+        else:
+            self._profile_path = None
+
+        if self.client == "firefox":
+            if self._profile_path is not None:
+                self._profile = webdriver.FirefoxProfile(self._profile_path)
+            else:
+                self._profile = webdriver.FirefoxProfile()
+            if not load_styles:
+                # Disable CSS
+                self._profile.set_preference('permissions.default.stylesheet', 2)
+                # Disable images
+                self._profile.set_preference('permissions.default.image', 2)
+                # Disable Flash
+                self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
+                                             'false')
+            if proxy is not None:
+                self.set_proxy(proxy)
+            self.logger.info("Starting webdriver")
+            self.driver = webdriver.Firefox(self._profile)
+        elif client == 'remote':
+            capabilities = DesiredCapabilities.FIREFOX.copy()
+            self.driver = webdriver.Remote(
+                command_executor=command_executor,
+                desired_capabilities=capabilities
+            )
+        else:
+            self.logger.error("Invalid client: %s" % client)
+            raise NotImplementedError
+        self.wapi_functions = WapiJsWrapper(self.driver)
+
+        self.driver.set_script_timeout(500)
+        self.driver.implicitly_wait(10)
+        self.driver.get(self._URL)
+
     def save_firefox_profile(self):
-        "Function to save the firefox profile to the permanant one"
+        """
+        Function to save the firefox profile to the permanant one
+        """
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
         os.system("cp -R " + self._profile.path + " " + self._profile_path)
         cookie_file = os.path.join(self._profile_path, "cookies.pkl")
@@ -91,82 +146,6 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None,
-                 loadstyles=False, profile=None):
-        "Initialises the webdriver"
-
-        # Get the name of the config folder
-        self.config_dir = os.path.join(os.path.expanduser("~"), ".whatsapi")
-
-        try:
-            if not os.path.exists(self.config_dir):
-                os.makedirs(self.config_dir)
-        except OSError:
-            print("Error: Could not create config dir")
-            exit(-1)
-
-        self.logger.setLevel(logging.DEBUG)
-
-        # Setting the log message format and log file
-        log_file_handler = logging.FileHandler(os.path.join(self.config_dir, "whatsapi.log"))
-        log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
-        self.logger.addHandler(log_file_handler)
-
-        if profile is not None:
-            self._profile_path = profile
-            self.logger.info("Checking for profile at %s" % self._profile_path)
-            if not os.path.exists(self._profile_path):
-                print("Could not find profile at %s" % profile)
-                self.logger.error("Could not find profile at %s" % profile)
-                exit(-1)
-        else:
-            self._profile_path = None
-
-        self.client = client.lower()
-        if self.client == "firefox":
-            if self._profile_path is not None:
-                self._profile = webdriver.FirefoxProfile(self._profile_path)
-            else:
-                self._profile = webdriver.FirefoxProfile()
-            if not loadstyles:
-                # Disable CSS
-                self._profile.set_preference('permissions.default.stylesheet', 2)
-                ## Disable images
-                self._profile.set_preference('permissions.default.image', 2)
-                ## Disable Flash
-                self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                             'false')
-            if proxy is not None:
-                self.set_proxy(proxy)
-            self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(self._profile)
-                                            # firefox_binary="/Applications/FirefoxDeveloperEdition.app/Contents/MacOS/firefox-bin")
-
-        elif self.client == "chrome":
-            self._profile = webdriver.chrome.options.Options()
-            if self._profile_path is not None:
-                self._profile.add_argument("user-data-dir=%s" % self._profile_path)
-            if proxy is not None:
-                profile.add_argument('--proxy-server=%s' % proxy)
-            self.driver = webdriver.Chrome(chrome_options=self._profile)
-
-        elif client == 'remote':
-            capabilities = DesiredCapabilities.FIREFOX.copy()
-            self.driver = webdriver.Remote(
-                command_executor=command_executor,
-                desired_capabilities=capabilities
-            )
-
-        else:
-            self.logger.error("Invalid client: %s" % client)
-            print("Enter a valid client name")
-        self.username = username
-        self.wapi_functions = WapiJsWrapper(self.driver)
-
-        self.driver.set_script_timeout(500)
-        self.driver.implicitly_wait(10)
-        self.driver.get(self._URL)
-
     def wait_for_login(self):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, 90).until(
@@ -178,9 +157,8 @@ class WhatsAPIDriver(object):
         if "Click to reload QR code" in self.driver.page_source:
             self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        fd, fn_png = tempfile.mkstemp(suffix='.png')
         self.logger.debug("QRcode image saved at %s" % fn_png)
-        print(fn_png)
         qr.screenshot(fn_png)
         os.close(fd)
         return fn_png
@@ -289,7 +267,15 @@ class WhatsAPIDriver(object):
         return next((contact for contact in chats if (number in contact.id)), None)
 
     def reload_qr(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
+        """
+        If the reload button is there, click it to reload
+        :return: success true/false
+        """
+        elem = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
+        if elem:
+            elem.click()
+            return True
+        return False
 
     def get_status(self):
         if self.driver is None:
@@ -308,7 +294,22 @@ class WhatsAPIDriver(object):
             pass
         return WhatsAPIDriverStatus.Unknown
 
-    def create_chat(self, number):
-        url = "{base_URL}/send?phone={phone_number}"\
-            .format(base_URL=self._URL, phone_number=number)
+    def create_chat(self, phone_number):
+        """
+        Creates a Chat object, that can be retrieved on success
+        This object will die if no messages are sent, so be careful :/
+        :param phone_number: str phone number, must be a contact
+        """
+        url = "{base_URL}/send?phone={phone_number}" \
+            .format(base_URL=self._URL, phone_number=phone_number)
         self.driver.get(url)
+
+    def first_message(self, phone_number, message):
+        """
+        Attempt to start a conversation with phone number, then send a message
+        :param phone_number: str phone number with country code
+        :param message: unicode message to send
+        :return: succes bool
+        """
+
+        self.create_chat(phone_number)
