@@ -10,3 +10,4 @@ chrome_cache/
 **/*.pyc
 profiles
 .idea
+docs/_build
