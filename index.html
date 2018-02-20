@@ -31,6 +31,7 @@
             
   <div class="section" id="welcome-to-webwhatsapi-s-documentation">
 <h1>Welcome to WebWhatsAPI’s documentation!<a class="headerlink" href="#welcome-to-webwhatsapi-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>This package is used to provide a python interface for interacting with WhatsAPP Web to send and recieve Whatsapp messages.</p>
 <div class="toctree-wrapper compound">
 </div>
 </div>
@@ -172,7 +173,7 @@ Use get_all_chats for all chats</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of unread messages grouped by chats</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list[MessageGroup]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list[<a class="reference internal" href="#webwhatsapi.objects.message.MessageGroup" title="webwhatsapi.objects.message.MessageGroup">MessageGroup</a>]</p>
 </td>
 </tr>
 </tbody>
@@ -258,6 +259,12 @@ Use get_all_chats for all chats</p>
 <dt id="webwhatsapi.objects.message.Message">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">Message</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#Message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.Message" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="class">
+<dt id="webwhatsapi.objects.message.MessageGroup">
+<em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">MessageGroup</code><span class="sig-paren">(</span><em>chat</em>, <em>messages</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#MessageGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.MessageGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a set of messages</p>
+</dd></dl>
 
 <dl class="class">
 <dt id="webwhatsapi.objects.message.NotificationMessage">
