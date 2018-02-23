@@ -64,6 +64,7 @@ window.WAPI._serializeMessageObj = function(obj) {
 
     let data = {
         sender: WAPI._serializeContactObj(obj["senderObj"]),
+        id: obj.id._serialized,
         timestamp: obj["t"],
         content: obj["body"],
         isGroupMsg: obj.__x_isGroupMsg,
@@ -75,6 +76,7 @@ window.WAPI._serializeMessageObj = function(obj) {
         type: obj.__x_type,
         size: obj.__x_size,
         mime: obj.__x_mimetype,
+        chatId: obj.__x_from
     }
 
     if (data.isMedia || data.isMMS) {
