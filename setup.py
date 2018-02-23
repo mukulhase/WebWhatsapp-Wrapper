@@ -95,7 +95,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=[PACKAGE_NAME,],
+    packages=[PACKAGE_NAME, ],
     install_requires=[
         'python-dateutil>=2.6.0',
         'selenium>=3.4.3',

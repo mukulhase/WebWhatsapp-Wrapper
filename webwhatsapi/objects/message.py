@@ -35,8 +35,12 @@ class Message(WhatsappObject):
         :type js_obj: dict
         """
         super(Message, self).__init__(js_obj, driver)
+
+        self.id = js_obj["id"]
         self.sender = False if js_obj["sender"] is False else Contact(js_obj["sender"], driver)
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
+        self.chat_id = js_obj['chatId']
+
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'
