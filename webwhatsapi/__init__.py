@@ -1,5 +1,8 @@
 """
-WhatsAPI module
+WebWhatsAPI module
+
+.. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
+
 """
 
 import logging
@@ -16,7 +19,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from webwhatsapi.objects.chat import factory_chat, UserChat
+from webwhatsapi.objects.chat import factory_chat, UserChat, Chat
 from webwhatsapi.objects.message import factory_message, MessageGroup
 from .consts import Selectors, URL
 from .objects.contact import Contact
@@ -46,6 +49,14 @@ class ContactNotFoundError(WhatsAPIException):
 
 
 class WhatsAPIDriver(object):
+    """
+    This is our main driver objects.
+
+        .. note::
+
+           Runs its own instance of selenium
+
+        """
     _PROXY = None
 
     _URL = "https://web.whatsapp.com"
@@ -244,7 +255,6 @@ class WhatsAPIDriver(object):
         return [Contact(contact, self) for contact in all_contacts]
 
     def get_all_chats(self):
-        # type: () -> list(Chat)
         """
         Fetches all chats
 
@@ -253,18 +263,14 @@ class WhatsAPIDriver(object):
         """
         return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
-    # TODO: Check if deprecated
-    def reset_unread(self):
-        """
-        Resets unread messages list
-        """
-        self.driver.execute_script("window.WAPI.lastRead = {}")
-
     def get_unread(self, include_me=False, include_notifications=False):
-        # type: (bool, bool) -> list(MessageGroup)
         """
         Fetches unread messages
 
+        :param include_me: Include user's messages
+        :type include_me: bool or None
+        :param include_notifications: Include events happening on chat
+        :type include_notifications: bool or None
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
@@ -279,10 +285,13 @@ class WhatsAPIDriver(object):
         return unread_messages
 
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
-        # type: (Chat ,bool, bool) -> list(Message)
         """
         Fetches messages in chat
 
+        :param include_me: Include user's messages
+        :type include_me: bool or None
+        :param include_notifications: Include events happening on chat
+        :type include_notifications: bool or None
         :return: List of messages in chat
         :rtype: list[Message]
         """
@@ -315,9 +324,9 @@ class WhatsAPIDriver(object):
 
         Number format should be as it appears in Whatsapp ID
         For example, for the number:
-            +972-51-234-5678
+        +972-51-234-5678
         This function would receive:
-            972512345678
+        972512345678
 
         :param number: Phone number
         :return: Chat

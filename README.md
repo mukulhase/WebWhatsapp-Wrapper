@@ -48,6 +48,9 @@ Possible arguments for constructor:
 7. To send a message, get a Contact object, and call the send_message function with the message.
 `<Contact Object>.send_message("Hello")`
 
+## Code Documentation
+http://mukulhase.github.io/WebWhatsAPI/index.html
+
 ## Limitation
 Phone has to be on and connected to the internet
 
