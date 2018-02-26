@@ -76,7 +76,7 @@ window.WAPI._serializeMessageObj = function(obj) {
         type: obj.__x_type,
         size: obj.__x_size,
         mime: obj.__x_mimetype,
-        chatId: obj.__x_from
+        chatId: obj.__x_id.remote
     }
 
     if (data.isMedia || data.isMMS) {
