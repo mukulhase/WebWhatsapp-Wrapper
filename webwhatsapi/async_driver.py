@@ -17,7 +17,7 @@ class WhatsAPIDriverAsync:
                                       autoconnect=False)
 
         self.loop = loop or get_event_loop()
-        self._pool_executor = ThreadPoolExecutor(max_workers=4)
+        self._pool_executor = ThreadPoolExecutor(max_workers=1)
 
     async def get_local_storage(self):
         return await self.loop.run_in_executor(self._pool_executor, self._driver.get_local_storage)
