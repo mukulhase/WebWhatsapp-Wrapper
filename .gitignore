@@ -10,4 +10,5 @@ chrome_cache/
 **/*.pyc
 profiles
 .idea
-docs/_build.coverage
+docs/_build
+.coverage
