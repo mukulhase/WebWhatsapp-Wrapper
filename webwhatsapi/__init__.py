@@ -1,26 +1,31 @@
 """
-WhatsAPI module
+WebWhatsAPI module
+
+.. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
+
 """
 
-
-from __future__ import print_function
-
-import sys
-import datetime
-import time
-import os
-import sys
 import logging
-import pickle
-import tempfile
+from json import dumps, loads
 
+import os
+import shutil
+import tempfile
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
+
+from webwhatsapi.objects.chat import factory_chat, UserChat, Chat
+from webwhatsapi.objects.message import factory_message, MessageGroup
+from .consts import Selectors, URL
+from .objects.contact import Contact
+from .wapi_js_wrapper import WapiJsWrapper
+
+__version__ = '2.0.2'
 
 
 class WhatsAPIDriverStatus(object):
@@ -30,20 +35,33 @@ class WhatsAPIDriverStatus(object):
     NotLoggedIn = 'NotLoggedIn'
     LoggedIn = 'LoggedIn'
 
-from consts import Selectors, URL
-from objects.chat import Chat, GroupChat, UserChat
-from objects.contact import Contact
-from objects.message import Message, MessageGroup
-from webwhatsapi.wapi_js_wrapper import WapiJsWrapper
 
-if __debug__:
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
+class WhatsAPIException(Exception):
+    pass
+
+
+class ChatNotFoundError(WhatsAPIException):
+    pass
+
+
+class ContactNotFoundError(WhatsAPIException):
+    pass
+
 
 class WhatsAPIDriver(object):
+    """
+    This is our main driver objects.
+
+        .. note::
+
+           Runs its own instance of selenium
+
+        """
     _PROXY = None
 
     _URL = "https://web.whatsapp.com"
+
+    _LOCAL_STORAGE_FILE = 'localStorage.json'
 
     _SELECTORS = {
         'firstrun': "#wrapper",
@@ -71,20 +89,47 @@ class WhatsAPIDriver(object):
         'messageList': "msg"
     }
 
-    logger = logging.getLogger("whatsapi")
+    logger = logging.getLogger(__name__)
     driver = None
 
     # Profile points to the Firefox profile for firefox and Chrome cache for chrome
     # Do not alter this
     _profile = None
 
-    def save_firefox_profile(self):
+    def get_local_storage(self):
+        return self.driver.execute_script('return window.localStorage;')
+
+    def set_local_storage(self, data):
+        self.driver.execute_script(''.join(["window.localStorage.setItem('{}', '{}');".format(k, v)
+                                            for k, v in data.items()]))
+
+    def save_firefox_profile(self, remove_old=False):
         "Function to save the firefox profile to the permanant one"
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
-        os.system("cp -R " + self._profile.path + " "+ self._profile_path)
-        cookie_file = os.path.join(self._profile_path, "cookies.pkl")
-        if self.driver:
-            pickle.dump(self.driver.get_cookies() , open(cookie_file,"wb"))
+
+        if remove_old:
+            if os.path.exists(self._profile_path):
+                try:
+                    shutil.rmtree(self._profile_path)
+                except OSError:
+                    pass
+
+            shutil.copytree(os.path.join(self._profile.path), self._profile_path,
+                            ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
+        else:
+            for item in os.listdir(self._profile.path):
+                if item in ["parent.lock", "lock", ".parentlock"]:
+                    continue
+                s = os.path.join(self._profile.path, item)
+                d = os.path.join(self._profile_path, item)
+                if os.path.isdir(s):
+                    shutil.copytree(s, d,
+                                    ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
+                else:
+                    shutil.copy2(s, d)
+
+        with open(os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE), 'w') as f:
+            f.write(dumps(self.get_local_storage()))
 
     def set_proxy(self, proxy):
         self.logger.info("Setting proxy to %s" % proxy)
@@ -95,33 +140,18 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False, profile=None):
+    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
+                 profile=None, headless=False, autoconnect=True, logger=None):
         "Initialises the webdriver"
 
-        # Get the name of the config folder
-        self.config_dir = os.path.join(os.path.expanduser("~"), ".whatsapi")
-
-        try:
-            if not os.path.exists(self.config_dir):
-                os.makedirs(self.config_dir)
-        except OSError:
-            print("Error: Could not create config dir")
-            exit(-1)
-
-        self.logger.setLevel(logging.DEBUG)
-
-        # Setting the log message format and log file
-        log_file_handler = logging.FileHandler(os.path.join(self.config_dir, "whatsapi.log"))
-        log_file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
-        self.logger.addHandler(log_file_handler)
+        self.logger = logger or self.logger
 
         if profile is not None:
             self._profile_path = profile
             self.logger.info("Checking for profile at %s" % self._profile_path)
             if not os.path.exists(self._profile_path):
-                print("Could not find profile at %s" % profile)
-                self.logger.error("Could not find profile at %s" % profile)
-                exit(-1)
+                self.logger.critical("Could not find profile at %s" % profile)
+                raise WhatsAPIException("Could not find profile at %s" % profile)
         else:
             self._profile_path = None
 
@@ -134,15 +164,26 @@ class WhatsAPIDriver(object):
             if loadstyles == False:
                 # Disable CSS
                 self._profile.set_preference('permissions.default.stylesheet', 2)
-                ## Disable images
+                # Disable images
                 self._profile.set_preference('permissions.default.image', 2)
-                ## Disable Flash
+                # Disable Flash
                 self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                              'false')
+                                             'false')
             if proxy is not None:
                 self.set_proxy(proxy)
+
+            options = Options()
+
+            if headless:
+                options.set_headless()
+
+            options.profile = self._profile
+
+            capabilities = DesiredCapabilities.FIREFOX.copy()
+            capabilities['webStorageEnabled'] = True
+
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(self._profile)
+            self.driver = webdriver.Firefox(capabilities=capabilities, options=options)
 
         elif self.client == "chrome":
             self._profile = webdriver.chrome.options.Options()
@@ -161,13 +202,24 @@ class WhatsAPIDriver(object):
 
         else:
             self.logger.error("Invalid client: %s" % client)
-            print("Enter a valid client name")
         self.username = username
         self.wapi_functions = WapiJsWrapper(self.driver)
 
         self.driver.set_script_timeout(500)
         self.driver.implicitly_wait(10)
+
+        if autoconnect:
+            self.connect()
+
+    def connect(self):
         self.driver.get(self._URL)
+
+        local_storage_file = os.path.join(self._profile.path, self._LOCAL_STORAGE_FILE)
+        if os.path.exists(local_storage_file):
+            with open(local_storage_file) as f:
+                self.set_local_storage(loads(f.read()))
+
+            self.driver.refresh()
 
     def wait_for_login(self):
         """Waits for the QR to go away"""
@@ -182,7 +234,6 @@ class WhatsAPIDriver(object):
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
         fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         self.logger.debug("QRcode image saved at %s" % fn_png)
-        print(fn_png)
         qr.screenshot(fn_png)
         os.close(fd)
         return fn_png
@@ -204,27 +255,22 @@ class WhatsAPIDriver(object):
         return [Contact(contact, self) for contact in all_contacts]
 
     def get_all_chats(self):
-        # type: (Chat ,bool, bool) -> list(Message)
         """
         Fetches all chats
 
         :return: List of chats
         :rtype: list[Chat]
         """
-        return [Chat(chat, self) for chat in self.wapi_functions.getAllChats()]
-
-    # TODO: Check if deprecated
-    def reset_unread(self):
-        """
-        Resets unread messages list
-        """
-        self.driver.execute_script("window.WAPI.lastRead = {}")
+        return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
     def get_unread(self, include_me=False, include_notifications=False):
-        # type: (bool, bool) -> list(MessageGroup)
         """
         Fetches unread messages
 
+        :param include_me: Include user's messages
+        :type include_me: bool or None
+        :param include_notifications: Include events happening on chat
+        :type include_notifications: bool or None
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
@@ -232,20 +278,20 @@ class WhatsAPIDriver(object):
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
-            chat = Chat(raw_message_group)
-            messages = [Message(message, self) for message in raw_message_group['messages']]
+            chat = factory_chat(raw_message_group, self)
+            messages = [factory_message(message, self) for message in raw_message_group['messages']]
             unread_messages.append(MessageGroup(chat, messages))
-
-        for message in unread_messages:
-            message.chat.driver = self
 
         return unread_messages
 
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
-        # type: (Chat ,bool, bool) -> list(Message)
         """
         Fetches messages in chat
 
+        :param include_me: Include user's messages
+        :type include_me: bool or None
+        :param include_notifications: Include events happening on chat
+        :type include_notifications: bool or None
         :return: List of messages in chat
         :rtype: list[Message]
         """
@@ -253,26 +299,24 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in message_objs:
-            messages.append(Message(message, driver=self))
+            messages.append(factory_message(message, self))
 
         return messages
 
     def get_contact_from_id(self, contact_id):
         contact = self.wapi_functions.getContact(contact_id)
 
-        assert contact, "Contact {0} not found".format(contact_id)
+        if contact is None:
+            raise ContactNotFoundError("Contact {0} not found".format(contact_id))
 
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
-        chats = filter(
-            lambda chat: chat["id"] == chat_id,
-            self.wapi_functions.getAllChats()
-        )
+        for chat in self.wapi_functions.getAllChats():
+            if chat["id"] == chat_id:
+                return factory_chat(chat, self)
 
-        assert len(chats) == 1, "Chat {0} not found".format(chat_id)
-
-        return Chat(chats[0], self)
+        raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
     def get_chat_from_phone_number(self, number):
         """
@@ -280,16 +324,20 @@ class WhatsAPIDriver(object):
 
         Number format should be as it appears in Whatsapp ID
         For example, for the number:
-            +972-51-234-5678
+        +972-51-234-5678
         This function would receive:
-            972512345678
+        972512345678
 
         :param number: Phone number
         :return: Chat
         :rtype: Chat
         """
-        chats = filter(lambda chat:(type(chat) is UserChat), self.get_all_chats())
-        return next((contact for contact in chats if (number in contact.id)), None)
+        for chat in self.get_all_chats():
+            if not isinstance(chat, UserChat) or number not in chat.id:
+                continue
+            return chat
+
+        raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
@@ -310,3 +358,42 @@ class WhatsAPIDriver(object):
         except NoSuchElementException:
             pass
         return WhatsAPIDriverStatus.Unknown
+
+    def contact_get_common_groups(self, contact_id):
+        for group in self.wapi_functions.getCommonGroups(contact_id):
+            yield factory_chat(group, self)
+
+    def chat_send_message(self, chat_id, message):
+        return self.wapi_functions.sendMessage(chat_id, message)
+
+    def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
+        message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
+        for message in message_objs:
+            yield factory_message(message, self)
+
+    def chat_load_earlier_messages(self, chat_id):
+        self.wapi_functions.loadEarlierMessages(chat_id)
+
+    def chat_load_all_earlier_messages(self, chat_id):
+        self.wapi_functions.loadAllEarlierMessages(chat_id)
+
+    def group_get_participants_ids(self, group_id):
+        return self.wapi_functions.getGroupParticipantIDs(group_id)
+
+    def group_get_participants(self, group_id):
+        participant_ids = self.group_get_participants_ids(group_id)
+
+        for participant_id in participant_ids:
+            yield self.get_contact_from_id(participant_id)
+
+    def group_get_admin_ids(self, group_id):
+        return self.wapi_functions.getGroupAdmins(group_id)
+
+    def group_get_admins(self, group_id):
+        admin_ids = self.group_get_admin_ids(group_id)
+
+        for admin_id in admin_ids:
+            yield self.get_contact_from_id(admin_id)
+
+    def quit(self):
+        self.driver.quit()

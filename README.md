@@ -48,6 +48,9 @@ Possible arguments for constructor:
 7. To send a message, get a Contact object, and call the send_message function with the message.
 `<Contact Object>.send_message("Hello")`
 
+## Code Documentation
+http://mukulhase.github.io/WebWhatsAPI/index.html
+
 ## Limitation
 Phone has to be on and connected to the internet
 
@@ -59,6 +62,9 @@ Phone has to be on and connected to the internet
  - Get List of Groups
  - Get information about Groups
  - Get various events. For example: Leaving, Joining, Missed Call etc.
+ - Download media messages
+ - Get List of common groups
+ - Asyncio driver version
 
 ## Note:
 There are issues with asynchronous calls in Chrome. Primary support of this api is for firefox. If something doesn't work in chrome, please try firefox.
@@ -68,10 +74,12 @@ There are issues with asynchronous calls in Chrome. Primary support of this api 
 ### For more queries, contact: mukulhase@gmail.com
 
 
-## Use Cases
-- Auto Reply bot for whatsapp, “I am away from phone”
-- Can use whatsapp on phone and this api at the same time, (unlike the other whatsapp APIs, since this uses web.whatsapp)
-- No need for number registration
-- Hackathons, very easy to setup a whatsapp messaging service.
-- API for custom bot making
-- Whatsapp cloud(A service): User can access and send messages from anywhere without scanning qr anymore, just simple user login and password
+## Contribute
+Contributing is simple as cloning, making changes and submitting a pull request.
+If you would like to contribute, here are a few starters:
+- Bug Hunts
+- More sorts of examples
+- Additional features/ More integrations (This api has the minimum amount, but I don't mind having more data accessible to users)
+- Create an env/vagrant box to make it easy for others to contribute. (At the moment, all I have is a requirements.txt
+- Phantom JS support
+
