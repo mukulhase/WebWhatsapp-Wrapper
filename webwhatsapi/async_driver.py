@@ -18,11 +18,11 @@ from . import WhatsAPIDriver
 class WhatsAPIDriverAsync:
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, logger=None, loop=None):
+                 profile=None, headless=False, logger=None, extra_params=None, loop=None):
 
         self._driver = WhatsAPIDriver(client=client, username=username, proxy=proxy, command_executor=command_executor,
                                       loadstyles=loadstyles, profile=profile, headless=headless, logger=logger,
-                                      autoconnect=False)
+                                      autoconnect=False, extra_params=extra_params)
 
         self.loop = loop or get_event_loop()
         self._pool_executor = ThreadPoolExecutor(max_workers=1)
