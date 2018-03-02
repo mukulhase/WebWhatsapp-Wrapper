@@ -146,10 +146,11 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None):
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
         "Initialises the webdriver"
 
         self.logger = logger or self.logger
+        extra_params = extra_params or {}
 
         if profile is not None:
             self._profile_path = profile
@@ -188,7 +189,7 @@ class WhatsAPIDriver(object):
             capabilities['webStorageEnabled'] = True
 
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(capabilities=capabilities, options=options)
+            self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
 
         elif self.client == "chrome":
             self._profile = webdriver.chrome.options.Options()
@@ -196,13 +197,14 @@ class WhatsAPIDriver(object):
                 self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
-            self.driver = webdriver.Chrome(chrome_options=self._profile)
+            self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == 'remote':
             capabilities = DesiredCapabilities.FIREFOX.copy()
             self.driver = webdriver.Remote(
                 command_executor=command_executor,
-                desired_capabilities=capabilities
+                desired_capabilities=capabilities,
+                **extra_params
             )
 
         else:
