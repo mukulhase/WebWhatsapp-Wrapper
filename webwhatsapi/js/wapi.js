@@ -86,6 +86,10 @@ window.WAPI._serializeMessageObj = function(obj) {
             duration: obj['__x_mediaData']['__x_duration'],
             filehash: obj['__x_mediaData']['__x_filehash'],
             mimetype: obj['__x_mediaData']['__x_mimetype'],
+            encriptationKey: obj['__x_mediaData']['__x_encryptionKey'],
+            fullHeight: obj['__x_mediaData']['__x_fullHeight'],
+            fullWidth: obj['__x_mediaData']['__x_fullWidth'],
+            size: obj['__x_mediaData']['__x_size'],
         }
     }
 
