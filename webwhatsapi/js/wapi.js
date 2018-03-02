@@ -374,7 +374,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
             if (!messageObj.__x_isNewMsg) {
                 break;
             } else {
-                messageObj.__x_isNewMsg = false;
+//                messageObj.__x_isNewMsg = false;
                 let message = WAPI.processMessageObj(messageObj, includeMe,  includeNotifications);
                 if(message){
                     messageGroup.messages.push(message);
@@ -393,6 +393,24 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
     }
     return output;
 };
+window.WAPI.setUnreadMessages = function () {
+    const chats = Store.Chat.models;
+    for (let chat in chats) {
+        if (isNaN(chat)) {
+            continue;
+        }
+
+        let messageGroupObj = chats[chat];
+        let messageGroup = WAPI.serializeChat(messageGroupObj);
+
+        const messages = messageGroupObj.msgs.models;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            let messageObj = messages[i];
+            messageObj.__x_isNewMsg = false;
+        }
+    }
+ };
+
 
 window.WAPI.getGroupOwnerID = async function (id) {
     return WAPI.getGroupMetadata(id).owner.id;

@@ -218,6 +218,14 @@ class WhatsAPI(object):
 
         return unread_messages
 
+    def set_unread(self, include_me=False, include_notifications=False):
+        # type: (bool, bool) -> list(MessageGroup)
+        """
+        sets unread messages
+
+        """
+        self.wapi_functions.setUnreadMessages()
+
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         # type: (Chat ,bool, bool) -> list(Message)
         """
