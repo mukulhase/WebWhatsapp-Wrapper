@@ -11,3 +11,4 @@ chrome_cache/
 profiles
 .idea
 docs/_build
+.coverage

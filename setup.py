@@ -9,13 +9,13 @@ import ast
 
 # To use a consistent encoding
 from codecs import open
-from os import path
+import os
 # Always prefer setuptools over distutils
 from setuptools import setup
 
 PACKAGE_NAME = 'webwhatsapi'
 
-path = path.join(path.dirname(__file__), PACKAGE_NAME, '__init__.py')
+path = os.path.join(os.path.dirname(__file__), PACKAGE_NAME, '__init__.py')
 
 with open(path, 'r') as file:
     t = compile(file.read(), path, 'exec', ast.PyCF_ONLY_AST)
@@ -43,7 +43,7 @@ with open(path, 'r') as file:
             break
 
 # Get the long description from the README file
-with open(path.join(path.dirname(__file__), 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -95,11 +95,13 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=PACKAGE_NAME,
+    packages=[PACKAGE_NAME, ],
     install_requires=[
         'python-dateutil>=2.6.0',
         'selenium>=3.4.3',
         'six>=1.10.0',
+        'python-axolotl',
+        'pycrypto'
     ],
     extras_require={
     },
