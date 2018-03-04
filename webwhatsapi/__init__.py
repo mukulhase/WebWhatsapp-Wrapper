@@ -261,6 +261,16 @@ class WhatsAPIDriver(object):
         all_contacts = self.wapi_functions.getAllContacts()
         return [Contact(contact, self) for contact in all_contacts]
 
+    def get_my_contacts(self):
+        """
+        Fetches list of added contacts
+
+        :return: List of contacts
+        :rtype: list[Contact]
+        """
+        my_contacts = self.wapi_functions.getMyContacts()
+        return [Contact(contact, self) for contact in my_contacts]
+
     def get_all_chats(self):
         """
         Fetches all chats

@@ -110,6 +110,21 @@ window.WAPI.getAllContacts = function (done) {
         return contacts;
     }
 };
+/**
+ * Fetches all contact objects from store, filters them
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of contacts
+ */
+window.WAPI.getMyContacts = function (done) {
+    const contacts = Store.Contact.models.filter(d => d.__x_isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
+
+    if (done !== undefined) {
+        done(contacts);
+    } else {
+        return contacts;
+    }
+};
 
 /**
  * Fetches contact object from store by ID
