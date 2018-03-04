@@ -234,12 +234,16 @@ class WhatsAPIDriver(object):
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
 
-    def get_qr(self):
+    def get_qr(self, filename=None):
         """Get pairing QR code from client"""
         if "Click to reload QR code" in self.driver.page_source:
             self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        if filename is None:
+            fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        else:
+            fd = os.open(filename, os.O_RDWR|os.CREAT)
+            fn_png = os.path.abspath(filename)
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
         os.close(fd)
