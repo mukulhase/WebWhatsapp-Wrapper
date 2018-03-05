@@ -30,7 +30,7 @@ from .objects.contact import Contact
 from .objects.message import MessageGroup, factory_message
 from .wapi_js_wrapper import WapiJsWrapper
 
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 
 
 class WhatsAPIDriverStatus(object):
