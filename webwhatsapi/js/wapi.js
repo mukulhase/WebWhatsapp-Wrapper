@@ -156,6 +156,7 @@ window.WAPI.getChat = function (id, done) {
     }
 };
 
+
 /**
  * Load more messages in chat object from store by ID
  *
@@ -349,6 +350,38 @@ window.WAPI.sendMessage = function (id, message, done) {
                 return true;
             } else {
                 Chats[chat].sendMessage(message);
+                return true;
+            }
+        }
+    }
+    if (done !== undefined) {
+        done();
+    } else {
+        return false;
+    }
+    return false;
+};
+
+
+window.WAPI.sendSeen = function (id, done) {
+    const Chats = Store.Chat.models;
+
+    for (const chat in Chats) {
+        if (isNaN(chat)) {
+            continue;
+        }
+
+        let temp = {};
+        temp.name = Chats[chat].__x__formattedTitle;
+        temp.id = Chats[chat].__x_id;
+        if (temp.id === id) {
+            if (done !== undefined) {
+                Chats[chat].sendSeen(false).then(function () {
+                    done(true);
+                });
+                return true;
+            } else {
+                Chats[chat].sendSeen(false);
                 return true;
             }
         }

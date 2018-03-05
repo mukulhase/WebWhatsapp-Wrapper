@@ -366,6 +366,9 @@ class WhatsAPIDriver(object):
     def chat_send_message(self, chat_id, message):
         return self.wapi_functions.sendMessage(chat_id, message)
 
+    def chat_send_seen(self, chat_id):
+        return self.wapi_functions.sendSeen(chat_id)
+
     def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
         message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
         for message in message_objs:
