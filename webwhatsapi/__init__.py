@@ -167,15 +167,6 @@ class WhatsAPIDriver(object):
         else:
             self._profile = webdriver.FirefoxProfile()
 
-        if not load_styles:
-            # Disable CSS
-            self._profile.set_preference('permissions.default.stylesheet', 2)
-            # Disable images
-            self._profile.set_preference('permissions.default.image', 2)
-            # Disable Flash
-            self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                         'false')
-
         if self.client == "firefox":
             if self._profile_path is not None:
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
