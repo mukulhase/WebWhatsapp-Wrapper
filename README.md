@@ -48,6 +48,9 @@ Possible arguments for constructor:
 7. To send a message, get a Contact object, and call the send_message function with the message.
 `<Contact Object>.send_message("Hello")`
 
+## Code Documentation
+http://mukulhase.github.io/WebWhatsAPI/index.html
+
 ## Limitation
 Phone has to be on and connected to the internet
 
@@ -59,6 +62,9 @@ Phone has to be on and connected to the internet
  - Get List of Groups
  - Get information about Groups
  - Get various events. For example: Leaving, Joining, Missed Call etc.
+ - Download media messages
+ - Get List of common groups
+ - Asyncio driver version
 
 ## Note:
 There are issues with asynchronous calls in Chrome. Primary support of this api is for firefox. If something doesn't work in chrome, please try firefox.

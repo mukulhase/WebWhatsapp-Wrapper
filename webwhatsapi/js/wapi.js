@@ -60,22 +60,41 @@ window.WAPI._serializeNotificationObj = (obj) => ({
 });
 
 //TODO: Add chat ref
-window.WAPI._serializeMessageObj = (obj) => ({
-    sender: WAPI._serializeContactObj(obj["senderObj"]),
-    timestamp: obj["t"],
-    content: obj["body"],
-    isGroupMsg: obj.__x_isGroupMsg,
-    isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
-    isMedia: obj.__x_isMedia,
-    isNotification: obj.__x_isNotification,
-    isPSA: obj.__x_isPSA,
-    type: obj.__x_type,
-    size: obj.__x_size,
-    mime: obj.__x_mimetype,
-    id: obj.__x_id.id,
-});
 
+window.WAPI._serializeMessageObj = function(obj) {
+
+    let data = {
+        sender: WAPI._serializeContactObj(obj["senderObj"]),
+        id: obj.id._serialized,
+        timestamp: obj["t"],
+        content: obj["body"],
+        isGroupMsg: obj.__x_isGroupMsg,
+        isLink: obj.__x_isLink,
+        isMMS: obj.__x_isMMS,
+        isMedia: obj.__x_isMedia,
+        isNotification: obj.__x_isNotification,
+        isPSA: obj.__x_isPSA,
+        type: obj.__x_type,
+        size: obj.__x_size,
+        mime: obj.__x_mimetype,
+        chatId: obj.__x_id.remote
+    }
+
+    if (data.isMedia || data.isMMS) {
+        data['clientUrl'] = obj['__x_clientUrl'];
+        data['mediaKey'] = obj['__x_mediaKey'];
+        data['mediaData'] = {
+            duration: obj['__x_mediaData']['__x_duration'],
+            filehash: obj['__x_mediaData']['__x_filehash'],
+            mimetype: obj['__x_mediaData']['__x_mimetype'],
+            encriptationKey: obj['__x_mediaData']['__x_encryptionKey'],
+            fullHeight: obj['__x_mediaData']['__x_fullHeight'],
+            fullWidth: obj['__x_mediaData']['__x_fullWidth'],
+            size: obj['__x_mediaData']['__x_size'],
+        }
+    }
+    return data
+}
 /**
  * Fetches all contact objects from store
  *
@@ -122,6 +141,22 @@ window.WAPI.getAllChats = function (done) {
         done(chats);
     } else {
         return chats;
+    }
+};
+
+/**
+ * Fetches all groups objects from store
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of chats
+ */
+window.WAPI.getAllGroups = function (done) {
+    const groups = window.WAPI.getAllChats().filter((chat) => chat.isGroup);
+
+    if (done !== undefined) {
+        done(groups);
+    } else {
+        return groups;
     }
 };
 
@@ -175,9 +210,9 @@ window.WAPI.loadEarlierMessages = function (id, done) {
 window.WAPI.loadAllEarlierMessages = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
     x = function(){
-        if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
+        if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
             found.loadEarlierMsgs().then(x);
-        }else {
+        } else {
             done();
         }
     };
@@ -209,20 +244,21 @@ window.WAPI.getAllGroupMetadata = function (done) {
  * @returns {T|*} Group metadata object
  */
 window.WAPI.getGroupMetadata = async function (id, done) {
-    let found = Store.GroupMetadata.models.find((groupData) => groupData.id === id);
+    let output = Store.GroupMetadata.models.find((groupData) => groupData.id === id);
 
-    if (found !== undefined) {
-        if (found.stale) {
-            await found.update();
+    if (output !== undefined) {
+        if (output.stale) {
+            await output.update();
         }
     }
 
     if (done !== undefined) {
-        done(found);
-    } else {
-        return found;
+        done(output);
     }
+    return output;
+
 };
+
 
 /**
  * Fetches group participants
@@ -244,21 +280,24 @@ window.WAPI._getGroupParticipants = async function (id) {
  * @returns {Promise.<Array|*>} Yields list of IDs
  */
 window.WAPI.getGroupParticipantIDs = async function (id, done) {
-    const participants = await WAPI._getGroupParticipants(id);
-    const ids = participants.map((participant) => participant.id);
+    const output = (await WAPI._getGroupParticipants(id))
+        .map((participant) => participant.id);
 
     if (done !== undefined) {
-        done(ids);
-    } else {
-        return ids;
+        done(output);
     }
+    return output;
 };
 
-window.WAPI.getGroupAdmins = async function (id) {
-    const participants = await WAPI._getGroupParticipants(id);
-    return participants
+window.WAPI.getGroupAdmins = async function (id, done) {
+    const output = (await WAPI._getGroupParticipants(id))
         .filter((participant) => participant.isAdmin)
         .map((admin) => admin.id);
+
+    if (done !== undefined) {
+        done(output);
+    }
+    return output;
 };
 
 /**
@@ -388,8 +427,6 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
     }
     if (done !== undefined) {
         done(output);
-    } else {
-        return output;
     }
     return output;
 };
@@ -414,12 +451,57 @@ window.WAPI.setUnreadMessages = function () {
  };
 
 
-window.WAPI.getGroupOwnerID = async function (id) {
-    return WAPI.getGroupMetadata(id).owner.id;
+window.WAPI.getGroupOwnerID = async function (id, done) {
+    const output = await WAPI.getGroupMetadata(id).owner.id;
+    if (done !== undefined) {
+        done(output);
+    }
+    return output;
+
 };
 
-// FUNCTIONS UNDER THIS LINE ARE UNSTABLE
+window.WAPI.getCommonGroups = async function (id, done) {
+    let output = [];
 
-window.WAPI.getCommonGroups = function (id) {
-    // return
+    groups = window.WAPI.getAllGroups();
+
+    for (let idx in groups) {
+        try {
+            participants = await window.WAPI.getGroupParticipantIDs(groups[idx].id);
+            if (participants.filter((participant) => participant == id).length) {
+                output.push(groups[idx]);
+            }
+        } catch(err) {
+            console.log("Error in group:");
+            console.log(groups[idx]);
+            console.log(err);
+        }
+    }
+
+    if (done !== undefined) {
+        done(output);
+    }
+    return output;
 };
+
+window.WAPI.downloadFile = function (url, done) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onload = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let reader = new FileReader();
+                reader.readAsDataURL(xhr.response);
+                reader.onload =  function(e){
+                    done(reader.result.substr(reader.result.indexOf(',')+1))
+                };
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.open("GET", url, true);
+    xhr.responseType = 'blob';
+    xhr.send(null);
+}
+

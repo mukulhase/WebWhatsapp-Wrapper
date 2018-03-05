@@ -1,44 +1,31 @@
 import mimetypes
-import os
-import pprint
+from base64 import b64decode
 from datetime import datetime
 
+import os
 from webwhatsapi.helper import safe_str
-
-pprint = pprint.PrettyPrinter(indent=4).pprint
-from webwhatsapi.objects.whatsapp_object import WhatsappObjectWithoutID
 from webwhatsapi.objects.contact import Contact
+from webwhatsapi.objects.whatsapp_object import WhatsappObject
 
 
-class MessageMetaClass(type):
-    """
-    Message type factory
-    """
+def factory_message(js_obj, driver):
+    if js_obj["isMedia"]:
+        return MediaMessage(js_obj, driver)
 
-    def __call__(cls, js_obj, driver=None):
-        """
-        Responsible for returning correct Message subtype
+    if js_obj["isNotification"]:
+        return NotificationMessage(js_obj, driver)
 
-        :param js_obj: Raw message JS
-        :return: Instance of appropriate message type
-        :rtype: MediaMessage | Message | MMSMessage | VCardMessage
-        """
-        if js_obj["isMedia"]:
-            return type.__call__(MediaMessage, js_obj, driver)
+    if js_obj["isMMS"]:
+        return MMSMessage(js_obj, driver)
 
-        if js_obj["isNotification"]:
-            return type.__call__(NotificationMessage, js_obj, driver)
+    if js_obj["type"] in ["vcard", "multi_vcard"]:
+        return VCardMessage(js_obj, driver)
 
-        if js_obj["isMMS"]:
-            return type.__call__(MMSMessage, js_obj, driver)
-
-        if js_obj["type"] in ["vcard", "multi_vcard"]:
-            return type.__call__(VCardMessage, js_obj, driver)
-
-        return type.__call__(Message, js_obj, driver)
+    return Message(js_obj, driver)
 
 
-class Message(WhatsappObjectWithoutID, metaclass=MessageMetaClass):
+
+class Message(WhatsappObject):
     def __init__(self, js_obj, driver=None):
         """
         Constructor
@@ -47,9 +34,11 @@ class Message(WhatsappObjectWithoutID, metaclass=MessageMetaClass):
         :type js_obj: dict
         """
         super(Message, self).__init__(js_obj, driver)
-        self.sender = False if js_obj["sender"] == False else Contact(js_obj["sender"], driver)
-        self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
+
         self.id = js_obj["id"]
+        self.sender = False if js_obj["sender"] is False else Contact(js_obj["sender"], driver)
+        self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
+        self.chat_id = js_obj['chatId']
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'
@@ -63,6 +52,11 @@ class Message(WhatsappObjectWithoutID, metaclass=MessageMetaClass):
 
 
 class MediaMessage(Message):
+    crypt_keys = {'document': '576861747341707020446f63756d656e74204b657973',
+                  'image': '576861747341707020496d616765204b657973',
+                  'video': '576861747341707020566964656f204b657973',
+                  'ptt': '576861747341707020417564696f204b657973'}
+
     def __init__(self, js_obj, driver=None):
         super(MediaMessage, self).__init__(js_obj, driver)
 
@@ -70,18 +64,25 @@ class MediaMessage(Message):
         self.size = self.js_obj["size"]
         self.mime = self.js_obj["mime"]
 
-    def save_media(self, path):
-        extension = mimetypes.guess_extension(self.mime)
-        filename = "{0}{1}".format(self["__x_filehash"], extension)
+        self.media_key = self.js_obj.get('mediaKey')
+        self.client_url = self.js_obj.get('clientUrl')
 
-        with open(os.path.join(path, filename), "wb") as output:
-            output.write(self.content.decode("base64"))
+        extension = mimetypes.guess_extension(self.mime)
+        try:
+            self.filename = ''.join([self.js_obj["filehash"], extension])
+        except KeyError:
+            self.filename = ''.join([str(id(self)), extension or ''])
+
+    def save_media(self, path):
+        with open(os.path.join(path, self.filename), "wb") as output:
+            output.write(b64decode(self.content))
 
     def __repr__(self):
-        return "<MediaMessage - {type} from {sender} at {timestamp}>".format(
+        return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
             type=self.type,
             sender=safe_str(self.sender.get_safe_name()),
-            timestamp=self.timestamp
+            timestamp=self.timestamp,
+            filename=self.filename
         )
 
 

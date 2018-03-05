@@ -1,6 +1,7 @@
 import os
 
 from selenium.common.exceptions import WebDriverException
+from six import string_types
 
 
 class JsException(Exception):
@@ -66,10 +67,11 @@ class JsArg(object):
 
         :return: JS literal represented in a string
         """
-        if type(self.obj) in [str, str]:
+
+        if isinstance(self.obj, string_types):
             return repr(str(self.obj))
 
-        if type(self.obj) == bool:
+        if isinstance(self.obj, bool):
             return str(self.obj).lower()
 
         return str(self.obj)

@@ -8,3 +8,7 @@ chrome_cache/
 *.png
 **/.DS_Store
 **/*.pyc
+profiles
+.idea
+docs/_build
+.coverage
