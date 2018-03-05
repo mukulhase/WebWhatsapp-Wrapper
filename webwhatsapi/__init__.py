@@ -451,3 +451,13 @@ class WhatsAPIDriver(object):
 
     def quit(self):
         self.driver.quit()
+
+    def create_chat(self, phone_number):
+        """
+        Creates a Chat object, that can be retrieved on success
+        This object will die if no messages are sent, so be careful :/
+        :param phone_number: str phone number, must be a contact
+        """
+        url = "{base_URL}/send?phone={phone_number}" \
+            .format(base_URL=self._URL, phone_number=phone_number)
+        self.driver.get(url)
