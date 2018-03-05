@@ -396,40 +396,53 @@ function isChatMessage(message) {
 
 
 window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done) {
-    const chats = Store.Chat.models;
-    let output = [];
-    for (let chat in chats) {
+    var Chats = Store.Chat.models;
+    var Output = [];
+
+    for (chat in Chats) {
         if (isNaN(chat)) {
             continue;
+        };
+        if (!Chats[chat].__x_hasUnread) {
+            continue;
+        };
+        console.log(Chats[chat]);
+        var temp = {};
+        temp.contact = Chats[chat].contact;
+        temp.id = Chats[chat].id;
+        temp.kind = Chats[chat].kind;
+        temp.isGroup = Chats[chat].isGroup;
+        temp.name = Chats[chat].name
+        temp.messages = [];
+        var messages = Chats[chat].msgs.models;
+        var readfrom = messages.length - 1;
+        var readuntil = readfrom - Chats[chat].__x_unreadCount;
+        for (var i = readfrom; i > readuntil; i--) {
+            temp.messages.push({
+                isMedia: messages[i].isMedia,
+                sender: messages[i].sender,
+                content: messages[i].body,
+                message: messages[i].body,
+                id: messages[i].__x_id._serialized,
+                chatId: messages[i].__x_id.remote,
+                isMMS: messages[i].isMMs,
+                isNotification: messages[i].isNotification,
+                type: messages[i].type,
+                contact: messages[i].contact,
+                timestamp: messages[i].__x_t
+            });
         }
+        if (temp.messages.length > 0) {
+            Output.push(temp);
+            };
 
-        let messageGroupObj = chats[chat];
-        let messageGroup = WAPI.serializeChat(messageGroupObj);
-        messageGroup.messages = [];
-
-        const messages = messageGroupObj.msgs.models;
-        for (let i = messages.length - 1; i >= 0; i--) {
-            let messageObj = messages[i];
-            if (!messageObj.__x_isNewMsg) {
-                break;
-            } else {
-//                messageObj.__x_isNewMsg = false;
-                let message = WAPI.processMessageObj(messageObj, includeMe,  includeNotifications);
-                if(message){
-                    messageGroup.messages.push(message);
-                }
-            }
-        }
-
-        if (messageGroup.messages.length > 0) {
-            output.push(messageGroup);
-        }
+        if(done !== undefined){
+                done(Output)
+        };
     }
-    if (done !== undefined) {
-        done(output);
-    }
-    return output;
+    return Output;
 };
+
 window.WAPI.setUnreadMessages = function () {
     const chats = Store.Chat.models;
     for (let chat in chats) {
