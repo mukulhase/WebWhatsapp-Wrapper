@@ -408,6 +408,8 @@ window.WAPI.setUnreadMessages = function () {
             let messageObj = messages[i];
             messageObj.__x_isNewMsg = false;
         }
+
+    return
     }
  };
 
