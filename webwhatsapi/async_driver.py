@@ -169,4 +169,3 @@ class WhatsAPIDriverAsync:
 
     async def quit(self):
         return await self.loop.run_in_executor(self._pool_executor, self._driver.quit)
-
