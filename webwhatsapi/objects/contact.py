@@ -8,7 +8,6 @@ class Contact(WhatsappObjectWithId):
     """
     Class which represents a Contact on user's phone
     """
-
     def __init__(self, js_obj, driver=None):
         """
 

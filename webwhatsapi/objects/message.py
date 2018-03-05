@@ -3,7 +3,6 @@ from base64 import b64decode
 from datetime import datetime
 
 import os
-
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
 from webwhatsapi.objects.whatsapp_object import WhatsappObject
@@ -25,8 +24,8 @@ def factory_message(js_obj, driver):
     return Message(js_obj, driver)
 
 
-class Message(WhatsappObject):
 
+class Message(WhatsappObject):
     def __init__(self, js_obj, driver=None):
         """
         Constructor
@@ -40,7 +39,6 @@ class Message(WhatsappObject):
         self.sender = False if js_obj["sender"] is False else Contact(js_obj["sender"], driver)
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
-
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'

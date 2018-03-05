@@ -1,6 +1,5 @@
 """
 WebWhatsAPI module
-
 .. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
 
 """
@@ -85,7 +84,7 @@ class WhatsAPIDriver(object):
         'UnreadChatBanner': '.message-list',
         'ReconnectLink': '.action',
         'WhatsappQrIcon': 'span.icon:nth-child(2)',
-        'QRReloader': '.qr-wrapper-container'
+        'QRReloader': 'div > span > div[role=\"button\"]'
     }
 
     _CLASSES = {
@@ -152,6 +151,8 @@ class WhatsAPIDriver(object):
         self.logger = logger or self.logger
         extra_params = extra_params or {}
 
+        self.client = client
+
         if profile is not None:
             self._profile_path = profile
             self.logger.info("Checking for profile at %s" % self._profile_path)
@@ -161,7 +162,11 @@ class WhatsAPIDriver(object):
         else:
             self._profile_path = None
 
-        self.client = client.lower()
+        if self._profile_path is not None:
+            self._profile = webdriver.FirefoxProfile(self._profile_path)
+        else:
+            self._profile = webdriver.FirefoxProfile()
+
         if self.client == "firefox":
             if self._profile_path is not None:
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
@@ -198,15 +203,13 @@ class WhatsAPIDriver(object):
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
-
         elif client == 'remote':
             capabilities = DesiredCapabilities.FIREFOX.copy()
-            self.driver = webdriver.Remote(
+            self.driver = webdriver.Remote(browser_profile=self._profile,
                 command_executor=command_executor,
                 desired_capabilities=capabilities,
                 **extra_params
             )
-
         else:
             self.logger.error("Invalid client: %s" % client)
         self.username = username
@@ -220,7 +223,6 @@ class WhatsAPIDriver(object):
 
     def connect(self):
         self.driver.get(self._URL)
-
         local_storage_file = os.path.join(self._profile.path, self._LOCAL_STORAGE_FILE)
         if os.path.exists(local_storage_file):
             with open(local_storage_file) as f:
@@ -239,7 +241,7 @@ class WhatsAPIDriver(object):
         if "Click to reload QR code" in self.driver.page_source:
             self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        fd, fn_png = tempfile.mkstemp(suffix='.png')
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
         os.close(fd)
@@ -281,7 +283,8 @@ class WhatsAPIDriver(object):
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me,
+                                                                   include_notifications)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -290,6 +293,14 @@ class WhatsAPIDriver(object):
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
+
+    def set_unread(self, include_me=False, include_notifications=False):
+        # type: (bool, bool) -> list(MessageGroup)
+        """
+        sets unread messages
+
+        """
+        self.wapi_functions.setUnreadMessages()
 
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         """
@@ -302,7 +313,8 @@ class WhatsAPIDriver(object):
         :return: List of messages in chat
         :rtype: list[Message]
         """
-        message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me, include_notifications)
+        message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me,
+                                                                include_notifications)
 
         messages = []
         for message in message_objs:
@@ -347,7 +359,15 @@ class WhatsAPIDriver(object):
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
+        """
+        If the reload button is there, click it to reload
+        :return: success true/false
+        """
+        elem = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
+        if elem:
+            elem.click()
+            return True
+        return False
 
     def get_status(self):
         if self.driver is None:

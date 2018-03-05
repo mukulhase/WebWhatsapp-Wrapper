@@ -47,6 +47,7 @@ class WhatsappObject(object):
         return self._driver()
 
 
+
 class WhatsappObjectWithId(WhatsappObject):
     """
     Base class for Whatsapp objects
