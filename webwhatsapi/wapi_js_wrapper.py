@@ -96,7 +96,7 @@ class JsFunction(object):
             command = "return WAPI.{0}(arguments[0])".format(self.function_name)
 
         try:
-            return self.driver.execute_async_script(command)
+            return self.driver.execute_script(command)
         except WebDriverException as e:
             if e.msg == 'Timed out':
                 raise Exception("Phone not connected to Internet")
