@@ -176,6 +176,15 @@ window.WAPI.getChat = function (id, done) {
     }
 };
 
+window.WAPI.getAllMessagesAfter = function (unix_timestamp, done) {
+    const found = Store.Msg.models.find((chat) => chat.__x_t >= unix_timestamp);
+    if (done !== undefined) {
+        done(found);
+    } else {
+        return found;
+    }
+};
+
 /**
  * Load more messages in chat object from store by ID
  *

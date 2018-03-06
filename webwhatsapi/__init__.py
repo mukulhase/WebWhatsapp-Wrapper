@@ -135,6 +135,18 @@ class WhatsAPIDriver(object):
         with open(os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE), 'w') as f:
             f.write(dumps(self.get_local_storage()))
 
+    def load_all_messages(self):
+        """
+        load all messages into cache
+        """
+        self.wait_for_login()
+        for c in self.get_all_chats():
+            try:
+                c.load_all_earlier_messages()
+            except ChatNotFoundError as e:
+                self.logger.debug("chat not found", c)
+
+
     def set_proxy(self, proxy):
         self.logger.info("Setting proxy to %s" % proxy)
         proxy_address, proxy_port = proxy.split(":")
@@ -400,6 +412,14 @@ class WhatsAPIDriver(object):
 
     def chat_load_earlier_messages(self, chat_id):
         self.wapi_functions.loadEarlierMessages(chat_id)
+
+    def get_all_messages_after(self, unix_timestamp):
+        """
+        load all messages that occurred after unix_timestamp
+        :param unix_timestamp: int
+        :return: Message
+        """
+        self.wapi_functions.getAllMessagesAfter(unix_timestamp)
 
     def chat_load_all_earlier_messages(self, chat_id):
         self.wapi_functions.loadAllEarlierMessages(chat_id)
