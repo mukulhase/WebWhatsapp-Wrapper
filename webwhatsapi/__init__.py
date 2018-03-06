@@ -419,7 +419,12 @@ class WhatsAPIDriver(object):
         :param unix_timestamp: int
         :return: Message
         """
-        self.wapi_functions.getAllMessagesAfter(unix_timestamp)
+        raw_messages = self.wapi_functions.getAllMessagesAfter(unix_timestamp)
+
+        messages = []
+        for message in raw_messages:
+            messages.append(factory_message(message, self))
+        return messages
 
     def chat_load_all_earlier_messages(self, chat_id):
         self.wapi_functions.loadAllEarlierMessages(chat_id)

@@ -77,7 +77,7 @@ window.WAPI._serializeMessageObj = function(obj) {
         type: obj.__x_type,
         size: obj.__x_size,
         mime: obj.__x_mimetype,
-        chatId: obj.__x_id.remote
+        chatId: obj.__x_id.remote,
     }
 
     if (data.isMedia || data.isMMS) {
@@ -176,8 +176,18 @@ window.WAPI.getChat = function (id, done) {
     }
 };
 
-window.WAPI.getAllMessagesAfter = function (unix_timestamp) {
-    return Store.Msg.models.filter((msg) => msg.__x_t >= unix_timestamp);
+window.WAPI.getAllMessagesAfter = function (unix_timestamp, done) {
+    messageObjs = Store.Msg.models.filter((msg) => msg.__x_t >= unix_timestamp);
+    output = []
+    for (const i in messageObjs) {
+        if (i === "remove") {
+            continue;
+        }
+        const messageObj = messageObjs[i];
+        let message = WAPI.processMessageObj(messageObj, true, false)
+        if (message)output.push(message);
+    }
+    return output
 };
 
 /**

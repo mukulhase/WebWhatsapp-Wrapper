@@ -35,9 +35,9 @@ class Message(WhatsappObject):
         super(Message, self).__init__(js_obj, driver)
 
         self.id = js_obj["id"]
-        self.phone_number = js_obj['__x_sender'].split('@')[0]
+        # self.phone_number = js_obj['__x_sender'].split('@')[0]
 
-        # self.sender = False if js_obj["sender"] is False else Contact(js_obj["sender"], driver)
+        self.sender = False if js_obj["sender"] is False else Contact(js_obj["sender"], driver)
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
         if js_obj["content"]:
