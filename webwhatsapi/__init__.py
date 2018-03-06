@@ -404,7 +404,11 @@ class WhatsAPIDriver(object):
             yield factory_chat(group, self)
 
     def chat_send_message(self, chat_id, message):
-        return self.wapi_functions.sendMessage(chat_id, message)
+        result = self.wapi_functions.sendMessage(chat_id, message)
+
+        if result:
+            return factory_chat(result, self)
+        return False
 
     def send_message_to_id(self, recipient, message):
         return self.wapi_functions.sendMessageToID(recipient, message)
