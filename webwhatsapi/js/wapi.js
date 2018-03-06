@@ -176,9 +176,9 @@ window.WAPI.getChat = function (id, done) {
     }
 };
 
-//window.WAPI.getAllMessagesAfter = function (unix_timestamp) {
-//    return Store.Msg.models.filter((msg) => msg.__x_t >= unix_timestamp);
-//};
+window.WAPI.getAllMessagesAfter = function (unix_timestamp) {
+    return Store.Msg.models.filter((msg) => msg.__x_t >= unix_timestamp);
+};
 
 /**
  * Load more messages in chat object from store by ID
@@ -213,14 +213,12 @@ window.WAPI.loadEarlierMessages = function (id, done) {
 
 window.WAPI.loadAllEarlierMessages = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
-    x = function(){
-        if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
-            found.loadEarlierMsgs().then(x);
-        } else {
-            done();
-        }
-    };
-    x();
+    if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
+        found.loadEarlierMsgs()
+    }
+    if (done !== undefined) {
+        done();
+    }
 };
 
 
