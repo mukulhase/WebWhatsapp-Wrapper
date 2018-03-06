@@ -364,15 +364,24 @@ window.WAPI.sendMessage = function (id, message, done) {
         if (temp.id === id) {
             if (done !== undefined) {
                 Chats[chat].sendMessage(message).then(function () {
-                    for (let i=Chats[chat].msgs.models.length - 1; i >= 0; i--) {
-                        let msg = Chats[chat].msgs.models[i];
-
-                        if (!msg.senderObj.isMe || msg.body != message) {
-                            continue;
-                        }
-                        done(WAPI._serializeMessageObj(msg));
-                        return;
+                    function sleep(ms) {
+                      return new Promise(resolve => setTimeout(resolve, ms));
                     }
+
+                    function check() {
+                        for (let i=Chats[chat].msgs.models.length - 1; i >= 0; i--) {
+                            let msg = Chats[chat].msgs.models[i];
+
+                            if (!msg.senderObj.isMe || msg.body != message) {
+                                continue;
+                            }
+                            done(WAPI._serializeMessageObj(msg));
+                            return True;
+                        }
+                        sleep(100).then(check);
+                    }
+
+                    check();
                     done(false);
                 });
                 return true;

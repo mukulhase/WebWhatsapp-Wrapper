@@ -371,7 +371,11 @@ class WhatsAPIDriver(object):
             yield factory_chat(group, self)
 
     def chat_send_message(self, chat_id, message):
-        return self.wapi_functions.sendMessage(chat_id, message)
+        result = self.wapi_functions.sendMessage(chat_id, message)
+
+        if result:
+            return factory_chat(result, self)
+        return False
 
     def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
         message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
