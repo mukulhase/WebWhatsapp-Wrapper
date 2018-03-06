@@ -60,21 +60,41 @@ window.WAPI._serializeNotificationObj = (obj) => ({
 });
 
 //TODO: Add chat ref
-window.WAPI._serializeMessageObj = (obj) => ({
-    sender: WAPI._serializeContactObj(obj["senderObj"]),
-    timestamp: obj["t"],
-    content: obj["body"],
-    isGroupMsg: obj.__x_isGroupMsg,
-    isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
-    isMedia: obj.__x_isMedia,
-    isNotification: obj.__x_isNotification,
-    isPSA: obj.__x_isPSA,
-    type: obj.__x_type,
-    size: obj.__x_size,
-    mime: obj.__x_mimetype,
-});
+window.WAPI._serializeMessageObj = function(obj) {
 
+    let data = {
+        sender: WAPI._serializeContactObj(obj["senderObj"]),
+        id: obj.id._serialized,
+        timestamp: obj["t"],
+        content: obj["body"],
+        isGroupMsg: obj.__x_isGroupMsg,
+        isLink: obj.__x_isLink,
+        isMMS: obj.__x_isMMS,
+        isMedia: obj.__x_isMedia,
+        isNotification: obj.__x_isNotification,
+        isPSA: obj.__x_isPSA,
+        type: obj.__x_type,
+        size: obj.__x_size,
+        mime: obj.__x_mimetype,
+        chatId: obj.__x_id.remote
+    }
+
+    if (data.isMedia || data.isMMS) {
+        data['clientUrl'] = obj['__x_clientUrl'];
+        data['mediaKey'] = obj['__x_mediaKey'];
+        data['mediaData'] = {
+            duration: obj['__x_mediaData']['__x_duration'],
+            filehash: obj['__x_mediaData']['__x_filehash'],
+            mimetype: obj['__x_mediaData']['__x_mimetype'],
+            encriptationKey: obj['__x_mediaData']['__x_encryptionKey'],
+            fullHeight: obj['__x_mediaData']['__x_fullHeight'],
+            fullWidth: obj['__x_mediaData']['__x_fullWidth'],
+            size: obj['__x_mediaData']['__x_size'],
+        }
+    }
+
+    return data
+}
 /**
  * Fetches all contact objects from store
  *
@@ -458,4 +478,24 @@ window.WAPI.getCommonGroups = async function (id, done) {
     return output;
 };
 
+window.WAPI.downloadFile = function (url, done) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onload = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let reader = new FileReader();
+                reader.readAsDataURL(xhr.response);
+                reader.onload =  function(e){
+                    done(reader.result.substr(reader.result.indexOf(',')+1))
+                };
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.open("GET", url, true);
+    xhr.responseType = 'blob';
+    xhr.send(null);
+}
 

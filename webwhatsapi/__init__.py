@@ -5,12 +5,18 @@ WebWhatsAPI module
 
 """
 
+import binascii
 import logging
 from json import dumps, loads
 
 import os
 import shutil
 import tempfile
+from Crypto.Cipher import AES
+from axolotl.kdf.hkdfv3 import HKDFv3
+from axolotl.util.byteutil import ByteUtil
+from base64 import b64decode
+from io import BytesIO
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -19,10 +25,9 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from webwhatsapi.objects.chat import factory_chat, UserChat, Chat
-from webwhatsapi.objects.message import factory_message, MessageGroup
-from .consts import Selectors, URL
+from .objects.chat import UserChat, factory_chat
 from .objects.contact import Contact
+from .objects.message import MessageGroup, factory_message
 from .wapi_js_wrapper import WapiJsWrapper
 
 __version__ = '2.0.2'
@@ -141,10 +146,11 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None):
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
         "Initialises the webdriver"
 
         self.logger = logger or self.logger
+        extra_params = extra_params or {}
 
         if profile is not None:
             self._profile_path = profile
@@ -161,7 +167,7 @@ class WhatsAPIDriver(object):
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
             else:
                 self._profile = webdriver.FirefoxProfile()
-            if loadstyles == False:
+            if not loadstyles:
                 # Disable CSS
                 self._profile.set_preference('permissions.default.stylesheet', 2)
                 # Disable images
@@ -183,7 +189,7 @@ class WhatsAPIDriver(object):
             capabilities['webStorageEnabled'] = True
 
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(capabilities=capabilities, options=options)
+            self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
 
         elif self.client == "chrome":
             self._profile = webdriver.chrome.options.Options()
@@ -191,13 +197,14 @@ class WhatsAPIDriver(object):
                 self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
-            self.driver = webdriver.Chrome(chrome_options=self._profile)
+            self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == 'remote':
             capabilities = DesiredCapabilities.FIREFOX.copy()
             self.driver = webdriver.Remote(
                 command_executor=command_executor,
-                desired_capabilities=capabilities
+                desired_capabilities=capabilities,
+                **extra_params
             )
 
         else:
@@ -394,6 +401,33 @@ class WhatsAPIDriver(object):
 
         for admin_id in admin_ids:
             yield self.get_contact_from_id(admin_id)
+
+    def download_file(self, url):
+        return b64decode(self.wapi_functions.downloadFile(url))
+
+    def download_media(self, media_msg):
+        try:
+            if media_msg.content:
+                return BytesIO(b64decode(self.content))
+        except AttributeError:
+            pass
+
+        file_data = self.download_file(media_msg.client_url)
+
+        media_key = b64decode(media_msg.media_key)
+        derivative = HKDFv3().deriveSecrets(media_key,
+                                            binascii.unhexlify(media_msg.crypt_keys[media_msg.type]),
+                                            112)
+
+        parts = ByteUtil.split(derivative, 16, 32)
+        iv = parts[0]
+        cipher_key = parts[1]
+        e_file = file_data[:-10]
+
+        AES.key_size = 128
+        cr_obj = AES.new(key=cipher_key, mode=AES.MODE_CBC, IV=iv)
+
+        return BytesIO(cr_obj.decrypt(e_file))
 
     def quit(self):
         self.driver.quit()

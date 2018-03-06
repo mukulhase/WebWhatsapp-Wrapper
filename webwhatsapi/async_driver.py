@@ -1,7 +1,15 @@
 from asyncio import get_event_loop
+
+import binascii
+
+from Crypto.Cipher import AES
+from axolotl.kdf.hkdfv3 import HKDFv3
+from axolotl.util.byteutil import ByteUtil
+from base64 import b64decode
 from concurrent.futures import ThreadPoolExecutor
 
 from functools import partial
+from io import BytesIO
 
 from webwhatsapi import factory_message
 from . import WhatsAPIDriver
@@ -10,14 +18,14 @@ from . import WhatsAPIDriver
 class WhatsAPIDriverAsync:
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, logger=None, loop=None):
+                 profile=None, headless=False, logger=None, extra_params=None, loop=None):
 
         self._driver = WhatsAPIDriver(client=client, username=username, proxy=proxy, command_executor=command_executor,
                                       loadstyles=loadstyles, profile=profile, headless=headless, logger=logger,
-                                      autoconnect=False)
+                                      autoconnect=False, extra_params=extra_params)
 
         self.loop = loop or get_event_loop()
-        self._pool_executor = ThreadPoolExecutor(max_workers=4)
+        self._pool_executor = ThreadPoolExecutor(max_workers=1)
 
     async def get_local_storage(self):
         return await self.loop.run_in_executor(self._pool_executor, self._driver.get_local_storage)
@@ -130,5 +138,35 @@ class WhatsAPIDriverAsync:
         for admin_id in admin_ids:
             yield await self.get_contact_from_id(admin_id)
 
+    async def download_file(self, url):
+        return await self.loop.run_in_executor(self._pool_executor,
+                                               self._driver.download_file,
+                                               url)
+
+    async def download_media(self, media_msg):
+        try:
+            if media_msg.content:
+                return BytesIO(b64decode(self.content))
+        except AttributeError:
+            pass
+
+        file_data = await self.download_file(media_msg.client_url)
+
+        media_key = b64decode(media_msg.media_key)
+        derivative = HKDFv3().deriveSecrets(media_key,
+                                            binascii.unhexlify(media_msg.crypt_keys[media_msg.type]),
+                                            112)
+
+        parts = ByteUtil.split(derivative, 16, 32)
+        iv = parts[0]
+        cipher_key = parts[1]
+        e_file = file_data[:-10]
+
+        AES.key_size = 128
+        cr_obj = AES.new(key=cipher_key, mode=AES.MODE_CBC, IV=iv)
+
+        return BytesIO(cr_obj.decrypt(e_file))
+
     async def quit(self):
         return await self.loop.run_in_executor(self._pool_executor, self._driver.quit)
+
