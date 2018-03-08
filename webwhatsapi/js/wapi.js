@@ -368,6 +368,8 @@ window.WAPI.sendMessage = function (id, message, done) {
                       return new Promise(resolve => setTimeout(resolve, ms));
                     }
 
+                    var trials = 0;
+
                     function check() {
                         for (let i=Chats[chat].msgs.models.length - 1; i >= 0; i--) {
                             let msg = Chats[chat].msgs.models[i];
@@ -378,11 +380,15 @@ window.WAPI.sendMessage = function (id, message, done) {
                             done(WAPI._serializeMessageObj(msg));
                             return True;
                         }
-                        sleep(100).then(check);
+                        trials += 1;
+                        console.log(trials);
+                        if (trials > 30) {
+                            done(true);
+                            return;
+                        }
+                        sleep(500).then(check);
                     }
-
                     check();
-                    done(false);
                 });
                 return true;
             } else {
@@ -391,12 +397,6 @@ window.WAPI.sendMessage = function (id, message, done) {
             }
         }
     }
-    if (done !== undefined) {
-        done();
-    } else {
-        return false;
-    }
-    return false;
 };
 
 function isChatMessage(message) {
