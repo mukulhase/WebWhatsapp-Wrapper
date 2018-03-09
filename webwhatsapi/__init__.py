@@ -262,7 +262,7 @@ class WhatsAPIDriver(object):
     def screenshot(self, filename):
         self.driver.get_screenshot_as_file(filename)
 
-    def get_contacts(self):
+    def get_contacts(self, force_phone_number=True):
         """
         Fetches list of all contacts
 
@@ -272,8 +272,11 @@ class WhatsAPIDriver(object):
         :return: List of contacts
         :rtype: list[Contact]
         """
-        all_contacts = self.wapi_functions.getAllContacts()
-        return [Contact(contact, self) for contact in all_contacts]
+        raw_contacts = self.wapi_functions.getAllContacts()
+        contacts = [Contact(contact, self) for contact in raw_contacts]
+        if force_phone_number:
+            contacts = filter(lambda x: hasattr(x, 'phone_number'), contacts)
+        return contacts
 
     def get_all_chats(self):
         """
@@ -363,6 +366,7 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
+        number = number.replace('+', '')
         for chat in self.get_all_chats():
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
