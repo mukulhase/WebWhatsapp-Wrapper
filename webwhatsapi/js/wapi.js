@@ -43,9 +43,25 @@ window.WAPI._serializeContactObj = (obj) => (obj?{
     profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
     statusMute: obj.__x_statusMute,
     pushname: obj.__x_pushname
+
 }:null);
 
-//TODO: Add chat ref
+window.WAPI._serializeNotificationObj = (obj) => ({
+    id: obj.id._serialized,
+    sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
+    isGroupMsg: obj.__x_isGroupMsg,
+    content: obj["body"],
+    isLink: obj.__x_isLink,
+    isMMS: obj.__x_isMMS,
+    isMedia: obj.__x_isMedia,
+    isNotification: obj.__x_isNotification,
+    timestamp: obj["t"],
+    type: obj.__x_type,
+    subtype: obj.__x_subtype,
+    recipients: obj.__x_recipients,
+    chatId: obj.__x_id.remote
+});
+
 window.WAPI._serializeMessageObj = function(obj) {
 
     let data = {
