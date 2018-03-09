@@ -46,6 +46,7 @@ window.WAPI._serializeContactObj = (obj) => ({
 });
 
 window.WAPI._serializeNotificationObj = (obj) => ({
+    id: obj.id._serialized,
     sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
     isGroupMsg: obj.__x_isGroupMsg,
     content: obj["body"],
@@ -57,6 +58,7 @@ window.WAPI._serializeNotificationObj = (obj) => ({
     type: obj.__x_type,
     subtype: obj.__x_subtype,
     recipients: obj.__x_recipients,
+    chatId: obj.__x_id.remote
 });
 
 //TODO: Add chat ref
