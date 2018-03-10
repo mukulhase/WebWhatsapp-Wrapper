@@ -365,6 +365,14 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
     }
 };
 
+window.WAPI.sendMessageToID = function (id, message) {
+    if(Store.Chat.models.length == 0)
+        return false;
+    Store.Chat.models[0].id = id
+    Store.Chat.models[0].sendMessage(message);
+    return true;
+}
+
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = Store.Chat.models;
 
