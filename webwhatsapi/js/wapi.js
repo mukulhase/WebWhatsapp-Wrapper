@@ -365,11 +365,24 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
     }
 };
 
-window.WAPI.sendMessageToID = function (id, message) {
+window.WAPI.sendMessageToID = function (id, message, done) {
     if(Store.Chat.models.length == 0)
         return false;
+
     Store.Chat.models[0].id = id
-    Store.Chat.models[0].sendMessage(message);
+    if (done !== undefined) {
+        Store.Chat.models[0].sendMessage(message).then(function(){ done(true); });
+        return true;
+    } else {
+        Store.Chat.models[0].sendMessage(message);
+        return true;
+    }
+
+    if (done !== undefined)
+        done();
+    else
+        return false;
+
     return true;
 }
 
