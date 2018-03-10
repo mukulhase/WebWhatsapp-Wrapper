@@ -228,6 +228,14 @@ class WhatsAPIDriver(object):
 
             self.driver.refresh()
 
+    def is_logged_in(self):
+        """Returns if user is logged. Can be used if non-block needed for wait_for_login"""
+        # self.driver.find_element_by_css_selector(self._SELETORS['mainPage'])
+        # it becomes ridiculously slow if the element is not found.
+
+        # instead we use this (temporary) solution:
+        return 'class="app _3dqpi two"' in self.driver.page_source
+
     def wait_for_login(self):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, 90).until(
