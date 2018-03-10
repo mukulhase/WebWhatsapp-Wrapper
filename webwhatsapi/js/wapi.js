@@ -50,7 +50,7 @@ window.WAPI._serializeNotificationObj = (obj) => ({
     isGroupMsg: obj.__x_isGroupMsg,
     content: obj["body"],
     isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
+    isMMS: (typeof obj.__x_isMMS === "undefined" ? false : obj.__x_isMMS),
     isMedia: obj.__x_isMedia,
     isNotification: obj.__x_isNotification,
     timestamp: obj["t"],
