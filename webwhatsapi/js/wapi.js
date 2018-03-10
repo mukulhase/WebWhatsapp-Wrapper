@@ -369,12 +369,14 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     if(Store.Chat.models.length == 0)
         return false;
 
-    Store.Chat.models[0].id = id
+    var originalID = Store.Chat.models[0].id;
+    Store.Chat.models[0].id = id;
     if (done !== undefined) {
-        Store.Chat.models[0].sendMessage(message).then(function(){ done(true); });
+        Store.Chat.models[0].sendMessage(message).then(function(){ Store.Chat.models[0].id = originalID; done(true); });
         return true;
     } else {
         Store.Chat.models[0].sendMessage(message);
+        Store.Chat.models[0].id = originalID;
         return true;
     }
 
