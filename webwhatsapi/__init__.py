@@ -71,6 +71,7 @@ class WhatsAPIDriver(object):
     _SELECTORS = {
         'firstrun': "#wrapper",
         'qrCode': "img[alt=\"Scan me!\"]",
+        'qrCodePlain': "._2EZ_m",
         'mainPage': ".app.two",
         'chatList': ".infinite-list-viewport",
         'messageList': "#main > div > div:nth-child(1) > div > div.message-list",
@@ -144,6 +145,9 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.http_port", int(proxy_port))
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
+
+    def close(self):
+        self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
                  profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
@@ -230,7 +234,7 @@ class WhatsAPIDriver(object):
 
     def is_logged_in(self):
         """Returns if user is logged. Can be used if non-block needed for wait_for_login"""
-        # self.driver.find_element_by_css_selector(self._SELETORS['mainPage'])
+        # self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
         # it becomes ridiculously slow if the element is not found.
 
         # instead we use this (temporary) solution:
@@ -241,6 +245,9 @@ class WhatsAPIDriver(object):
         WebDriverWait(self.driver, 90).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
+
+    def get_qr_plain(self):
+        return self.driver.find_element_by_css_selector(self._SELECTORS['qrCodePlain']).get_attribute("data-ref")
 
     def get_qr(self, filename=None):
         """Get pairing QR code from client"""
