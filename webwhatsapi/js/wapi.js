@@ -45,20 +45,6 @@ window.WAPI._serializeContactObj = (obj) => (obj?{
     pushname: obj.__x_pushname
 }:null);
 
-window.WAPI._serializeNotificationObj = (obj) => ({
-    sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
-    isGroupMsg: obj.__x_isGroupMsg,
-    content: obj["body"],
-    isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
-    isMedia: obj.__x_isMedia,
-    isNotification: obj.__x_isNotification,
-    timestamp: obj["t"],
-    type: obj.__x_type,
-    subtype: obj.__x_subtype,
-    recipients: obj.__x_recipients,
-});
-
 //TODO: Add chat ref
 window.WAPI._serializeMessageObj = function(obj) {
 
@@ -77,7 +63,7 @@ window.WAPI._serializeMessageObj = function(obj) {
         size: obj.__x_size,
         mime: obj.__x_mimetype,
         chatId: obj.__x_id.remote
-    }
+    };
 
     if (data.isMedia || data.isMMS) {
         data['clientUrl'] = obj['__x_clientUrl'];
@@ -93,8 +79,13 @@ window.WAPI._serializeMessageObj = function(obj) {
         }
     }
 
-    return data
-}
+    if (data.isNotification) {
+        data['subtype']= obj.__x_subtype;
+        data['recipients']= obj.__x_recipients;
+    }
+
+    return data;
+};
 /**
  * Fetches all contact objects from store
  *
@@ -336,7 +327,7 @@ window.WAPI.getMe = function (done) {
 window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifications) {
     if (messageObj.__x_isNotification) {
         if(includeNotifications)
-            return WAPI._serializeNotificationObj(messageObj);
+            return WAPI._serializeMessageObj(messageObj);
         else return;
         // System message
         // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
