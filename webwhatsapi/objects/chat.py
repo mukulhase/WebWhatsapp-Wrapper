@@ -24,6 +24,10 @@ class Chat(WhatsappObjectWithId):
     def send_message(self, message):
         return self.driver.chat_send_message(self.id, message)
 
+    @driver_needed
+    def send_seen(self):
+        return self.driver.chat_send_seen(self.id)
+
     def get_messages(self, include_me=False, include_notifications=False):
         return list(self.driver.chat_get_messages(self.id, include_me, include_notifications))
 
