@@ -1,6 +1,7 @@
 from .whatsapp_object import WhatsappObjectWithId, driver_needed
 from ..helper import safe_str
-
+import time
+from datetime import datetime
 
 def factory_chat(js_obj, driver=None):
     if js_obj["kind"] not in ["chat", "group", "broadcast"]:
@@ -36,6 +37,19 @@ class Chat(WhatsappObjectWithId):
 
     def load_all_earlier_messages(self):
         self.driver.chat_load_all_earlier_messages(self.id)
+
+    def load_earlier_messages_till(self, last):
+        """
+        Triggers loading of messages till a specific point in time
+
+        :param last: Datetime object for the last message to be loaded
+        :type last: datetime
+        :return: Nothing
+        :rtype: None
+        """
+        timestamp = time.mktime(last.timetuple())
+        self.driver.wapi_functions.loadEarlierMessagesTillDate(self.id, timestamp)
+
 
 
 class UserChat(Chat):
