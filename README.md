@@ -18,6 +18,10 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 - Install from pip
 `pip install webwhatsapi`
 
+#### From pipenv
+- Install from pipenv
+`pipenv install`
+
 ## Usage
 1. Import library
 ` from webwhatsapi import WhatsAPIDriver `
