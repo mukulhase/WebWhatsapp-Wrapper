@@ -25,7 +25,7 @@ window.WAPI._serializeRawObj = (obj) => {
     return obj.all;
 };
 
-window.WAPI._serializeContactObj = (obj) => ({
+window.WAPI._serializeContactObj = (obj) => (obj?{
     formattedName: obj.__x_formattedName,
     formattedShortName: obj.__x_formattedShortName,
     shortName: obj.__x_formattedShortName,
@@ -43,7 +43,7 @@ window.WAPI._serializeContactObj = (obj) => ({
     profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
     statusMute: obj.__x_statusMute,
     pushname: obj.__x_pushname
-});
+}:null);
 
 window.WAPI._serializeNotificationObj = (obj) => ({
     sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
@@ -191,6 +191,7 @@ window.WAPI.getChat = function (id, done) {
     }
 };
 
+
 /**
  * Load more messages in chat object from store by ID
  *
@@ -214,13 +215,6 @@ window.WAPI.loadEarlierMessages = function (id, done) {
  * @param done Optional callback function for async execution
  * @returns None
  */
-// window.WAPI.recurseLoad = function (found, done){
-//     if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
-//         found.loadEarlierMessages().then(window.WAPI.recurse);
-//     }else {
-//         done();
-//     }
-// };
 
 window.WAPI.loadAllEarlierMessages = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
@@ -228,6 +222,27 @@ window.WAPI.loadAllEarlierMessages = function (id, done) {
         if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
             found.loadEarlierMsgs().then(x);
         } else {
+            done();
+        }
+    };
+    x();
+};
+
+/**
+ * Load more messages in chat object from store by ID till a particular date
+ *
+ * @param id ID of chat
+ * @param lastMessage UTC timestamp of last message to be loaded
+ * @param done Optional callback function for async execution
+ * @returns None
+ */
+
+window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+    x = function(){
+        if(found.msgs.models[0].t>lastMessage){
+            found.loadEarlierMsgs().then(x);
+        }else {
             done();
         }
     };
@@ -407,6 +422,38 @@ window.WAPI.sendMessage = function (id, message, done) {
                 return true;
             } else {
                 Chats[chat].sendMessage(message);
+                return true;
+            }
+        }
+    }
+    if (done !== undefined) {
+        done();
+    } else {
+        return false;
+    }
+    return false;
+};
+
+
+window.WAPI.sendSeen = function (id, done) {
+    const Chats = Store.Chat.models;
+
+    for (const chat in Chats) {
+        if (isNaN(chat)) {
+            continue;
+        }
+
+        let temp = {};
+        temp.name = Chats[chat].__x__formattedTitle;
+        temp.id = Chats[chat].__x_id;
+        if (temp.id === id) {
+            if (done !== undefined) {
+                Chats[chat].sendSeen(false).then(function () {
+                    done(true);
+                });
+                return true;
+            } else {
+                Chats[chat].sendSeen(false);
                 return true;
             }
         }
