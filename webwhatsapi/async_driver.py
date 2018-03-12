@@ -35,7 +35,7 @@ class WhatsAPIDriverAsync:
 
     async def save_firefox_profile(self, remove_old=False):
         return await self.loop.run_in_executor(self._pool_executor,
-                                               partial(self._driver.set_local_storage,
+                                               partial(self._driver.save_firefox_profile,
                                                        remove_old=remove_old))
 
     async def connect(self):
