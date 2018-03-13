@@ -8,6 +8,12 @@ from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
 from webwhatsapi.objects.whatsapp_object import WhatsappObject
 
+def getContacts(x, driver):
+    try:
+        contact = driver.get_contact_from_id(x)
+        return contact
+    except:
+        return x
 
 def factory_message(js_obj, driver):
     if js_obj["isMedia"]:
@@ -35,8 +41,12 @@ class Message(WhatsappObject):
         :type js_obj: dict
         """
         super(Message, self).__init__(js_obj, driver)
-        self.sender = False if js_obj["sender"] == False else Contact(js_obj["sender"], driver)
+
+        self.id = js_obj["id"]
+        self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
+        self.chat_id = js_obj['chatId']
+
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'
@@ -50,6 +60,11 @@ class Message(WhatsappObject):
 
 
 class MediaMessage(Message):
+    crypt_keys = {'document': '576861747341707020446f63756d656e74204b657973',
+                  'image': '576861747341707020496d616765204b657973',
+                  'video': '576861747341707020566964656f204b657973',
+                  'ptt': '576861747341707020417564696f204b657973'}
+
     def __init__(self, js_obj, driver=None):
         super(MediaMessage, self).__init__(js_obj, driver)
 
@@ -57,11 +72,14 @@ class MediaMessage(Message):
         self.size = self.js_obj["size"]
         self.mime = self.js_obj["mime"]
 
+        self.media_key = self.js_obj.get('mediaKey')
+        self.client_url = self.js_obj.get('clientUrl')
+
         extension = mimetypes.guess_extension(self.mime)
         try:
-            self.filename = ''.join([self.js_obj["__x_filehash"], extension])
+            self.filename = ''.join([self.js_obj["filehash"], extension])
         except KeyError:
-            self.filename = ''.join([str(id(self)), extension])
+            self.filename = ''.join([str(id(self)), extension or ''])
 
     def save_media(self, path):
         with open(os.path.join(path, self.filename), "wb") as output:
@@ -116,7 +134,7 @@ class NotificationMessage(Message):
         self.type = js_obj["type"]
         self.subtype = js_obj["subtype"].encode("ascii", "ignore")
         if js_obj["recipients"]:
-            self.recipients = [self.driver.get_contact_from_id(x) for x in js_obj["recipients"]]
+            self.recipients = [getContacts(x, driver) for x in js_obj["recipients"]]
 
     def __repr__(self):
         readable = {

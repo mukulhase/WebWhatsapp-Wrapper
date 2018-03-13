@@ -25,7 +25,7 @@ window.WAPI._serializeRawObj = (obj) => {
     return obj.all;
 };
 
-window.WAPI._serializeContactObj = (obj) => ({
+window.WAPI._serializeContactObj = (obj) => (obj?{
     formattedName: obj.__x_formattedName,
     formattedShortName: obj.__x_formattedShortName,
     shortName: obj.__x_formattedShortName,
@@ -43,38 +43,49 @@ window.WAPI._serializeContactObj = (obj) => ({
     profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
     statusMute: obj.__x_statusMute,
     pushname: obj.__x_pushname
-});
-
-window.WAPI._serializeNotificationObj = (obj) => ({
-    sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
-    isGroupMsg: obj.__x_isGroupMsg,
-    content: obj["body"],
-    isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
-    isMedia: obj.__x_isMedia,
-    isNotification: obj.__x_isNotification,
-    timestamp: obj["t"],
-    type: obj.__x_type,
-    subtype: obj.__x_subtype,
-    recipients: obj.__x_recipients,
-});
+}:null);
 
 //TODO: Add chat ref
-window.WAPI._serializeMessageObj = (obj) => ({
-    sender: WAPI._serializeContactObj(obj["senderObj"]),
-    timestamp: obj["t"],
-    content: obj["body"],
-    isGroupMsg: obj.__x_isGroupMsg,
-    isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
-    isMedia: obj.__x_isMedia,
-    isNotification: obj.__x_isNotification,
-    isPSA: obj.__x_isPSA,
-    type: obj.__x_type,
-    size: obj.__x_size,
-    mime: obj.__x_mimetype,
-});
+window.WAPI._serializeMessageObj = function(obj) {
 
+    let data = {
+        sender: WAPI._serializeContactObj(obj["senderObj"]),
+        id: obj.id._serialized,
+        timestamp: obj["t"],
+        content: obj["body"],
+        isGroupMsg: obj.__x_isGroupMsg,
+        isLink: obj.__x_isLink,
+        isMMS: obj.__x_isMMS,
+        isMedia: obj.__x_isMedia,
+        isNotification: obj.__x_isNotification,
+        isPSA: obj.__x_isPSA,
+        type: obj.__x_type,
+        size: obj.__x_size,
+        mime: obj.__x_mimetype,
+        chatId: obj.__x_id.remote
+    };
+
+    if (data.isMedia || data.isMMS) {
+        data['clientUrl'] = obj['__x_clientUrl'];
+        data['mediaKey'] = obj['__x_mediaKey'];
+        data['mediaData'] = {
+            duration: obj['__x_mediaData']['__x_duration'],
+            filehash: obj['__x_mediaData']['__x_filehash'],
+            mimetype: obj['__x_mediaData']['__x_mimetype'],
+            encriptationKey: obj['__x_mediaData']['__x_encryptionKey'],
+            fullHeight: obj['__x_mediaData']['__x_fullHeight'],
+            fullWidth: obj['__x_mediaData']['__x_fullWidth'],
+            size: obj['__x_mediaData']['__x_size'],
+        }
+    }
+
+    if (data.isNotification) {
+        data['subtype']= obj.__x_subtype;
+        data['recipients']= obj.__x_recipients;
+    }
+
+    return data;
+};
 /**
  * Fetches all contact objects from store
  *
@@ -83,6 +94,21 @@ window.WAPI._serializeMessageObj = (obj) => ({
  */
 window.WAPI.getAllContacts = function (done) {
     const contacts = Store.Contact.models.map((contact) => WAPI._serializeContactObj(contact));
+
+    if (done !== undefined) {
+        done(contacts);
+    } else {
+        return contacts;
+    }
+};
+/**
+ * Fetches all contact objects from store, filters them
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of contacts
+ */
+window.WAPI.getMyContacts = function (done) {
+    const contacts = Store.Contact.models.filter(d => d.__x_isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
 
     if (done !== undefined) {
         done(contacts);
@@ -156,6 +182,7 @@ window.WAPI.getChat = function (id, done) {
     }
 };
 
+
 /**
  * Load more messages in chat object from store by ID
  *
@@ -179,13 +206,6 @@ window.WAPI.loadEarlierMessages = function (id, done) {
  * @param done Optional callback function for async execution
  * @returns None
  */
-// window.WAPI.recurseLoad = function (found, done){
-//     if(!found.msgs.msgLoadState.__x_noEarlierMsgs){
-//         found.loadEarlierMessages().then(window.WAPI.recurse);
-//     }else {
-//         done();
-//     }
-// };
 
 window.WAPI.loadAllEarlierMessages = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
@@ -193,6 +213,27 @@ window.WAPI.loadAllEarlierMessages = function (id, done) {
         if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
             found.loadEarlierMsgs().then(x);
         } else {
+            done();
+        }
+    };
+    x();
+};
+
+/**
+ * Load more messages in chat object from store by ID till a particular date
+ *
+ * @param id ID of chat
+ * @param lastMessage UTC timestamp of last message to be loaded
+ * @param done Optional callback function for async execution
+ * @returns None
+ */
+
+window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+    x = function(){
+        if(found.msgs.models[0].t>lastMessage){
+            found.loadEarlierMsgs().then(x);
+        }else {
             done();
         }
     };
@@ -301,7 +342,7 @@ window.WAPI.getMe = function (done) {
 window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifications) {
     if (messageObj.__x_isNotification) {
         if(includeNotifications)
-            return WAPI._serializeNotificationObj(messageObj);
+            return WAPI._serializeMessageObj(messageObj);
         else return;
         // System message
         // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
@@ -330,6 +371,29 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
     }
 };
 
+window.WAPI.sendMessageToID = function (id, message, done) {
+    if(Store.Chat.models.length == 0)
+        return false;
+
+    var originalID = Store.Chat.models[0].id;
+    Store.Chat.models[0].id = id;
+    if (done !== undefined) {
+        Store.Chat.models[0].sendMessage(message).then(function(){ Store.Chat.models[0].id = originalID; done(true); });
+        return true;
+    } else {
+        Store.Chat.models[0].sendMessage(message);
+        Store.Chat.models[0].id = originalID;
+        return true;
+    }
+
+    if (done !== undefined)
+        done();
+    else
+        return false;
+
+    return true;
+}
+
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = Store.Chat.models;
 
@@ -349,6 +413,38 @@ window.WAPI.sendMessage = function (id, message, done) {
                 return true;
             } else {
                 Chats[chat].sendMessage(message);
+                return true;
+            }
+        }
+    }
+    if (done !== undefined) {
+        done();
+    } else {
+        return false;
+    }
+    return false;
+};
+
+
+window.WAPI.sendSeen = function (id, done) {
+    const Chats = Store.Chat.models;
+
+    for (const chat in Chats) {
+        if (isNaN(chat)) {
+            continue;
+        }
+
+        let temp = {};
+        temp.name = Chats[chat].__x__formattedTitle;
+        temp.id = Chats[chat].__x_id;
+        if (temp.id === id) {
+            if (done !== undefined) {
+                Chats[chat].sendSeen(false).then(function () {
+                    done(true);
+                });
+                return true;
+            } else {
+                Chats[chat].sendSeen(false);
                 return true;
             }
         }
@@ -444,4 +540,24 @@ window.WAPI.getCommonGroups = async function (id, done) {
     return output;
 };
 
+window.WAPI.downloadFile = function (url, done) {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onload = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let reader = new FileReader();
+                reader.readAsDataURL(xhr.response);
+                reader.onload =  function(e){
+                    done(reader.result.substr(reader.result.indexOf(',')+1))
+                };
+            } else {
+                console.error(xhr.statusText);
+            }
+        }
+    };
+    xhr.open("GET", url, true);
+    xhr.responseType = 'blob';
+    xhr.send(null);
+}
 

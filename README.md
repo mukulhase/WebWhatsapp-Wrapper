@@ -18,6 +18,10 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 - Install from pip
 `pip install webwhatsapi`
 
+#### From pipenv
+- Install from pipenv
+`pipenv install`
+
 ## Usage
 1. Import library
 ` from webwhatsapi import WhatsAPIDriver `
@@ -47,6 +51,9 @@ Possible arguments for constructor:
 
 7. To send a message, get a Contact object, and call the send_message function with the message.
 `<Contact Object>.send_message("Hello")`
+
+8. Sending a message to an ID, whether a contact or not.
+`driver.send_message_to_id(id, message)`
 
 ## Code Documentation
 http://mukulhase.github.io/WebWhatsAPI/index.html
