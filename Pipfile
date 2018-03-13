@@ -1,0 +1,24 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+python-dateutil = ">=2.6.0"
+selenium = ">=3.4.3"
+python-axolotl = "*"
+pycrypto = "*"
+
+
+[dev-packages]
+pep8 = "*"
+flake8 = "*"
+coverage = "*"
+autopep8 = "*"
+
+
+[requires]
+
