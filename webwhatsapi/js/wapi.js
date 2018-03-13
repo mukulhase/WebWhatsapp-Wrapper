@@ -101,6 +101,21 @@ window.WAPI.getAllContacts = function (done) {
         return contacts;
     }
 };
+/**
+ * Fetches all contact objects from store, filters them
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of contacts
+ */
+window.WAPI.getMyContacts = function (done) {
+    const contacts = Store.Contact.models.filter(d => d.__x_isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
+
+    if (done !== undefined) {
+        done(contacts);
+    } else {
+        return contacts;
+    }
+};
 
 /**
  * Fetches contact object from store by ID
@@ -355,6 +370,29 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
         return output;
     }
 };
+
+window.WAPI.sendMessageToID = function (id, message, done) {
+    if(Store.Chat.models.length == 0)
+        return false;
+
+    var originalID = Store.Chat.models[0].id;
+    Store.Chat.models[0].id = id;
+    if (done !== undefined) {
+        Store.Chat.models[0].sendMessage(message).then(function(){ Store.Chat.models[0].id = originalID; done(true); });
+        return true;
+    } else {
+        Store.Chat.models[0].sendMessage(message);
+        Store.Chat.models[0].id = originalID;
+        return true;
+    }
+
+    if (done !== undefined)
+        done();
+    else
+        return false;
+
+    return true;
+}
 
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = Store.Chat.models;

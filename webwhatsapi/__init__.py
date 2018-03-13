@@ -71,6 +71,7 @@ class WhatsAPIDriver(object):
     _SELECTORS = {
         'firstrun': "#wrapper",
         'qrCode': "img[alt=\"Scan me!\"]",
+        'qrCodePlain': "._2EZ_m",
         'mainPage': ".app.two",
         'chatList': ".infinite-list-viewport",
         'messageList': "#main > div > div:nth-child(1) > div > div.message-list",
@@ -144,6 +145,9 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.http_port", int(proxy_port))
         self._profile.set_preference("network.proxy.ssl", proxy_address)
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
+
+    def close(self):
+        self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
                  profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
@@ -232,18 +236,33 @@ class WhatsAPIDriver(object):
 
             self.driver.refresh()
 
+    def is_logged_in(self):
+        """Returns if user is logged. Can be used if non-block needed for wait_for_login"""
+        # self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
+        # it becomes ridiculously slow if the element is not found.
+
+        # instead we use this (temporary) solution:
+        return 'class="app _3dqpi two"' in self.driver.page_source
+
     def wait_for_login(self):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, 90).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
 
-    def get_qr(self):
+    def get_qr_plain(self):
+        return self.driver.find_element_by_css_selector(self._SELECTORS['qrCodePlain']).get_attribute("data-ref")
+
+    def get_qr(self, filename=None):
         """Get pairing QR code from client"""
         if "Click to reload QR code" in self.driver.page_source:
             self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
-        fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        if filename is None:
+            fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+        else:
+            fd = os.open(filename, os.O_RDWR|os.CREAT)
+            fn_png = os.path.abspath(filename)
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
         os.close(fd)
@@ -264,6 +283,16 @@ class WhatsAPIDriver(object):
         """
         all_contacts = self.wapi_functions.getAllContacts()
         return [Contact(contact, self) for contact in all_contacts]
+
+    def get_my_contacts(self):
+        """
+        Fetches list of added contacts
+
+        :return: List of contacts
+        :rtype: list[Contact]
+        """
+        my_contacts = self.wapi_functions.getMyContacts()
+        return [Contact(contact, self) for contact in my_contacts]
 
     def get_all_chats(self):
         """
@@ -377,6 +406,9 @@ class WhatsAPIDriver(object):
     def chat_send_message(self, chat_id, message):
         return self.wapi_functions.sendMessage(chat_id, message)
 
+    def send_message_to_id(self, recipient, message):
+        return self.wapi_functions.sendMessageToID(recipient, message)
+      
     def chat_send_seen(self, chat_id):
         return self.wapi_functions.sendSeen(chat_id)
 
