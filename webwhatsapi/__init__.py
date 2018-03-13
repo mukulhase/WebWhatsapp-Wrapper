@@ -200,6 +200,10 @@ class WhatsAPIDriver(object):
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == 'remote':
+            if self._profile_path is not None:
+                self._profile = webdriver.FirefoxProfile(self._profile_path)
+            else:
+                self._profile = webdriver.FirefoxProfile()
             capabilities = DesiredCapabilities.FIREFOX.copy()
             self.driver = webdriver.Remote(
                 command_executor=command_executor,
