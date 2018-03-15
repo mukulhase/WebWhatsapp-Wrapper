@@ -244,9 +244,9 @@ class WhatsAPIDriver(object):
         # instead we use this (temporary) solution:
         return 'class="app _3dqpi two"' in self.driver.page_source
 
-    def wait_for_login(self):
+    def wait_for_login(self, timeout=90):
         """Waits for the QR to go away"""
-        WebDriverWait(self.driver, 90).until(
+        WebDriverWait(self.driver, timeout).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
 
@@ -261,7 +261,7 @@ class WhatsAPIDriver(object):
         if filename is None:
             fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         else:
-            fd = os.open(filename, os.O_RDWR|os.CREAT)
+            fd = os.open(filename, os.O_RDWR | os.CREAT)
             fn_png = os.path.abspath(filename)
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
@@ -412,7 +412,7 @@ class WhatsAPIDriver(object):
 
     def send_message_to_id(self, recipient, message):
         return self.wapi_functions.sendMessageToID(recipient, message)
-      
+
     def chat_send_seen(self, chat_id):
         return self.wapi_functions.sendSeen(chat_id)
 

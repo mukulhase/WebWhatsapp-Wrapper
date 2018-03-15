@@ -1,4 +1,4 @@
-from asyncio import get_event_loop
+from asyncio import get_event_loop, sleep
 
 import binascii
 
@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from functools import partial
 from io import BytesIO
+from selenium.common.exceptions import TimeoutException
 
 from webwhatsapi import factory_message
 from . import WhatsAPIDriver
@@ -41,8 +42,14 @@ class WhatsAPIDriverAsync:
     async def connect(self):
         return await self.loop.run_in_executor(self._pool_executor, self._driver.connect)
 
-    async def wait_for_login(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.wait_for_login)
+    async def wait_for_login(self, timeout=90):
+        for _ in range(timeout//2):
+            try:
+                return await self.loop.run_in_executor(self._pool_executor,
+                                                       partial(self._driver.wait_for_login, timeout=1))
+            except TimeoutException:
+                await sleep(1)
+        raise TimeoutException('Timeout: Not logged')
 
     async def get_qr(self):
         return await self.loop.run_in_executor(self._pool_executor, self._driver.get_qr)

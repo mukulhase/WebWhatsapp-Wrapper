@@ -7,6 +7,13 @@ window.WAPI = {
     lastRead: {}
 };
 
+window.WAPI._serializeRawObj = (obj) => {
+    let data = obj.all || obj.toJSON();
+    delete data.status;
+    delete data.promises;
+
+    return data;
+};
 
 /**
  * Serializes a chat object
@@ -14,94 +21,86 @@ window.WAPI = {
  * @param rawChat Chat object
  * @returns {{}}
  */
-window.WAPI.serializeChat = (obj) => ({
-    name: obj.__x_name || obj.__x_formattedName || obj.__x_formattedTitle || "None",
-    id: obj.__x_id,
-    isGroup: obj.isGroup,
-    kind: obj.kind,
-});
 
-window.WAPI._serializeRawObj = (obj) => {
-    return obj.all;
-};
+window.WAPI._serializeChatObj = (obj) => {
 
-window.WAPI._serializeContactObj = (obj) => (obj?{
-    formattedName: obj.__x_formattedName,
-    formattedShortName: obj.__x_formattedShortName,
-    shortName: obj.__x_formattedShortName,
-    formattedShortNameWithNonBreakingSpaces: obj.__x_formattedShortNameWithNonBreakingSpaces,
-    formattedUser: obj.__x_formattedUser,
-    id: obj.__x_id,
-    isHighLevelVerified: obj.__x_isHighLevelVerified,
-    isMe: obj.__x_isMe,
-    isMyContact: obj.__x_isMyContact,
-    isPSA: obj.__x_isPSA,
-    isUser: obj.__x_isUser,
-    isVerified: obj.__x_isVerified,
-    isWAContact: obj.__x_isWAContact,
-    name: obj.__x_name,
-    profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
-    statusMute: obj.__x_statusMute,
-    pushname: obj.__x_pushname
+    let data = window.WAPI._serializeRawObj(obj);
 
-}:null);
+    delete data.colors;
+    delete data.composeAttachMediaContents;
+    delete data.composeContents;
+    delete data.composeQuotedMsg;
+    delete data.mute;
+    delete data.previewMessage;
+    delete data.shouldShowUnreadDivider;
+    delete data.presenceResendTimerId;
 
-window.WAPI._serializeNotificationObj = (obj) => ({
-    id: obj.id._serialized,
-    sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
-    isGroupMsg: obj.__x_isGroupMsg,
-    content: obj["body"],
-    isLink: obj.__x_isLink,
-    isMMS: obj.__x_isMMS,
-    isMedia: obj.__x_isMedia,
-    isNotification: obj.__x_isNotification,
-    timestamp: obj["t"],
-    type: obj.__x_type,
-    subtype: obj.__x_subtype,
-    recipients: obj.__x_recipients,
-    chatId: obj.__x_id.remote
-});
-
-window.WAPI._serializeMessageObj = function(obj) {
-
-    let data = {
-        sender: WAPI._serializeContactObj(obj["senderObj"]),
-        id: obj.id._serialized,
-        timestamp: obj["t"],
-        content: obj["body"],
-        isGroupMsg: obj.__x_isGroupMsg,
-        isLink: obj.__x_isLink,
-        isMMS: obj.__x_isMMS,
-        isMedia: obj.__x_isMedia,
-        isNotification: obj.__x_isNotification,
-        isPSA: obj.__x_isPSA,
-        type: obj.__x_type,
-        size: obj.__x_size,
-        mime: obj.__x_mimetype,
-        chatId: obj.__x_id.remote
-    };
-
-    if (data.isMedia || data.isMMS) {
-        data['clientUrl'] = obj['__x_clientUrl'];
-        data['mediaKey'] = obj['__x_mediaKey'];
-        data['mediaData'] = {
-            duration: obj['__x_mediaData']['__x_duration'],
-            filehash: obj['__x_mediaData']['__x_filehash'],
-            mimetype: obj['__x_mediaData']['__x_mimetype'],
-            encriptationKey: obj['__x_mediaData']['__x_encryptionKey'],
-            fullHeight: obj['__x_mediaData']['__x_fullHeight'],
-            fullWidth: obj['__x_mediaData']['__x_fullWidth'],
-            size: obj['__x_mediaData']['__x_size'],
-        }
+    if (obj['contact']) {
+        data.contact = window.WAPI._serializeContactObj(obj['contact']);
     }
 
-    if (data.isNotification) {
-        data['subtype']= obj.__x_subtype;
-        data['recipients']= obj.__x_recipients;
+    if (obj["groupMetadata"]) {
+        data.groupMetadata = window.WAPI._serializeRawObj(obj["groupMetadata"]);
+    }
+
+    if (obj["presence"]) {
+        data.presence = obj["presence"].toJSON();
     }
 
     return data;
 };
+
+window.WAPI._serializeContactObj = (obj) => {
+    if (!obj) {
+        return null;
+    }
+
+    data = window.WAPI._serializeRawObj(obj);
+    delete data._notifyName;
+
+    data.profilePicThumb = obj.__x_profilePicThumb ? obj.__x_profilePicThumb.imgFull : "none";
+    data.profilePicThumbObj = obj.__x_profilePicThumb ? WAPI._serializeRawObj(obj.__x_profilePicThumb):{};
+
+    return data;
+};
+
+window.WAPI._serializeMessageObj = (obj) => {
+
+    let data = window.WAPI._serializeRawObj(obj);;
+    delete data.msgChunk;
+    data.id = obj.id._serialized;
+    if (obj["senderObj"]) {
+        data.sender = WAPI._serializeContactObj(obj["senderObj"]);
+        data.senderObj = data.sender;
+    } else {
+        data.sender = false;
+    }
+
+    // Make compatible with old versions.
+    // TODO: We must deprecate old fields.
+    data.content = obj.body;
+    data.timestamp = data.t;
+
+    if (obj['chat']) {
+        data.chat = WAPI._serializeChatObj(obj['chat']);
+    }
+
+    if (obj['_quotedMsgObj']) {
+        data.quotedMsgObj = WAPI._serializeMessageObj(obj['_quotedMsgObj']);
+    }
+    delete obj['_quotedMsgObj'];
+
+    if (obj['mediaData']) {
+        data.mediaData = window.WAPI._serializeRawObj(obj['mediaData']);
+        delete data.mediaData.mediaBlob;
+        delete data.mediaData.preview;
+    }
+
+    // TODO: We must deprecate old fields.
+    data.chatId = obj.id.remote;
+    return data;
+};
+
 /**
  * Fetches all contact objects from store
  *
@@ -157,7 +156,7 @@ window.WAPI.getContact = function (id, done) {
  * @returns {Array|*} List of chats
  */
 window.WAPI.getAllChats = function (done) {
-    const chats = Store.Chat.models.map((chat) => WAPI.serializeChat(chat));
+    const chats = Store.Chat.models.map((chat) => WAPI._serializeChatObj(chat));
 
     if (done !== undefined) {
         done(chats);
@@ -356,7 +355,7 @@ window.WAPI.getMe = function (done) {
 };
 
 window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifications) {
-    if (messageObj.__x_isNotification) {
+    if (messageObj.isNotification) {
         if(includeNotifications)
             return WAPI._serializeMessageObj(messageObj);
         else return;
@@ -377,6 +376,7 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
             continue;
         }
         const messageObj = messages[i];
+
         let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications)
         if (message)output.push(message);
     }
@@ -514,7 +514,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
         }
 
         let messageGroupObj = chats[chat];
-        let messageGroup = WAPI.serializeChat(messageGroupObj);
+        let messageGroup = WAPI._serializeChatObj(messageGroupObj);
         messageGroup.messages = [];
 
         const messages = messageGroupObj.msgs.models;

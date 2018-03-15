@@ -8,12 +8,14 @@ from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
 from webwhatsapi.objects.whatsapp_object import WhatsappObject
 
+
 def getContacts(x, driver):
     try:
         contact = driver.get_contact_from_id(x)
         return contact
     except:
         return x
+
 
 def factory_message(js_obj, driver):
     if js_obj["isMedia"]:
@@ -50,7 +52,6 @@ class Message(WhatsappObject):
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'
-        self.js_obj = js_obj
 
     def __repr__(self):
         return "<Message - from {sender} at {timestamp}: {content}>".format(
@@ -68,16 +69,16 @@ class MediaMessage(Message):
     def __init__(self, js_obj, driver=None):
         super(MediaMessage, self).__init__(js_obj, driver)
 
-        self.type = self.js_obj["type"]
-        self.size = self.js_obj["size"]
-        self.mime = self.js_obj["mime"]
+        self.type = self._js_obj["type"]
+        self.size = self._js_obj["size"]
+        self.mime = self._js_obj["mimetype"]
 
-        self.media_key = self.js_obj.get('mediaKey')
-        self.client_url = self.js_obj.get('clientUrl')
+        self.media_key = self._js_obj.get('mediaKey')
+        self.client_url = self._js_obj.get('clientUrl')
 
         extension = mimetypes.guess_extension(self.mime)
         try:
-            self.filename = ''.join([self.js_obj["filehash"], extension])
+            self.filename = ''.join([self._js_obj["filehash"], extension])
         except KeyError:
             self.filename = ''.join([str(id(self)), extension or ''])
 
@@ -132,7 +133,7 @@ class NotificationMessage(Message):
     def __init__(self, js_obj, driver=None):
         super(NotificationMessage, self).__init__(js_obj, driver)
         self.type = js_obj["type"]
-        self.subtype = js_obj["subtype"].encode("ascii", "ignore")
+        self.subtype = js_obj["subtype"]
         if js_obj["recipients"]:
             self.recipients = [getContacts(x, driver) for x in js_obj["recipients"]]
 
