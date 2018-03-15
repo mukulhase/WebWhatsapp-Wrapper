@@ -303,6 +303,15 @@ class WhatsAPIDriver(object):
         """
         return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
+    def get_all_chat_ids(self):
+        """
+        Fetches all chat ids
+
+        :return: List of chat ids
+        :rtype: list[str]
+        """
+        return self.wapi_functions.getAllChatIds()
+
     def get_unread(self, include_me=False, include_notifications=False):
         """
         Fetches unread messages

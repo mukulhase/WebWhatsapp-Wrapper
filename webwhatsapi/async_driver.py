@@ -68,7 +68,11 @@ class WhatsAPIDriverAsync:
         return await self._run_async(self._driver.get_contacts)
 
     async def get_all_chats(self):
-        return await self._run_async(self._driver.get_all_chats)
+        for chat_id in await self.get_all_chat_ids():
+            yield await self.get_chat_from_id(chat_id)
+
+    async def get_all_chat_ids(self):
+        return await self._run_async(self._driver.get_all_chat_ids)
 
     # TODO: Check if deprecated
     async def reset_unread(self):

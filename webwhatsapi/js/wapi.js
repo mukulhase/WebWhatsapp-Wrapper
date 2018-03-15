@@ -166,6 +166,22 @@ window.WAPI.getAllChats = function (done) {
 };
 
 /**
+ * Fetches all chat IDs from store
+ *
+ * @param done Optional callback function for async execution
+ * @returns {Array|*} List of chat id's
+ */
+window.WAPI.getAllChatIds = function (done) {
+    const chatIds = Store.Chat.models.map((chat) => chat.id);
+
+    if (done !== undefined) {
+        done(chatIds);
+    } else {
+        return chats;
+    }
+};
+
+/**
  * Fetches all groups objects from store
  *
  * @param done Optional callback function for async execution
