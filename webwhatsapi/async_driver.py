@@ -28,7 +28,7 @@ class WhatsAPIDriverAsync:
 
     async def _run_async(self, method, *args, **kwargs):
         try:
-            fut = await self.loop.run_in_executor(self._pool_executor, partial(method, *args, **kwargs))
+            fut = self.loop.run_in_executor(self._pool_executor, partial(method, *args, **kwargs))
             return await fut
         except CancelledError:
             fut.cancel()
