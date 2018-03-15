@@ -34,13 +34,27 @@ window.WAPI._serializeChatObj = (obj) => {
     delete data.previewMessage;
     delete data.shouldShowUnreadDivider;
     delete data.presenceResendTimerId;
+    delete data.lastReceivedKey;
+    delete data.msgChunks;
+    delete data.msgsChanged;
+    delete data.msgsLength;
+    delete data.muteExpiration;
+    delete data.pausedTimerId
+    delete data.pendingAction
+    delete data.pendingMsgs;
+    delete data.pendingSeenCount;
+    delete data.popupPanels;
+    delete data.popupPositionChange;
+    delete data.unreadCount;
+    delete data.unreadMsgAnchor;
+
 
     if (obj['contact']) {
         data.contact = window.WAPI._serializeContactObj(obj['contact']);
     }
 
     if (obj["groupMetadata"]) {
-        data.groupMetadata = window.WAPI._serializeRawObj(obj["groupMetadata"]);
+        data.groupMetadata = obj["groupMetadata"].toJSON();
     }
 
     if (obj["presence"]) {
