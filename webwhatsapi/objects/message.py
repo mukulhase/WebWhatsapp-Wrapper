@@ -79,7 +79,7 @@ class MediaMessage(Message):
         extension = mimetypes.guess_extension(self.mime)
         try:
             self.filename = ''.join([self._js_obj["filehash"], extension])
-        except KeyError:
+        except (KeyError, TypeError):
             self.filename = ''.join([str(id(self)), extension or ''])
 
     def save_media(self, path):
