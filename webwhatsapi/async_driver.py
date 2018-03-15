@@ -2,6 +2,7 @@ import binascii
 from asyncio import CancelledError, get_event_loop, sleep
 from concurrent.futures import ThreadPoolExecutor
 
+import aiohttp
 from Crypto.Cipher import AES
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
@@ -151,7 +152,9 @@ class WhatsAPIDriverAsync:
             yield await self.get_contact_from_id(admin_id)
 
     async def download_file(self, url):
-        return await self._run_async(self._driver.download_file, url)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                return await resp.read()
 
     async def download_media(self, media_msg):
         try:
