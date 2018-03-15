@@ -8,11 +8,14 @@ from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
 from functools import partial
 from io import BytesIO
+from logging import getLogger
 from selenium.common.exceptions import TimeoutException
 
-from webwhatsapi import factory_message
+from .objects.message import factory_message
 from . import WhatsAPIDriver
 
+
+logger = getLogger(__name__)
 
 class WhatsAPIDriverAsync:
 
@@ -28,6 +31,7 @@ class WhatsAPIDriverAsync:
 
     async def _run_async(self, method, *args, **kwargs):
         try:
+            logger.debug('Running async method {}'.format(method.__name__))
             fut = self.loop.run_in_executor(self._pool_executor, partial(method, *args, **kwargs))
             return await fut
         except CancelledError:
