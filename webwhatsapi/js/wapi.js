@@ -8,11 +8,10 @@ window.WAPI = {
 };
 
 window.WAPI._serializeRawObj = (obj) => {
-    let data = obj.all || obj.toJSON();
-    delete data.status;
-    delete data.promises;
-
-    return data;
+    if (obj) {
+        return obj.toJSON();
+    }
+    return {}
 };
 
 /**
@@ -23,96 +22,66 @@ window.WAPI._serializeRawObj = (obj) => {
  */
 
 window.WAPI._serializeChatObj = (obj) => {
-
-    let data = window.WAPI._serializeRawObj(obj);
-
-    delete data.colors;
-    delete data.composeAttachMediaContents;
-    delete data.composeContents;
-    delete data.composeQuotedMsg;
-    delete data.mute;
-    delete data.previewMessage;
-    delete data.shouldShowUnreadDivider;
-    delete data.presenceResendTimerId;
-    delete data.lastReceivedKey;
-    delete data.msgChunks;
-    delete data.msgsChanged;
-    delete data.msgsLength;
-    delete data.muteExpiration;
-    delete data.pausedTimerId
-    delete data.pendingAction
-    delete data.pendingMsgs;
-    delete data.pendingSeenCount;
-    delete data.popupPanels;
-    delete data.popupPositionChange;
-    delete data.unreadCount;
-    delete data.unreadMsgAnchor;
-
-
-    if (obj['contact']) {
-        data.contact = window.WAPI._serializeContactObj(obj['contact']);
-    }
-
-    if (obj["groupMetadata"]) {
-        data.groupMetadata = obj["groupMetadata"].toJSON();
-    }
-
-    if (obj["presence"]) {
-        data.presence = obj["presence"].toJSON();
-    }
-
-    return data;
-};
-
-window.WAPI._serializeContactObj = (obj) => {
-    if (!obj) {
+    console.log(obj);
+    console.log('chat');
+    if (obj == undefined) {
         return null;
     }
 
-    data = window.WAPI._serializeRawObj(obj);
-    delete data._notifyName;
+    return Object.assign(window.WAPI._serializeRawObj(obj), {
+        kind: obj.kind,
+        isGroup: obj.isGroup,
+        contact: obj['contact']? window.WAPI._serializeContactObj(obj['contact']): null,
+        groupMetadata: obj["groupMetadata"]? window.WAPI._serializeRawObj(obj["groupMetadata"]): null,
+        presence: obj["presence"]? window.WAPI._serializeRawObj(obj["presence"]):null,
+        msgs: null
+    });
+};
 
-    data.profilePicThumb = obj.__x_profilePicThumb ? obj.__x_profilePicThumb.imgFull : "none";
-    data.profilePicThumbObj = obj.__x_profilePicThumb ? WAPI._serializeRawObj(obj.__x_profilePicThumb):{};
+window.WAPI._serializeContactObj = (obj) => {
+    console.log(!obj);
+    console.log('contact');
+    if (obj == undefined) {
+        return null;
+    }
 
-    return data;
+    return Object.assign(window.WAPI._serializeRawObj(obj), {
+        formattedName: obj.formattedName,
+        isHighLevelVerified: obj.__x_isHighLevelVerified,
+        isMe: obj.isMe,
+        isMyContact: obj.isMyContact,
+        isPSA: obj.isPSA,
+        isUser: obj.isUser,
+        isVerified: obj.isVerified,
+        isWAContact: obj.isWAContact,
+        profilePicThumbObj: obj.profilePicThumb ? WAPI._serializeRawObj(obj.profilePicThumb):{},
+        statusMute: obj.statusMute,
+        msgs: null
+    });
 };
 
 window.WAPI._serializeMessageObj = (obj) => {
-
-    let data = window.WAPI._serializeRawObj(obj);;
-    delete data.msgChunk;
-    data.id = obj.id._serialized;
-    if (obj["senderObj"]) {
-        data.sender = WAPI._serializeContactObj(obj["senderObj"]);
-        data.senderObj = data.sender;
-    } else {
-        data.sender = false;
+    if (obj == undefined) {
+        return null;
     }
-
-    // Make compatible with old versions.
-    // TODO: We must deprecate old fields.
-    data.content = obj.body;
-    data.timestamp = data.t;
-
-    if (obj['chat']) {
-        data.chat = WAPI._serializeChatObj(obj['chat']);
-    }
-
-    if (obj['_quotedMsgObj']) {
-        data.quotedMsgObj = WAPI._serializeMessageObj(obj['_quotedMsgObj']);
-    }
-    delete obj['_quotedMsgObj'];
-
-    if (obj['mediaData']) {
-        data.mediaData = window.WAPI._serializeRawObj(obj['mediaData']);
-        delete data.mediaData.mediaBlob;
-        delete data.mediaData.preview;
-    }
-
-    // TODO: We must deprecate old fields.
-    data.chatId = obj.id.remote;
-    return data;
+    console.log('message');
+    return Object.assign(window.WAPI._serializeRawObj(obj), {
+        id: obj.id._serialized,
+        sender: obj["senderObj"]?WAPI._serializeContactObj(obj["senderObj"]): null,
+        timestamp: obj["t"],
+        content: obj["body"],
+        isGroupMsg: obj.isGroupMsg,
+        isLink: obj.isLink,
+        isMMS: obj.isMMS,
+        isMedia: obj.isMedia,
+        isNotification: obj.isNotification,
+        isPSA: obj.isPSA,
+        type: obj.type,
+        chat: WAPI._serializeChatObj(obj['chat']),
+        chatId: obj.id.remote,
+        quotedMsgObj: WAPI._serializeMessageObj(obj['_quotedMsgObj']),
+        mediaData: window.WAPI._serializeRawObj(obj['mediaData'])
+    });
 };
 
 /**
@@ -220,6 +189,21 @@ window.WAPI.getAllGroups = function (done) {
  */
 window.WAPI.getChat = function (id, done) {
     const found = Store.Chat.models.find((chat) => chat.id === id);
+    if (done !== undefined) {
+        done(found);
+    } else {
+        return found;
+    }
+};
+
+window.WAPI.getChatById = function (id, done) {
+    let found = window.WAPI.getChat(id);
+    if (found) {
+        found = WAPI._serializeChatObj(found);
+    } else {
+        found = false;
+    }
+
     if (done !== undefined) {
         done(found);
     } else {

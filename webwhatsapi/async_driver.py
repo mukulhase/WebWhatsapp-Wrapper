@@ -17,6 +17,7 @@ from . import WhatsAPIDriver
 
 logger = getLogger(__name__)
 
+
 class WhatsAPIDriverAsync:
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,

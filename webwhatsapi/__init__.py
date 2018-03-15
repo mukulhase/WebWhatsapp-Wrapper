@@ -361,9 +361,9 @@ class WhatsAPIDriver(object):
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
-        for chat in self.wapi_functions.getAllChats():
-            if chat["id"] == chat_id:
-                return factory_chat(chat, self)
+        chat = self.wapi_functions.getChatById(chat_id)
+        if chat:
+            return factory_chat(chat, self)
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
