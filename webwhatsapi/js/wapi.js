@@ -22,8 +22,6 @@ window.WAPI._serializeRawObj = (obj) => {
  */
 
 window.WAPI._serializeChatObj = (obj) => {
-    console.log(obj);
-    console.log('chat');
     if (obj == undefined) {
         return null;
     }
@@ -39,8 +37,6 @@ window.WAPI._serializeChatObj = (obj) => {
 };
 
 window.WAPI._serializeContactObj = (obj) => {
-    console.log(!obj);
-    console.log('contact');
     if (obj == undefined) {
         return null;
     }
@@ -64,7 +60,7 @@ window.WAPI._serializeMessageObj = (obj) => {
     if (obj == undefined) {
         return null;
     }
-    console.log('message');
+
     return Object.assign(window.WAPI._serializeRawObj(obj), {
         id: obj.id._serialized,
         sender: obj["senderObj"]?WAPI._serializeContactObj(obj["senderObj"]): null,
