@@ -145,6 +145,7 @@ class NotificationMessage(Message):
                 'encrypt': "Messages now Encrypted"
             },
             'gp2': {
+                'invite': "Joined an invite link",
                 'create': "Created group",
                 'add': "Added to group",
                 'remove': "Removed from group",
