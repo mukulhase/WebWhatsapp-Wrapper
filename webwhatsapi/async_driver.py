@@ -1,6 +1,7 @@
 import binascii
 from asyncio import CancelledError, get_event_loop, sleep
 from concurrent.futures import ThreadPoolExecutor
+from logging import getLogger
 
 import aiohttp
 from Crypto.Cipher import AES
@@ -9,12 +10,9 @@ from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
 from functools import partial
 from io import BytesIO
-from logging import getLogger
 from selenium.common.exceptions import TimeoutException
 
-from .objects.message import factory_message
 from . import WhatsAPIDriver
-
 
 logger = getLogger(__name__)
 
@@ -76,10 +74,6 @@ class WhatsAPIDriverAsync:
     async def get_all_chat_ids(self):
         return await self._run_async(self._driver.get_all_chat_ids)
 
-    # TODO: Check if deprecated
-    async def reset_unread(self):
-        return await self._run_async(self._driver.reset_unread)
-
     async def get_unread(self, include_me=False, include_notifications=False):
         return await self._run_async(self._driver.get_unread,
                                      include_me=include_me,
@@ -117,11 +111,21 @@ class WhatsAPIDriverAsync:
         return await self._run_async(self._driver.chat_send_message,
                                      chat_id=chat_id, message=message)
 
-    async def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
-        message_objs = await self._run_async(self._driver.wapi_functions.getAllMessagesInChat,
-                                             chat_id, include_me, include_notifications)
-        for message in message_objs:
-            yield factory_message(message, self._driver)
+    async def chat_get_messages(self, chat, include_me=False, include_notifications=False):
+        async for msg_id in self.get_all_message_ids_in_chat(chat,
+                                                             include_me=include_me,
+                                                             include_notifications=include_notifications):
+            yield self.get_message_by_id(msg_id)
+
+    async def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
+        message_ids = await self._run_async(self._driver.wapi_functions.get_all_message_ids_in_chat,
+                                            chat.id, include_me, include_notifications)
+        for i in message_ids:
+            yield i
+
+    async def get_message_by_id(self, message_id):
+        return await self._run_async(self._driver.wapi_functions.get_message_by_id,
+                                     message_id)
 
     async def chat_load_earlier_messages(self, chat_id):
         return await self._run_async(self._driver.chat_load_earlier_messages,
@@ -130,6 +134,14 @@ class WhatsAPIDriverAsync:
     async def chat_load_all_earlier_messages(self, chat_id):
         return await self._run_async(
             self._driver.chat_load_all_earlier_messages, chat_id)
+
+    async def async_chat_load_all_earlier_messages(self, chat_id):
+        return await self._run_async(
+            self._driver.async_chat_load_all_earlier_messages, chat_id)
+
+    async def are_all_messages_loaded(self, chat_id):
+        return await self._run_async(
+            self._driver.are_all_messages_loaded, chat_id)
 
     async def group_get_participants_ids(self, group_id):
         return await self._run_async(self._driver.group_get_participants_ids,

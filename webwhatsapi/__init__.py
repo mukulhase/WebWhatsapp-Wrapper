@@ -352,6 +352,33 @@ class WhatsAPIDriver(object):
 
         return messages
 
+    def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
+        """
+        Fetches message ids in chat
+
+        :param include_me: Include user's messages
+        :type include_me: bool or None
+        :param include_notifications: Include events happening on chat
+        :type include_notifications: bool or None
+        :return: List of message ids in chat
+        :rtype: list[str]
+        """
+        return self.wapi_functions.getAllMessageIdsInChat(chat.id, include_me, include_notifications)
+
+    def get_message_by_id(self, message_id):
+        """
+        Fetch a message
+
+        :return: Message or False
+        :rtype: Message
+        """
+        result = self.wapi_functions.getMessageById(message_id)
+
+        if result:
+            result = factory_message(result, self)
+
+        return result
+
     def get_contact_from_id(self, contact_id):
         contact = self.wapi_functions.getContact(contact_id)
 
@@ -435,6 +462,12 @@ class WhatsAPIDriver(object):
 
     def chat_load_all_earlier_messages(self, chat_id):
         self.wapi_functions.loadAllEarlierMessages(chat_id)
+
+    def async_chat_load_all_earlier_messages(self, chat_id):
+        self.wapi_functions.asyncLoadAllEarlierMessages(chat_id)
+
+    def are_all_messages_loaded(self, chat_id):
+        return self.wapi_functions.areAllMessagesLoaded(chat_id)
 
     def group_get_participants_ids(self, group_id):
         return self.wapi_functions.getGroupParticipantIDs(group_id)

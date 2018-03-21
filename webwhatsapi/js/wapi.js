@@ -237,11 +237,32 @@ window.WAPI.loadAllEarlierMessages = function (id, done) {
     x = function(){
         if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
             found.loadEarlierMsgs().then(x);
-        } else {
+        } else if (done) {
             done();
         }
     };
     x();
+};
+
+window.WAPI.asyncLoadAllEarlierMessages = function (id, done) {
+    done();
+    window.WAPI.loadAllEarlierMessages(id);
+};
+
+window.WAPI.areAllMessagesLoaded = function (id, done) {
+    const found = Store.Chat.models.find((chat) => chat.id === id);
+    if (!found.msgs.msgLoadState.__x_noEarlierMsgs) {
+        if (done) {
+            done(false);
+        } else {
+            return false
+        }
+    }
+    if (done) {
+        done(true);
+    } else {
+        return true
+    }
 };
 
 /**
@@ -394,6 +415,33 @@ window.WAPI.getAllMessagesInChat = function (id, includeMe, includeNotifications
         done(output);
     } else {
         return output;
+    }
+};
+
+window.WAPI.getAllMessageIdsInChat = function (id, includeMe, includeNotifications, done) {
+    const chat = WAPI.getChat(id);
+    let output = [];
+    const messages = chat.msgs.models;
+    for (const i in messages) {
+        if ((i === "remove")
+                || (!includeMe && messages[i].isMe)
+                || (!includeNotifications && messages[i].isNotification)) {
+            continue;
+        }
+        output.push(messages[i].id._serialized);
+    }
+    if (done !== undefined) {
+        done(output);
+    } else {
+        return output;
+    }
+};
+
+window.WAPI.getMessageById = function (id, done) {
+    try {
+        Store.Msg.find(id).then((item) => done(WAPI.processMessageObj(item, true, true)))
+    } catch (err) {
+        done(false);
     }
 };
 
