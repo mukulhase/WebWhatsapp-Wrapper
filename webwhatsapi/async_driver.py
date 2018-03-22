@@ -102,7 +102,7 @@ class WhatsAPIDriverAsync:
 
     async def contact_get_common_groups(self, contact_id):
         groups = await self._run_async(
-            self._driver.wapi_functions.getCommonGroups,
+            self._driver.contact_get_common_groups(contact_id),
             contact_id)
         for group in groups:
             yield group
@@ -118,13 +118,13 @@ class WhatsAPIDriverAsync:
             yield self.get_message_by_id(msg_id)
 
     async def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
-        message_ids = await self._run_async(self._driver.wapi_functions.get_all_message_ids_in_chat,
+        message_ids = await self._run_async(self._driver.get_all_message_ids_in_chat,
                                             chat.id, include_me, include_notifications)
         for i in message_ids:
             yield i
 
     async def get_message_by_id(self, message_id):
-        return await self._run_async(self._driver.wapi_functions.get_message_by_id,
+        return await self._run_async(self._driver.get_message_by_id,
                                      message_id)
 
     async def chat_load_earlier_messages(self, chat_id):
