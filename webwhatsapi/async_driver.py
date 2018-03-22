@@ -119,7 +119,7 @@ class WhatsAPIDriverAsync:
 
     async def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
         message_ids = await self._run_async(self._driver.get_all_message_ids_in_chat,
-                                            chat.id, include_me, include_notifications)
+                                            chat, include_me, include_notifications)
         for i in message_ids:
             yield i
 
