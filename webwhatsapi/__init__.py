@@ -244,9 +244,9 @@ class WhatsAPIDriver(object):
         # instead we use this (temporary) solution:
         return 'class="app _3dqpi two"' in self.driver.page_source
 
-    def wait_for_login(self):
+    def wait_for_login(self, timeout=90):
         """Waits for the QR to go away"""
-        WebDriverWait(self.driver, 90).until(
+        WebDriverWait(self.driver, timeout).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
 
@@ -261,7 +261,7 @@ class WhatsAPIDriver(object):
         if filename is None:
             fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         else:
-            fd = os.open(filename, os.O_RDWR|os.CREAT)
+            fd = os.open(filename, os.O_RDWR | os.CREAT)
             fn_png = os.path.abspath(filename)
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
@@ -303,6 +303,15 @@ class WhatsAPIDriver(object):
         """
         return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
 
+    def get_all_chat_ids(self):
+        """
+        Fetches all chat ids
+
+        :return: List of chat ids
+        :rtype: list[str]
+        """
+        return self.wapi_functions.getAllChatIds()
+
     def get_unread(self, include_me=False, include_notifications=False):
         """
         Fetches unread messages
@@ -343,6 +352,33 @@ class WhatsAPIDriver(object):
 
         return messages
 
+    def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
+        """
+        Fetches message ids in chat
+
+        :param include_me: Include user's messages
+        :type include_me: bool or None
+        :param include_notifications: Include events happening on chat
+        :type include_notifications: bool or None
+        :return: List of message ids in chat
+        :rtype: list[str]
+        """
+        return self.wapi_functions.getAllMessageIdsInChat(chat.id, include_me, include_notifications)
+
+    def get_message_by_id(self, message_id):
+        """
+        Fetch a message
+
+        :return: Message or False
+        :rtype: Message
+        """
+        result = self.wapi_functions.getMessageById(message_id)
+
+        if result:
+            result = factory_message(result, self)
+
+        return result
+
     def get_contact_from_id(self, contact_id):
         contact = self.wapi_functions.getContact(contact_id)
 
@@ -352,9 +388,9 @@ class WhatsAPIDriver(object):
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
-        for chat in self.wapi_functions.getAllChats():
-            if chat["id"] == chat_id:
-                return factory_chat(chat, self)
+        chat = self.wapi_functions.getChatById(chat_id)
+        if chat:
+            return factory_chat(chat, self)
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
@@ -404,11 +440,15 @@ class WhatsAPIDriver(object):
             yield factory_chat(group, self)
 
     def chat_send_message(self, chat_id, message):
-        return self.wapi_functions.sendMessage(chat_id, message)
+        result = self.wapi_functions.sendMessage(chat_id, message)
+
+        if not isinstance(result, bool):
+            return factory_message(result, self)
+        return result
 
     def send_message_to_id(self, recipient, message):
         return self.wapi_functions.sendMessageToID(recipient, message)
-      
+
     def chat_send_seen(self, chat_id):
         return self.wapi_functions.sendSeen(chat_id)
 
@@ -422,6 +462,12 @@ class WhatsAPIDriver(object):
 
     def chat_load_all_earlier_messages(self, chat_id):
         self.wapi_functions.loadAllEarlierMessages(chat_id)
+
+    def async_chat_load_all_earlier_messages(self, chat_id):
+        self.wapi_functions.asyncLoadAllEarlierMessages(chat_id)
+
+    def are_all_messages_loaded(self, chat_id):
+        return self.wapi_functions.areAllMessagesLoaded(chat_id)
 
     def group_get_participants_ids(self, group_id):
         return self.wapi_functions.getGroupParticipantIDs(group_id)

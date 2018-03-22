@@ -1,18 +1,20 @@
-from asyncio import get_event_loop
-
 import binascii
+from asyncio import CancelledError, get_event_loop, sleep
+from concurrent.futures import ThreadPoolExecutor
+from logging import getLogger
 
+import aiohttp
 from Crypto.Cipher import AES
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
-from concurrent.futures import ThreadPoolExecutor
-
 from functools import partial
 from io import BytesIO
+from selenium.common.exceptions import TimeoutException
 
-from webwhatsapi import factory_message
 from . import WhatsAPIDriver
+
+logger = getLogger(__name__)
 
 
 class WhatsAPIDriverAsync:
@@ -27,99 +29,123 @@ class WhatsAPIDriverAsync:
         self.loop = loop or get_event_loop()
         self._pool_executor = ThreadPoolExecutor(max_workers=1)
 
+    async def _run_async(self, method, *args, **kwargs):
+        try:
+            logger.debug('Running async method {}'.format(method.__name__))
+            fut = self.loop.run_in_executor(self._pool_executor, partial(method, *args, **kwargs))
+            return await fut
+        except CancelledError:
+            fut.cancel()
+            raise
+
     async def get_local_storage(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_local_storage)
+        return await self._run_async(self._driver.get_local_storage)
 
     async def set_local_storage(self, data):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.set_local_storage, data)
+        return await self._run_async(self._driver.set_local_storage, data)
 
     async def save_firefox_profile(self, remove_old=False):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               partial(self._driver.set_local_storage,
-                                                       remove_old=remove_old))
+        return await self._run_async(self._driver.save_firefox_profile, remove_old=remove_old)
 
     async def connect(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.connect)
+        return await self._run_async(self._driver.connect)
 
-    async def wait_for_login(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.wait_for_login)
+    async def wait_for_login(self, timeout=90):
+        for _ in range(timeout // 2):
+            try:
+                return await self._run_async(self._driver.wait_for_login, timeout=1)
+            except TimeoutException:
+                await sleep(1)
+        raise TimeoutException('Timeout: Not logged')
 
     async def get_qr(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_qr)
+        return await self._run_async(self._driver.get_qr)
 
     async def screenshot(self, filename):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.screenshot, filename)
+        return await self._run_async(self._driver.screenshot, filename)
 
     async def get_contacts(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_contacts)
+        return await self._run_async(self._driver.get_contacts)
 
     async def get_all_chats(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_all_chats)
+        for chat_id in await self.get_all_chat_ids():
+            yield await self.get_chat_from_id(chat_id)
 
-    # TODO: Check if deprecated
-    async def reset_unread(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.reset_unread)
+    async def get_all_chat_ids(self):
+        return await self._run_async(self._driver.get_all_chat_ids)
 
     async def get_unread(self, include_me=False, include_notifications=False):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               partial(self._driver.get_unread,
-                                                       include_me=include_me,
-                                                       include_notifications=include_notifications))
+        return await self._run_async(self._driver.get_unread,
+                                     include_me=include_me,
+                                     include_notifications=include_notifications)
 
     async def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               partial(self._driver.get_all_messages_in_chat,
-                                                       chat=chat, include_me=include_me,
-                                                       include_notifications=include_notifications))
+        return await self._run_async(self._driver.get_all_messages_in_chat,
+                                     chat=chat, include_me=include_me,
+                                     include_notifications=include_notifications)
 
     async def get_contact_from_id(self, contact_id):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_contact_from_id, contact_id)
+        return await self._run_async(self._driver.get_contact_from_id, contact_id)
 
     async def get_chat_from_id(self, chat_id):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_chat_from_id, chat_id)
+        return await self._run_async(self._driver.get_chat_from_id, chat_id)
 
     async def get_chat_from_phone_number(self, number):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               self._driver.get_chat_from_phone_number, number)
+        return await self._run_async(
+            self._driver.get_chat_from_phone_number, number)
 
     async def reload_qr(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.reload_qr)
+        return await self._run_async(self._driver.reload_qr)
 
     async def get_status(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.get_status)
+        return await self._run_async(self._driver.get_status)
 
     async def contact_get_common_groups(self, contact_id):
-        groups = await self.loop.run_in_executor(self._pool_executor,
-                                                 self._driver.wapi_functions.getCommonGroups,
-                                                 contact_id)
+        groups = await self._run_async(
+            self._driver.contact_get_common_groups(contact_id),
+            contact_id)
         for group in groups:
             yield group
 
     async def chat_send_message(self, chat_id, message):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               partial(self._driver.chat_send_message,
-                                                       chat_id=chat_id, message=message))
+        return await self._run_async(self._driver.chat_send_message,
+                                     chat_id=chat_id, message=message)
 
-    async def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
-        message_objs = await self.loop.run_in_executor(self._pool_executor,
-                                                       self._driver.wapi_functions.getAllMessagesInChat,
-                                                       chat_id, include_me, include_notifications)
-        for message in message_objs:
-            yield factory_message(message, self._driver)
+    async def chat_get_messages(self, chat, include_me=False, include_notifications=False):
+        async for msg_id in self.get_all_message_ids_in_chat(chat,
+                                                             include_me=include_me,
+                                                             include_notifications=include_notifications):
+            yield self.get_message_by_id(msg_id)
+
+    async def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
+        message_ids = await self._run_async(self._driver.get_all_message_ids_in_chat,
+                                            chat, include_me, include_notifications)
+        for i in message_ids:
+            yield i
+
+    async def get_message_by_id(self, message_id):
+        return await self._run_async(self._driver.get_message_by_id,
+                                     message_id)
 
     async def chat_load_earlier_messages(self, chat_id):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               self._driver.chat_load_earlier_messages,
-                                               chat_id)
+        return await self._run_async(self._driver.chat_load_earlier_messages,
+                                     chat_id)
 
     async def chat_load_all_earlier_messages(self, chat_id):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               self._driver.chat_load_all_earlier_messages, chat_id)
+        return await self._run_async(
+            self._driver.chat_load_all_earlier_messages, chat_id)
+
+    async def async_chat_load_all_earlier_messages(self, chat_id):
+        return await self._run_async(
+            self._driver.async_chat_load_all_earlier_messages, chat_id)
+
+    async def are_all_messages_loaded(self, chat_id):
+        return await self._run_async(
+            self._driver.are_all_messages_loaded, chat_id)
 
     async def group_get_participants_ids(self, group_id):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               self._driver.group_get_participants_ids,
-                                               group_id)
+        return await self._run_async(self._driver.group_get_participants_ids,
+                                     group_id)
 
     async def group_get_participants(self, group_id):
         participant_ids = await self.group_get_participants_ids(group_id)
@@ -128,9 +154,8 @@ class WhatsAPIDriverAsync:
             yield await self.get_contact_from_id(participant_id)
 
     async def group_get_admin_ids(self, group_id):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               self._driver.group_get_admin_ids,
-                                               group_id)
+        return await self._run_async(self._driver.group_get_admin_ids,
+                                     group_id)
 
     async def group_get_admins(self, group_id):
         admin_ids = await self.group_get_admin_ids(group_id)
@@ -139,9 +164,9 @@ class WhatsAPIDriverAsync:
             yield await self.get_contact_from_id(admin_id)
 
     async def download_file(self, url):
-        return await self.loop.run_in_executor(self._pool_executor,
-                                               self._driver.download_file,
-                                               url)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                return await resp.read()
 
     async def download_media(self, media_msg):
         try:
@@ -168,5 +193,4 @@ class WhatsAPIDriverAsync:
         return BytesIO(cr_obj.decrypt(e_file))
 
     async def quit(self):
-        return await self.loop.run_in_executor(self._pool_executor, self._driver.quit)
-
+        return await self._run_async(self._driver.quit)
