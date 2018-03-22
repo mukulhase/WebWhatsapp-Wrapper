@@ -490,14 +490,18 @@ class WhatsAPIDriver(object):
     def download_file(self, url):
         return b64decode(self.wapi_functions.downloadFile(url))
 
-    def download_media(self, media_msg):
-        try:
-            if media_msg.content:
-                return BytesIO(b64decode(self.content))
-        except AttributeError:
-            pass
+    def download_media(self, media_msg, force_download=False):
+        if not force_download:
+            try:
+                if media_msg.content:
+                    return BytesIO(b64decode(media_msg.content))
+            except AttributeError:
+                pass
 
         file_data = self.download_file(media_msg.client_url)
+
+        if not file_data:
+            raise Exception('Impossible to download file')
 
         media_key = b64decode(media_msg.media_key)
         derivative = HKDFv3().deriveSecrets(media_key,

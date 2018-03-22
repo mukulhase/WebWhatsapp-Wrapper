@@ -636,20 +636,43 @@ window.WAPI.downloadFile = function (url, done) {
     let xhr = new XMLHttpRequest();
 
     xhr.onload = function() {
-        if (xhr.readyState == 4) {
-            if (xhr.status == 200) {
-                let reader = new FileReader();
-                reader.readAsDataURL(xhr.response);
-                reader.onload =  function(e){
-                    done(reader.result.substr(reader.result.indexOf(',')+1))
-                };
-            } else {
-                console.error(xhr.statusText);
+        console.log('1');
+        try {
+            console.log('2');
+            console.log(xhr.readyState);
+            if (xhr.readyState == 4) {
+                console.log('3');
+                console.log(xhr.status);
+                if (xhr.status == 200) {
+                    let reader = new FileReader();
+                    reader.readAsDataURL(xhr.response);
+                    reader.onload =  function(e){
+                        console.log('99999');
+                        done(reader.result.substr(reader.result.indexOf(',')+1))
+                    };
+                } else {
+                    console.log(xhr.statusText);
+                    console.log(xhr.response);
+                    done(false);
+                }
             }
+        } catch (err) {
+            console.log(err);
+            done(false);
         }
     };
-    xhr.open("GET", url, true);
-    xhr.responseType = 'blob';
-    xhr.send(null);
+    xhr.onerror = function() {
+        console.log(url)
+        done(false);
+    }
+
+    try {
+        xhr.open("GET", url, true);
+        xhr.responseType = 'blob';
+        xhr.send(null);
+    } catch (err) {
+        console.log(err);
+        done(false);
+    }
 }
 
