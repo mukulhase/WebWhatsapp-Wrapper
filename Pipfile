@@ -10,7 +10,7 @@ name = "pypi"
 python-dateutil = ">=2.6.0"
 selenium = ">=3.4.3"
 python-axolotl = "*"
-pycrypto = "*"
+cryptography = "*"
 aiohttp = "*"
 
 
