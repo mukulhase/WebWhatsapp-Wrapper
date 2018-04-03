@@ -33,7 +33,7 @@ Possible arguments for constructor:
     - username : Can be any value.
     - proxy: The proxy server to configure selenium to. Format is "<proxy>:<portnumber>"
     - command executor: Passed directly as an argument to Remote Selenium. Ignore if not using it.
-    - loadstyle: Default is true. If true, doesn't load the styling in the browser.
+    - loadstyles: Default is False. If False, doesn't load the styling in the browser.
 	- profile: Pass the full path to the profile to load it. Profile folder will be end in ".default". For persistent login, open a normal firefox tab, log in to whatsapp, then pass the profile as an argument.
 
 
