@@ -12,7 +12,8 @@ from json import dumps, loads
 import os
 import shutil
 import tempfile
-from Crypto.Cipher import AES
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
@@ -509,10 +510,9 @@ class WhatsAPIDriver(object):
         cipher_key = parts[1]
         e_file = file_data[:-10]
 
-        AES.key_size = 128
-        cr_obj = AES.new(key=cipher_key, mode=AES.MODE_CBC, IV=iv)
-
-        return BytesIO(cr_obj.decrypt(e_file))
+        cr_obj = Cipher(algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cr_obj.decryptor()
+        return BytesIO(decryptor.update(e_file) + decryptor.finalize())
 
     def quit(self):
         self.driver.quit()
