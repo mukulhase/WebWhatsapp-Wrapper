@@ -583,7 +583,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
                 if(message){
                     messageObj.__x_isNewMsg = false;    
                     messageObj.__x_MustSent = false;    
-                    messageGroup.messages.push(message);
+                    messageGroup.messages.unshift(message);
                 }
             } else {
                 break;
