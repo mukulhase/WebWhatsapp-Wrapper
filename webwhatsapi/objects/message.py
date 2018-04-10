@@ -118,6 +118,14 @@ class VCardMessage(Message):
         super(VCardMessage, self).__init__(js_obj, driver)
 
         self.type = js_obj["type"]
+        self.contacts = list()
+
+        if js_obj["content"]:
+            self.contacts.append(js_obj["content"].encode("ascii", "ignore"))
+        else:
+            for card in js_obj["vcardList"]:
+                self.contacts.append(card["vcard"].encode("ascii", "ignore"))
+
         self.contacts = js_obj["content"].encode("ascii", "ignore")
 
     def __repr__(self):
