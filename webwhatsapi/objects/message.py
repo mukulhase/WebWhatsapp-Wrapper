@@ -126,8 +126,6 @@ class VCardMessage(Message):
             for card in js_obj["vcardList"]:
                 self.contacts.append(card["vcard"].encode("ascii", "ignore"))
 
-        self.contacts = js_obj["content"].encode("ascii", "ignore")
-
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
             type=self.type,
