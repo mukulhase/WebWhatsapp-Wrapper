@@ -609,7 +609,7 @@ window.WAPI.markDefaultUnreadMessages = function (done) {
         }
 
         let messageGroupObj = chats[chat];
-        let messageGroup = WAPI.serializeChat(messageGroupObj);
+        let messageGroup = WAPI._serializeChatObj(messageGroupObj);
         messageGroup.messages = [];
 
         const messages = messageGroupObj.msgs.models;
