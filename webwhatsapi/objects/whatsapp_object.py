@@ -46,6 +46,9 @@ class WhatsappObject(object):
     def driver(self):
         return self._driver()
 
+    def get_js_obj(self):
+        return self._js_obj
+
 
 class WhatsappObjectWithId(WhatsappObject):
     """

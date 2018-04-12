@@ -1,18 +1,16 @@
-
 # WebWhatsAPI (Based on web.whatsapp.com)
 
 ## What is it?
 This package is used to provide a python interface for interacting with WhatsAPP Web to send and receive Whatsapp messages.
 
-
-## Installation
+## Local installation
 
 ##### Dependencies
 You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) separately, if using firefox, which is the default.
 
 #### From Source
 - Clone the repository
-- Use `pip install -r requirements.txt' to install the required packages.
+- Use `pip install -r requirements.txt` to install the required packages
 
 #### From PyPI
 - Install from pip
@@ -22,20 +20,52 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 - Install from pipenv
 `pipenv install`
 
+## Docker and remote Selenium Installation
+
+It may be favorable to run Selenium and the webwhatsapi client inside Docker. This fixes most installation problems and completely avoids any messy local installation or dependency hell.
+Using docker may also help in developing the library itself.
+
+### 1. Create network
+
+    docker network create selenium
+
+### 2. Run Selenium grid/standalone container
+
+This is based on the official Selenium image (https://github.com/SeleniumHQ/docker-selenium).
+The following docker command runs a Selenium standalone Firefox browser in debug (VNC) mode. You can use VNC on port 5900 to view the browser. It uses the network "selenium" and container is named "firefox" for later reference.
+
+    docker run -d -p 4444:4444 -p 5900:5900 --name firefox --network selenium -v /dev/shm:/dev/shm selenium/standalone-firefox-debug
+
+### 3. Build python/webwhatsapi docker base image
+
+The following command uses the dockerfile to build a new image based on Python 2.7 with all required packages from requirements.txt. It tags the image as "webwhatsapi".
+
+    docker build -t webwhatsapi .
+
+### 4. Run client container
+
+Now for the client. The following command installs a local webwhatsapi and runs a client. It maps the local directory to the app directory inside the container for easy development. Also sets the network to "selenium" and an environment variable for the remote selenium url. Please note that the remote Selenium hostname is identical to the name of the Selenium container. 
+
+    docker run --network selenium -it -e SELENIUM='http://firefox:4444/wd/hub' -v $(pwd):/app  webwhatsapi /bin/bash -c "pip install ./;pip list;python sample/remote.py"
+
+It is also certainly possible to fully build the docker image in advance and define an entrypoint/cmd inside the dockerfile to run the client.
+
 ## Usage
+
+See sample directory for usage examples.
+
 1. Import library
 ` from webwhatsapi import WhatsAPIDriver `
 
 2. Instantiate driver and set username
 ` driver = WhatsAPIDriver(username="mkhase") `
 Possible arguments for constructor:
-    - client : Type of browser. The default is Firefox, but Chrome and Remote is supported too.
+    - client : Type of browser. The default is Firefox, but Chrome and Remote is supported too. See sample directory for remote examples.
     - username : Can be any value.
     - proxy: The proxy server to configure selenium to. Format is "<proxy>:<portnumber>"
-    - command executor: Passed directly as an argument to Remote Selenium. Ignore if not using it.
+    - command_executor: Passed directly as an argument to Remote Selenium. Ignore if not using it. See sample directory for remote examples. 
     - loadstyle: Default is true. If true, doesn't load the styling in the browser.
 	- profile: Pass the full path to the profile to load it. Profile folder will be end in ".default". For persistent login, open a normal firefox tab, log in to whatsapp, then pass the profile as an argument.
-
 
 3. Use the get_qrcode() function to save the QR code in a file, for remote clients, so that you can access them easily. Scan the QR code either from the file, or directly from the client to log in.
 ` driver.get_qr() `
@@ -75,11 +105,11 @@ Phone has to be on and connected to the internet
 
 ## Note:
 There are issues with asynchronous calls in Chrome. Primary support of this api is for firefox. If something doesn't work in chrome, please try firefox.
+
 ### Known issues with chrome:
  - Group Metadata
  
 ### For more queries, contact: mukulhase@gmail.com
-
 
 ## Contribute
 Contributing is simple as cloning, making changes and submitting a pull request.
@@ -89,4 +119,3 @@ If you would like to contribute, here are a few starters:
 - Additional features/ More integrations (This api has the minimum amount, but I don't mind having more data accessible to users)
 - Create an env/vagrant box to make it easy for others to contribute. (At the moment, all I have is a requirements.txt
 - Phantom JS support
-
