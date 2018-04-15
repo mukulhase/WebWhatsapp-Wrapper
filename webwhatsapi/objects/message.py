@@ -24,7 +24,7 @@ def factory_message(js_obj, driver):
     if js_obj["isNotification"]:
         return NotificationMessage(js_obj, driver)
 
-    if js_obj["isMMS"]:
+    if 'isMMS' in js_obj and js_obj["isMMS"]:
         return MMSMessage(js_obj, driver)
 
     if js_obj["type"] in ["vcard", "multi_vcard"]:
