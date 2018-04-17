@@ -1,0 +1,121 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es6": true,
+        "mocha": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": 2017
+    },
+    "rules": {
+        "array-bracket-spacing": ["error", "never"],
+        "brace-style": ["error", "allman", {"allowSingleLine": true}],
+        "comma-spacing": ["error"],
+        "comma-style": [
+            "error",
+            "last",
+            {
+                "exceptions": {
+                    "ArrayExpression": false,
+                    "ArrayPattern": false,
+                    "ArrowFunctionExpression": false,
+                    "CallExpression": false,
+                    "FunctionDeclaration": false,
+                    "FunctionExpression": false,
+                    "ImportDeclaration": false,
+                    "ObjectExpression": false,
+                    "ObjectPattern": false,
+                    "VariableDeclaration": false
+                }
+            }
+        ],
+        "complexity": ["error", 7],
+        "consistent-return": ["error"],
+        "eol-last": ["error"],
+        "eqeqeq": ["error"],
+        "func-call-spacing": ["error"],
+        "guard-for-in": ["error"],
+        "indent": [
+            "error",
+            4,
+            {
+                "ArrayExpression": "first",
+                "CallExpression": {"arguments": "first"},
+                "ObjectExpression": "first",
+                "SwitchCase": 1
+            }
+        ],
+        "linebreak-style": ["error", "unix"],
+        "lines-around-comment": [
+            "error",
+            {
+                "allowArrayStart": true,
+                "allowBlockStart": true,
+                "allowObjectStart": true,
+                "beforeBlockComment": true,
+                "beforeLineComment": true
+            }
+        ],
+        "key-spacing": ["error"],
+        "keyword-spacing": ["error"],
+        "max-len": ["error"],
+        "max-statements": ["error", {"max": 20}],
+        "new-cap": ["error"],
+        "new-parens": ["error"],
+        "no-alert": ["error"],
+        "no-caller": ["error"],
+        "no-else-return": ["error"],
+        "no-empty": ["error", {"allowEmptyCatch": true}],
+        "no-eval": ["error"],
+        "no-floating-decimal": ["error"],
+        "no-implicit-coercion": ["error"],
+        "no-implicit-globals": ["error"],
+        "no-implied-eval": ["error"],
+        "no-invalid-this": ["error"],
+        "no-iterator": ["error"],
+        "no-labels": ["error"],
+        "no-lonely-if": ["error"],
+        "no-multi-spaces": ["error"],
+        "no-multi-str": ["error"],
+        "no-new": ["error"],
+        "no-new-func": ["error"],
+        "no-new-wrappers": ["error"],
+        "no-octal-escape": ["error"],
+        "no-param-reassign": ["error", {"props": true}],
+        "no-proto": ["error"],
+        "no-return-assign": ["error", "always"],
+        "no-script-url": ["error"],
+        "no-self-compare": ["error"],
+        "no-trailing-spaces": ["error"],
+        "no-unused-expressions": [
+            "error",
+            {
+                "allowShortCircuit": true,
+                "allowTaggedTemplates": true,
+                "allowTernary": true
+            }
+        ],
+        "no-unused-vars": ["error", {"args": "none"}],
+        "no-use-before-define": ["error"],
+        "no-var": ["error"],
+        "object-curly-spacing": ["error", "never"],
+        "quotes": ["error", "single"],
+        "padded-blocks": [
+            "error",
+            {
+                "blocks": "never",
+                "classes": "never",
+                "switches": "never"
+            }
+        ],
+        "semi": ["error", "always"],
+        "semi-spacing": ["error"],
+        "space-before-function-paren": ["error", "always"],
+        "space-in-parens": ["error", "never"],
+        "space-infix-ops": ["error"],
+        "space-unary-ops": ["error", {"words": true, "nonwords": false}],
+        "strict": ["error", "global"]
+    }
+}
