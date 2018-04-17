@@ -334,6 +334,42 @@ class WhatsAPIDriver(object):
 
         return unread_messages
 
+
+    def get_unread_messages_in_chat(self,
+                                    id,
+                                    include_me=False,
+                                    include_notifications=False):
+        """
+        I fetch unread messages from an asked chat.
+
+        :param id: chat id
+        :type  id: str
+
+        :param include_me: if user's messages are to be included
+        :type  include_me: bool
+
+        :param include_notifications: if events happening on chat are to be
+                                      included
+        :type  include_notifications: bool
+
+        :return: list of unread messages from asked chat
+        :rtype: list
+        """
+        # get unread messages
+        messages = self.wapi_functions.getUnreadMessagesInChat(
+            id,
+            include_me,
+            include_notifications
+        )
+
+        # process them
+        unread = [factory_message(message, self) for message in messages]
+
+        # return them
+        return unread
+    # get_unread_messages_in_chat()
+
+
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         """
         Fetches messages in chat
