@@ -209,6 +209,70 @@ window.WAPI.getChatById = function (id, done) {
 
 
 /**
+ * I return all unread messages from an asked chat and mark them as read.
+ *
+ * :param id: chat id
+ * :type  id: string
+ *
+ * :param includeMe: indicates if user messages have to be included
+ * :type  includeMe: boolean
+ *
+ * :param includeNotifications: indicates if notifications have to be included
+ * :type  includeNotifications: boolean
+ *
+ * :param done: callback passed by selenium
+ * :type  done: function
+ *
+ * :returns: list of unread messages from asked chat
+ * :rtype: object
+ */
+window.WAPI.getUnreadMessagesInChat = function (
+    id, includeMe, includeNotifications, done
+)
+{
+    // get chat and its messages
+    let chat = WAPI.getChat(id);
+    let messages = chat.msgs.models;
+
+    // initialize result list
+    let output = [];
+
+    // look for unread messages, newest is at the end of array
+    for (let i = messages.length - 1; i >= 0; i--)
+    {
+        // system message: skip it
+        if (i === "remove") {
+            continue;
+        }
+
+        // get message
+        let messageObj = messages[i];
+
+        // found a read message: stop looking for others
+        if (!messageObj.__x_isNewMsg) {
+                break;
+        }
+
+        // process it
+        let message = WAPI.processMessageObj(messageObj,
+                                             includeMe,
+                                             includeNotifications);
+
+        // save processed message on result list
+        if (message) output.push(message);
+    }
+
+    // callback was passed: run it
+    if (done !== undefined) {
+        done(output);
+    }
+
+    // return result list
+    return output;
+};
+
+
+/**
  * Load more messages in chat object from store by ID
  *
  * @param id ID of chat
