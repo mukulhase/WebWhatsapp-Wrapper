@@ -151,7 +151,7 @@ class WhatsAPIDriver(object):
         self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None):
         "Initialises the webdriver"
 
         self.logger = logger or self.logger
@@ -202,6 +202,8 @@ class WhatsAPIDriver(object):
                 self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
+            for option in chrome_options:
+                self._profile.add_argument(option)
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == 'remote':
@@ -262,7 +264,7 @@ class WhatsAPIDriver(object):
         if filename is None:
             fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         else:
-            fd = os.open(filename, os.O_RDWR | os.CREAT)
+            fd = os.open(filename, os.O_RDWR | os.O_CREAT)
             fn_png = os.path.abspath(filename)
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
