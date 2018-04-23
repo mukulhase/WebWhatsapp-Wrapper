@@ -16,6 +16,7 @@ from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
 from io import BytesIO
+from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -262,7 +263,7 @@ class WhatsAPIDriver(object):
     def screenshot(self, filename):
         self.driver.get_screenshot_as_file(filename)
 
-    def get_contacts(self):
+    def get_contacts(self, force_phone_number=True):
         """
         Fetches list of all contacts
 
@@ -272,8 +273,11 @@ class WhatsAPIDriver(object):
         :return: List of contacts
         :rtype: list[Contact]
         """
-        all_contacts = self.wapi_functions.getAllContacts()
-        return [Contact(contact, self) for contact in all_contacts]
+        raw_contacts = self.wapi_functions.getAllContacts()
+        contacts = [Contact(contact, self) for contact in raw_contacts]
+        if force_phone_number:
+            contacts = filter(lambda x: hasattr(x, 'phone_number'), contacts)
+        return contacts
 
     def get_all_chats(self):
         """
@@ -363,6 +367,7 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
+        number.replace('+', '')
         for chat in self.get_all_chats():
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
@@ -486,3 +491,15 @@ class WhatsAPIDriver(object):
         url = "{base_URL}/send?phone={phone_number}" \
             .format(base_URL=self._URL, phone_number=phone_number)
         self.driver.get(url)
+
+    def check_number_whatsappable(self, phone_number):
+        self.create_chat(phone_number)
+        self.driver.implicitly_wait(10)
+        try:
+            fail_chat_popup = EC.visibility_of_element_located((By.CSS_SELECTOR, '._3lLzD'))
+            fail_chat_popup.__call__(self.driver)  # if popup shows, then it didn't find the number
+            return False
+        except NoSuchElementException:
+            # popup didn't show so the number does exist
+            return True
+
