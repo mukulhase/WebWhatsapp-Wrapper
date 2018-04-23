@@ -367,7 +367,8 @@ class WhatsAPIDriver(object):
         :return: Chat
         :rtype: Chat
         """
-        number.replace('+', '')
+
+        number = number.replace('+', '')
         for chat in self.get_all_chats():
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
@@ -418,17 +419,21 @@ class WhatsAPIDriver(object):
     def chat_load_earlier_messages(self, chat_id):
         self.wapi_functions.loadEarlierMessages(chat_id)
 
-    def get_all_messages_after(self, unix_timestamp):
+    def get_all_messages_after(self, unix_timestamp, text_only=True):
         """
         load all messages that occurred after unix_timestamp
         :param unix_timestamp: int
+        :param text_only: bool, only include text messages
         :return: Message
         """
         raw_messages = self.wapi_functions.getAllMessagesAfter(unix_timestamp)
 
         messages = []
         for message in raw_messages:
-            messages.append(factory_message(message, self))
+            if text_only and hasattr(message, "content"):
+                messages.append(factory_message(message, self))
+            else:
+                messages.append(factory_message(message, self))
         return messages
 
     def chat_load_all_earlier_messages(self, chat_id):
