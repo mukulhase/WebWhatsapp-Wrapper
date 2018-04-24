@@ -19,6 +19,7 @@ class Contact(WhatsappObjectWithId):
         self.short_name = js_obj["shortName"]
         self.push_name = js_obj["pushname"]
         self.formatted_name = js_obj["formattedName"]
+        self.is_me = js_obj["isMe"]
         if self.id:
             self.phone_number = "+" + self.id.split('@')[0]
 
