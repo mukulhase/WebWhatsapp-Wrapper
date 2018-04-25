@@ -73,7 +73,8 @@ class MediaMessage(Message):
 
         self.size = self._js_obj["size"]
         self.mime = self._js_obj["mimetype"]
-        self.caption = self._js_obj["caption"]
+        if self._js_obj["caption"]:
+            self.caption = self._js_obj["caption"]
 
         self.media_key = self._js_obj.get('mediaKey')
         self.client_url = self._js_obj.get('clientUrl')
@@ -87,6 +88,7 @@ class MediaMessage(Message):
         ioobj = self.driver.download_media(self)
         with open(filename, "wb") as f:
             f.write(ioobj.getvalue())
+        return filename
 
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
