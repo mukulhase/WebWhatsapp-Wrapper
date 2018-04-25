@@ -33,6 +33,30 @@ class Chat(WhatsappObjectWithId):
     def get_messages(self, include_me=False, include_notifications=False):
         return list(self.driver.chat_get_messages(self.id, include_me, include_notifications))
 
+
+    def get_unread_messages(self,
+                            include_me=False,
+                            include_notifications=False):
+        """
+        I fetch unread messages.
+
+        :param include_me: if user's messages are to be included
+        :type  include_me: bool
+
+        :param include_notifications: if events happening on chat are to be included
+        :type  include_notifications: bool
+
+        :return: list of unread messages
+        :rtype: list
+        """
+        return list(self.driver.get_unread_messages_in_chat(
+            self.id,
+            include_me,
+            include_notifications
+        ))
+    # get_unread_messages()
+
+
     def load_earlier_messages(self):
         self.driver.chat_load_earlier_messages(self.id)
 

@@ -13,3 +13,4 @@ profiles
 docs/_build
 .coverage
 .eggs
+*.sublime-*
