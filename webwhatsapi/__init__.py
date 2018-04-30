@@ -415,7 +415,7 @@ class WhatsAPIDriver(object):
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
-    def get_chat_from_phone_number(self, number):
+    def get_chat_from_phone_number(self, number, createIfNotFound = False):
         """
         Gets chat by phone number
         Number format should be as it appears in Whatsapp ID
@@ -431,13 +431,13 @@ class WhatsAPIDriver(object):
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
             return chat
-			
-        self.create_chat_by_number(number)
-        self.wait_for_login()
-        for chat in self.get_all_chats():
-            if not isinstance(chat, UserChat) or number not in chat.id:
-                continue
-            return chat
+	if(createIfNotFound):		
+            self.create_chat_by_number(number)
+            self.wait_for_login()
+            for chat in self.get_all_chats():
+                if not isinstance(chat, UserChat) or number not in chat.id:
+                    continue
+                return chat
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
