@@ -252,12 +252,12 @@ window.WAPI.getUnreadMessagesInChat = function (
         if (!messageObj.__x_isNewMsg) {
                 break;
         }
-
+		messageObj.__x_isNewMsg = false;
         // process it
         let message = WAPI.processMessageObj(messageObj,
                                              includeMe,
                                              includeNotifications);
-
+		
         // save processed message on result list
         if (message) output.push(message);
     }
@@ -506,6 +506,65 @@ window.WAPI.getMessageById = function (id, done) {
         Store.Msg.find(id).then((item) => done(WAPI.processMessageObj(item, true, true)))
     } catch (err) {
         done(false);
+    }
+};
+
+window.WAPI.ReplyMessage = function (idMessage,message,done) {
+	var messageObject = Store.Msg.find(idMessage);
+	if(messageObject===undefined){
+		if (done !== undefined) {
+			done(false);
+			return false;
+		} else {
+			return false;
+		}
+	}
+	messageObject = messageObject.value();
+	const Chats = Store.Chat.models;
+
+    for (const chat in Chats) {
+        if (isNaN(chat)) {
+            continue;
+        }
+
+        let temp = {};
+        temp.name = Chats[chat].__x__formattedTitle;
+        temp.id = Chats[chat].__x_id;
+        if (temp.id === messageObject.chat.id) {
+            if (done !== undefined) {
+                Chats[chat].sendMessage(message,null,messageObject).then(function () {
+                    function sleep(ms) {
+                      return new Promise(resolve => setTimeout(resolve, ms));
+                    }
+
+                    var trials = 0;
+
+                    function check() {
+                        for (let i=Chats[chat].msgs.models.length - 1; i >= 0; i--) {
+                            let msg = Chats[chat].msgs.models[i];
+
+                            if (!msg.senderObj.isMe || msg.body != message) {
+                                continue;
+                            }
+                            done(WAPI._serializeMessageObj(msg));
+                            return True;
+                        }
+                        trials += 1;
+                        console.log(trials);
+                        if (trials > 30) {
+                            done(true);
+                            return;
+                        }
+                        sleep(500).then(check);
+                    }
+                    check();
+                });
+                return true;
+            } else {
+                Chats[chat].sendMessage(message,null,messageObject);
+                return true;
+            }
+        }
     }
 };
 
