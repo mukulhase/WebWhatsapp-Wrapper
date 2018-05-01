@@ -48,6 +48,11 @@ The following command uses the dockerfile to build a new image based on Python 2
 Now to the client container. The following command installs a local webwhatsapi inside the base container and runs a client. It maps the local directory to the app directory inside the container for easy development. Also sets the network to "selenium" and an environment variable for the remote selenium url. Please note that the remote Selenium hostname must be identical to the name of the Selenium container. 
 
     docker run --network selenium -it -e SELENIUM='http://firefox:4444/wd/hub' -v $(pwd):/app  webwhatsapi /bin/bash -c "pip install ./;pip list;python sample/remote.py"
+    
+    
+For Windows:
+
+    docker run --network selenium -it -e SELENIUM='http://firefox:4444/wd/hub' -v "$(pwd):/app".ToLower() webwhatsapi /bin/bash -c "pip install ./;pip list;python sample/remote.py"
 
 It is also certainly possible to fully build the docker image in advance and define an entrypoint/cmd inside the dockerfile to run a full client.
 
