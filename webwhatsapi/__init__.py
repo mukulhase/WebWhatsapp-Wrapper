@@ -552,5 +552,19 @@ class WhatsAPIDriver(object):
         decryptor = cr_obj.decryptor()
         return BytesIO(decryptor.update(e_file) + decryptor.finalize())
 
+    def mark_default_unread_messages(self):
+        """
+        Look for the latest unreplied messages received and mark them as unread.
+
+        """
+        self.wapi_functions.markDefaultUnreadMessages()
+
+    def get_battery_level(self):
+        """
+        Check the battery level of device
+        :return: int: Battery level
+        """
+        return self.wapi_functions.getBatteryLevel()
+
     def quit(self):
         self.driver.quit()
