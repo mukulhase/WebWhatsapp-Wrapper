@@ -661,6 +661,14 @@ window.WAPI.getCommonGroups = async function (id, done) {
     return output;
 };
 
+window.WAPI.getBatteryLevel = function (done) {
+    output = Store.Conn.__x_battery;
+    if (done !== undefined) {
+        done(output);
+    }
+    return output;
+};
+
 window.WAPI.downloadFile = function (url, done) {
     let xhr = new XMLHttpRequest();
 

@@ -521,5 +521,12 @@ class WhatsAPIDriver(object):
         """
         self.wapi_functions.markDefaultUnreadMessages()
 
+    def get_battery_level(self):
+        """
+        Check the battery level of device
+        :return: int: Battery level
+        """
+        return self.wapi_functions.getBatteryLevel()
+
     def quit(self):
         self.driver.quit()
