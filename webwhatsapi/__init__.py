@@ -528,5 +528,21 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.getBatteryLevel()
 
+    def leave_group(self, chat_id):
+        """
+        Leave a group
+        :param chat_id: id of group
+        :return:
+        """
+        return self.wapi_functions.leaveGroup(chat_id)
+
+    def delete_chat(self, chat_id):
+        """
+        Delete a chat
+        :param chat_id: id of chat
+        :return:
+        """
+        return self.wapi_functions.deleteConversation(chat_id)
+
     def quit(self):
         self.driver.quit()

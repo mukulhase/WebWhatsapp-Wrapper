@@ -662,11 +662,33 @@ window.WAPI.getCommonGroups = async function (id, done) {
 };
 
 window.WAPI.getBatteryLevel = function (done) {
-    output = Store.Conn.__x_battery;
+    let output = Store.Conn.__x_battery;
     if (done !== undefined) {
         done(output);
     }
     return output;
+};
+
+window.WAPI.leaveGroup = function (groupId, done) {
+    Store.Wap.leaveGroup(groupId);
+    if (done !== undefined) {
+        done();
+    }
+    return true;
+};
+
+window.WAPI.deleteConversation = function (chatId, done) {
+    let conversation = Store.Chat.models.find((chat) => chat.id === chatId);
+    let lastReceivedKey = conversation.__x_lastReceivedKey;
+    Store.Wap.sendConversationDelete(chatId, lastReceivedKey).then(
+        function(response){
+            if (done !== undefined) {
+                done(response.status);
+            }
+        }
+    );
+
+    return true;
 };
 
 window.WAPI.downloadFile = function (url, done) {
