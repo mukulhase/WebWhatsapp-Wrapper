@@ -6,17 +6,16 @@ WebWhatsAPI module
 
 import binascii
 import logging
-from json import dumps, loads
-
 import os
 import shutil
 import tempfile
+from base64 import b64decode
+from io import BytesIO
+from json import dumps, loads
+
 from Crypto.Cipher import AES
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
-from base64 import b64decode
-from io import BytesIO
-from selenium.common.exceptions import NoSuchElementException
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -218,11 +217,19 @@ class WhatsAPIDriver(object):
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
         elif client == 'remote':
             capabilities = DesiredCapabilities.FIREFOX.copy()
+            options = Options()
+
+            if headless:
+                options.set_headless()
+
+            options.profile = self._profile
+
             self.driver = webdriver.Remote(browser_profile=self._profile,
-                command_executor=command_executor,
-                desired_capabilities=capabilities,
-                **extra_params
-            )
+                                           options=options,
+                                           command_executor=command_executor,
+                                           desired_capabilities=capabilities,
+                                           **extra_params
+                                           )
         else:
             self.logger.error("Invalid client: %s" % client)
         self.username = username
