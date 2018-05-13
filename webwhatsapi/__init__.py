@@ -1,8 +1,6 @@
 """
 WebWhatsAPI module
-
 .. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
-
 """
 
 import binascii
@@ -57,11 +55,8 @@ class ContactNotFoundError(WhatsAPIException):
 class WhatsAPIDriver(object):
     """
     This is our main driver objects.
-
         .. note::
-
            Runs its own instance of selenium
-
         """
     _PROXY = None
 
@@ -277,10 +272,8 @@ class WhatsAPIDriver(object):
     def get_contacts(self):
         """
         Fetches list of all contacts
-
         This will return chats with people from the address book only
         Use get_all_chats for all chats
-
         :return: List of contacts
         :rtype: list[Contact]
         """
@@ -290,7 +283,6 @@ class WhatsAPIDriver(object):
     def get_my_contacts(self):
         """
         Fetches list of added contacts
-
         :return: List of contacts
         :rtype: list[Contact]
         """
@@ -300,7 +292,6 @@ class WhatsAPIDriver(object):
     def get_all_chats(self):
         """
         Fetches all chats
-
         :return: List of chats
         :rtype: list[Chat]
         """
@@ -309,7 +300,6 @@ class WhatsAPIDriver(object):
     def get_all_chat_ids(self):
         """
         Fetches all chat ids
-
         :return: List of chat ids
         :rtype: list[str]
         """
@@ -318,7 +308,6 @@ class WhatsAPIDriver(object):
     def get_unread(self, include_me=False, include_notifications=False):
         """
         Fetches unread messages
-
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
@@ -343,17 +332,13 @@ class WhatsAPIDriver(object):
                                     include_notifications=False):
         """
         I fetch unread messages from an asked chat.
-
         :param id: chat id
         :type  id: str
-
         :param include_me: if user's messages are to be included
         :type  include_me: bool
-
         :param include_notifications: if events happening on chat are to be
                                       included
         :type  include_notifications: bool
-
         :return: list of unread messages from asked chat
         :rtype: list
         """
@@ -375,7 +360,6 @@ class WhatsAPIDriver(object):
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         """
         Fetches messages in chat
-
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
@@ -394,7 +378,6 @@ class WhatsAPIDriver(object):
     def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
         """
         Fetches message ids in chat
-
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
@@ -407,7 +390,6 @@ class WhatsAPIDriver(object):
     def get_message_by_id(self, message_id):
         """
         Fetch a message
-
         :return: Message or False
         :rtype: Message
         """
@@ -436,13 +418,11 @@ class WhatsAPIDriver(object):
     def get_chat_from_phone_number(self, number):
         """
         Gets chat by phone number
-
         Number format should be as it appears in Whatsapp ID
         For example, for the number:
         +972-51-234-5678
         This function would receive:
         972512345678
-
         :param number: Phone number
         :return: Chat
         :rtype: Chat
@@ -451,7 +431,13 @@ class WhatsAPIDriver(object):
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
             return chat
-
+			
+        self.create_chat_by_number(number)
+        self.wait_for_login()
+        for chat in self.get_all_chats():
+            if not isinstance(chat, UserChat) or number not in chat.id:
+                continue
+            return chat
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
@@ -554,3 +540,7 @@ class WhatsAPIDriver(object):
 
     def quit(self):
         self.driver.quit()
+			
+    def create_chat_by_number(self, number):
+        url = self._URL+"/send?phone="+number
+        self.driver.get(url)
