@@ -538,6 +538,36 @@ class WhatsAPIDriver(object):
         decryptor = cr_obj.decryptor()
         return BytesIO(decryptor.update(e_file) + decryptor.finalize())
 
+    def mark_default_unread_messages(self):
+        """
+        Look for the latest unreplied messages received and mark them as unread.
+
+        """
+        self.wapi_functions.markDefaultUnreadMessages()
+
+    def get_battery_level(self):
+        """
+        Check the battery level of device
+        :return: int: Battery level
+        """
+        return self.wapi_functions.getBatteryLevel()
+
+    def leave_group(self, chat_id):
+        """
+        Leave a group
+        :param chat_id: id of group
+        :return:
+        """
+        return self.wapi_functions.leaveGroup(chat_id)
+
+    def delete_chat(self, chat_id):
+        """
+        Delete a chat
+        :param chat_id: id of chat
+        :return:
+        """
+        return self.wapi_functions.deleteConversation(chat_id)
+
     def quit(self):
         self.driver.quit()
 			

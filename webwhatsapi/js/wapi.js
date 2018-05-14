@@ -642,14 +642,15 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
         const messages = messageGroupObj.msgs.models;
         for (let i = messages.length - 1; i >= 0; i--) {
             let messageObj = messages[i];
-            if (!messageObj.__x_isNewMsg) {
-                break;
-            } else {
-                messageObj.__x_isNewMsg = false;
+            if (messageObj.__x_isNewMsg || messageObj.__x_MustSent) {
                 let message = WAPI.processMessageObj(messageObj, includeMe,  includeNotifications);
                 if(message){
-                    messageGroup.messages.push(message);
+                    messageObj.__x_isNewMsg = false;    
+                    messageObj.__x_MustSent = false;    
+                    messageGroup.messages.unshift(message);
                 }
+            } else {
+                break;
             }
         }
 
@@ -661,6 +662,34 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
         done(output);
     }
     return output;
+};
+
+window.WAPI.markDefaultUnreadMessages = function (done) {
+    const chats = Store.Chat.models;
+    let output = [];
+    for (let chat in chats) {
+        if (isNaN(chat)) {
+            continue;
+        }
+
+        let messageGroupObj = chats[chat];
+        let messageGroup = WAPI._serializeChatObj(messageGroupObj);
+        messageGroup.messages = [];
+
+        const messages = messageGroupObj.msgs.models;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            let messageObj = messages[i];
+            if (messageObj.__x_isSentByMe) {
+                break;
+            } else {
+                messageObj.__x_MustSent = true;    
+            }
+        }
+    }
+    if (done !== undefined) {
+        done();
+    }
+    return true;
 };
 
 window.WAPI.getGroupOwnerID = async function (id, done) {
@@ -694,6 +723,36 @@ window.WAPI.getCommonGroups = async function (id, done) {
         done(output);
     }
     return output;
+};
+
+window.WAPI.getBatteryLevel = function (done) {
+    let output = Store.Conn.__x_battery;
+    if (done !== undefined) {
+        done(output);
+    }
+    return output;
+};
+
+window.WAPI.leaveGroup = function (groupId, done) {
+    Store.Wap.leaveGroup(groupId);
+    if (done !== undefined) {
+        done();
+    }
+    return true;
+};
+
+window.WAPI.deleteConversation = function (chatId, done) {
+    let conversation = Store.Chat.models.find((chat) => chat.id === chatId);
+    let lastReceivedKey = conversation.__x_lastReceivedKey;
+    Store.Wap.sendConversationDelete(chatId, lastReceivedKey).then(
+        function(response){
+            if (done !== undefined) {
+                done(response.status);
+            }
+        }
+    );
+
+    return true;
 };
 
 window.WAPI.downloadFile = function (url, done) {
