@@ -26,7 +26,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from .objects.chat import UserChat, factory_chat
 from .objects.contact import Contact
-from .objects.message import MessageGroup, factory_message
+from .objects.message import MessageGroup, factory_message, Message
 from .wapi_js_wrapper import WapiJsWrapper
 
 __version__ = '2.0.2'
@@ -437,11 +437,11 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in raw_messages:
-            if text_only:
-                if hasattr(message, "content"):
-                    messages.append(factory_message(message, self))
-            else:
-                messages.append(factory_message(message, self))
+            msg_obj = factory_message(message, self)
+            if not text_only:
+                messages.append(msg_obj)
+            elif type(msg_obj) is Message:
+                messages.append(msg_obj)
         return messages
 
     def chat_load_all_earlier_messages(self, chat_id):
