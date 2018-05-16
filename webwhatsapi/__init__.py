@@ -437,8 +437,9 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in raw_messages:
-            if text_only and hasattr(message, "content"):
-                messages.append(factory_message(message, self))
+            if text_only:
+                if hasattr(message, "content"):
+                    messages.append(factory_message(message, self))
             else:
                 messages.append(factory_message(message, self))
         return messages
