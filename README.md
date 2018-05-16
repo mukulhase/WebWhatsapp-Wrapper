@@ -102,7 +102,7 @@ Possible arguments for constructor:
     driver.send_message_to_id(id, message)
 
 ## Code Documentation
-http://mukulhase.github.io/WebWhatsAPI/index.html
+http://mukulhase.github.io/WebWhatsapp-Wrapper/index.html
 
 ## Limitation
 Phone needs to manually scan the QR Code from Whatsapp Web. Phone has to be on and connected to the internet.
