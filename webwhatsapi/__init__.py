@@ -505,14 +505,24 @@ class WhatsAPIDriver(object):
             .format(base_URL=self._URL, phone_number=phone_number)
         self.driver.get(url)
 
-    def check_number_whatsappable(self, phone_number):
-        self.create_chat(phone_number)
-        self.driver.implicitly_wait(10)
+    def whatsappable(self, phone_number):
+        """
+        Check if number is whatsappable, note that the number HAS to be a contact on the phone
+        :param phone_number:
+            str
+        :return:
+            bool whether or not the number is whatsappable
+        """
         try:
-            fail_chat_popup = EC.visibility_of_element_located((By.CSS_SELECTOR, '._3lLzD'))
-            fail_chat_popup.__call__(self.driver)  # if popup shows, then it didn't find the number
-            return False
-        except NoSuchElementException:
-            # popup didn't show so the number does exist
-            return True
+            return self.get_chat_from_phone_number(phone_number) is not None
+        except ChatNotFoundError:
+            self.create_chat(phone_number)
+            self.wait_for_login()
+            try:
+                fail_chat_popup = EC.visibility_of_element_located((By.CSS_SELECTOR, '._3lLzD'))
+                fail_chat_popup.__call__(self.driver)  # if popup shows, then it didn't find the number
+                return False
+            except NoSuchElementException:
+                # popup didn't show so the number does exist
+                return True
 
