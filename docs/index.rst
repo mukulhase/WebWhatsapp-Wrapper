@@ -5,12 +5,11 @@
 
 Welcome to WebWhatsAPI's documentation!
 =======================================
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+This package is used to provide a python interface for interacting with WhatsAPP Web to send and recieve Whatsapp messages.
 
 Indices and tables
 ==================
@@ -30,7 +29,10 @@ Objects
 =========================
 .. automodule:: webwhatsapi.objects.contact
    :members:
+   :undoc-members:
 .. automodule:: webwhatsapi.objects.chat
    :members:
+   :undoc-members:
 .. automodule:: webwhatsapi.objects.message
    :members:
+   :undoc-members:

@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 def factory_chat(js_obj, driver=None):
+    """Factory function for creating appropriate object given selenium JS object"""
     if js_obj["kind"] not in ["chat", "group", "broadcast"]:
         raise AssertionError("Expected chat, group or broadcast object, got {0}".format(js_obj["kind"]))
 

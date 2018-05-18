@@ -1,5 +1,6 @@
 """
 WebWhatsAPI module
+
 .. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
 """
 
@@ -24,7 +25,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from .objects.chat import UserChat, factory_chat
+from .objects.chat import Chat, UserChat, factory_chat
 from .objects.contact import Contact
 from .objects.message import MessageGroup, factory_message
 from .wapi_js_wrapper import WapiJsWrapper
@@ -106,7 +107,7 @@ class WhatsAPIDriver(object):
                                             for k, v in data.items()]))
 
     def save_firefox_profile(self, remove_old=False):
-        "Function to save the firefox profile to the permanant one"
+        """Function to save the firefox profile to the permanant one"""
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
 
         if remove_old:
@@ -143,11 +144,12 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def close(self):
+        """Closes the selenium instance"""
         self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
                  profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None):
-        "Initialises the webdriver"
+        """Initialises the webdriver"""
 
         self.logger = logger or self.logger
         extra_params = extra_params or {}
@@ -236,6 +238,7 @@ class WhatsAPIDriver(object):
 
     def is_logged_in(self):
         """Returns if user is logged. Can be used if non-block needed for wait_for_login"""
+
         # self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
         # it becomes ridiculously slow if the element is not found.
 
@@ -274,6 +277,7 @@ class WhatsAPIDriver(object):
         Fetches list of all contacts
         This will return chats with people from the address book only
         Use get_all_chats for all chats
+
         :return: List of contacts
         :rtype: list[Contact]
         """
@@ -283,6 +287,7 @@ class WhatsAPIDriver(object):
     def get_my_contacts(self):
         """
         Fetches list of added contacts
+
         :return: List of contacts
         :rtype: list[Contact]
         """
@@ -292,6 +297,7 @@ class WhatsAPIDriver(object):
     def get_all_chats(self):
         """
         Fetches all chats
+
         :return: List of chats
         :rtype: list[Chat]
         """
@@ -300,6 +306,7 @@ class WhatsAPIDriver(object):
     def get_all_chat_ids(self):
         """
         Fetches all chat ids
+
         :return: List of chat ids
         :rtype: list[str]
         """
@@ -328,19 +335,18 @@ class WhatsAPIDriver(object):
 
         return unread_messages
 
-
     def get_unread_messages_in_chat(self,
                                     id,
                                     include_me=False,
                                     include_notifications=False):
         """
         I fetch unread messages from an asked chat.
+
         :param id: chat id
         :type  id: str
         :param include_me: if user's messages are to be included
         :type  include_me: bool
-        :param include_notifications: if events happening on chat are to be
-                                      included
+        :param include_notifications: if events happening on chat are to be included
         :type  include_notifications: bool
         :return: list of unread messages from asked chat
         :rtype: list
@@ -357,12 +363,13 @@ class WhatsAPIDriver(object):
 
         # return them
         return unread
-    # get_unread_messages_in_chat()
 
+    # get_unread_messages_in_chat()
 
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         """
         Fetches messages in chat
+
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
@@ -374,13 +381,12 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in message_objs:
-            messages.append(factory_message(message, self))
-
-        return messages
+            yield(factory_message(message, self))
 
     def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
         """
         Fetches message ids in chat
+
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
@@ -393,6 +399,9 @@ class WhatsAPIDriver(object):
     def get_message_by_id(self, message_id):
         """
         Fetch a message
+
+        :param message_id: Message ID
+        :type message_id: str
         :return: Message or False
         :rtype: Message
         """
@@ -404,6 +413,14 @@ class WhatsAPIDriver(object):
         return result
 
     def get_contact_from_id(self, contact_id):
+        """
+        Fetches a contact given its ID
+
+        :param contact_id: Contact ID
+        :type contact_id: str
+        :return: Contact or Error
+        :rtype: Contact
+        """
         contact = self.wapi_functions.getContact(contact_id)
 
         if contact is None:
@@ -412,6 +429,14 @@ class WhatsAPIDriver(object):
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
+        """
+        Fetches a chat given its ID
+
+        :param chat_id: Chat ID
+        :type chat_id: str
+        :return: Chat or Error
+        :rtype: Chat
+        """
         chat = self.wapi_functions.getChatById(chat_id)
         if chat:
             return factory_chat(chat, self)
@@ -426,6 +451,7 @@ class WhatsAPIDriver(object):
         +972-51-234-5678
         This function would receive:
         972512345678
+
         :param number: Phone number
         :return: Chat
         :rtype: Chat
@@ -434,7 +460,7 @@ class WhatsAPIDriver(object):
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
             return chat
-			
+
         self.create_chat_by_number(number)
         self.wait_for_login()
         for chat in self.get_all_chats():
@@ -447,6 +473,12 @@ class WhatsAPIDriver(object):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
 
     def get_status(self):
+        """
+        Returns status of the driver
+
+        :return: Status
+        :rtype: WhatsAPIDriverStatus
+        """
         if self.driver is None:
             return WhatsAPIDriverStatus.NotConnected
         if self.driver.session_id is None:
@@ -464,6 +496,12 @@ class WhatsAPIDriver(object):
         return WhatsAPIDriverStatus.Unknown
 
     def contact_get_common_groups(self, contact_id):
+        """
+        Returns groups common between a user and the contact with given id.
+
+        :return: Contact or Error
+        :rtype: Contact
+        """
         for group in self.wapi_functions.getCommonGroups(contact_id):
             yield factory_chat(group, self)
 
@@ -475,15 +513,24 @@ class WhatsAPIDriver(object):
         return result
 
     def send_message_to_id(self, recipient, message):
+        """
+        Send a message to a chat given its ID
+
+        :param recipient: Chat ID
+        :type recipient: str
+        :param message: Plain-text message to be sent.
+        :type message: str
+        """
         return self.wapi_functions.sendMessageToID(recipient, message)
 
     def chat_send_seen(self, chat_id):
-        return self.wapi_functions.sendSeen(chat_id)
+        """
+        Send a seen to a chat given its ID
 
-    def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
-        message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
-        for message in message_objs:
-            yield factory_message(message, self)
+        :param chat_id: Chat ID
+        :type chat_id: str
+        """
+        return self.wapi_functions.sendSeen(chat_id)
 
     def chat_load_earlier_messages(self, chat_id):
         self.wapi_functions.loadEarlierMessages(chat_id)
@@ -551,6 +598,7 @@ class WhatsAPIDriver(object):
     def get_battery_level(self):
         """
         Check the battery level of device
+
         :return: int: Battery level
         """
         return self.wapi_functions.getBatteryLevel()
@@ -558,6 +606,7 @@ class WhatsAPIDriver(object):
     def leave_group(self, chat_id):
         """
         Leave a group
+
         :param chat_id: id of group
         :return:
         """
@@ -566,6 +615,7 @@ class WhatsAPIDriver(object):
     def delete_chat(self, chat_id):
         """
         Delete a chat
+
         :param chat_id: id of chat
         :return:
         """
@@ -573,7 +623,7 @@ class WhatsAPIDriver(object):
 
     def quit(self):
         self.driver.quit()
-			
+
     def create_chat_by_number(self, number):
-        url = self._URL+"/send?phone="+number
+        url = self._URL + "/send?phone=" + number
         self.driver.get(url)

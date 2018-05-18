@@ -3,7 +3,9 @@ from base64 import b64decode
 from datetime import datetime
 
 import os
+from typing import Union
 
+from webwhatsapi import Contact
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
 from webwhatsapi.objects.whatsapp_object import WhatsappObject
@@ -18,6 +20,8 @@ def getContacts(x, driver):
 
 
 def factory_message(js_obj, driver):
+    """Factory function for creating appropriate object given selenium JS object"""
+
     if js_obj["lat"] and js_obj["lng"]:
         return GeoMessage(js_obj, driver)
 
@@ -37,6 +41,8 @@ def factory_message(js_obj, driver):
 
 
 class Message(WhatsappObject):
+
+    sender: Union[Contact, bool]
 
     def __init__(self, js_obj, driver=None):
         """
