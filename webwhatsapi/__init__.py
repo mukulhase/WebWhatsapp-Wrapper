@@ -380,7 +380,9 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in message_objs:
-            yield(factory_message(message, self))
+            messages.append(factory_message(message, self))
+
+        return messages
 
     def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
         """
