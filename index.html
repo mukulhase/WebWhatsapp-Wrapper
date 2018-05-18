@@ -4,7 +4,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Welcome to WebWhatsAPI’s documentation! &#8212; WebWhatsAPI 2.0.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
@@ -31,9 +31,9 @@
             
   <div class="section" id="welcome-to-webwhatsapi-s-documentation">
 <h1>Welcome to WebWhatsAPI’s documentation!<a class="headerlink" href="#welcome-to-webwhatsapi-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>This package is used to provide a python interface for interacting with WhatsAPP Web to send and recieve Whatsapp messages.</p>
 <div class="toctree-wrapper compound">
 </div>
+<p>This package is used to provide a python interface for interacting with WhatsAPP Web to send and recieve Whatsapp messages.</p>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -61,14 +61,83 @@
 
 <dl class="class">
 <dt id="webwhatsapi.WhatsAPIDriver">
-<em class="property">class </em><code class="descclassname">webwhatsapi.</code><code class="descname">WhatsAPIDriver</code><span class="sig-paren">(</span><em>client='firefox'</em>, <em>username='API'</em>, <em>proxy=None</em>, <em>command_executor=None</em>, <em>loadstyles=False</em>, <em>profile=None</em>, <em>headless=False</em>, <em>autoconnect=True</em>, <em>logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is our main driver objects.</p>
-<blockquote>
-<div><div class="admonition note">
+<em class="property">class </em><code class="descclassname">webwhatsapi.</code><code class="descname">WhatsAPIDriver</code><span class="sig-paren">(</span><em>client='firefox'</em>, <em>username='API'</em>, <em>proxy=None</em>, <em>command_executor=None</em>, <em>loadstyles=False</em>, <em>profile=None</em>, <em>headless=False</em>, <em>autoconnect=True</em>, <em>logger=None</em>, <em>extra_params=None</em>, <em>chrome_options=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>This is our main driver objects.</dt>
+<dd><div class="first last admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Runs its own instance of selenium</p>
 </div>
-</div></blockquote>
+</dd>
+</dl>
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.chat_send_seen">
+<code class="descname">chat_send_seen</code><span class="sig-paren">(</span><em>chat_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.chat_send_seen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.chat_send_seen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a seen to a chat given its ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chat_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Chat ID</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the selenium instance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.contact_get_common_groups">
+<code class="descname">contact_get_common_groups</code><span class="sig-paren">(</span><em>contact_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.contact_get_common_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.contact_get_common_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns groups common between a user and the contact with given id.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Contact or Error</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#webwhatsapi.objects.contact.Contact" title="webwhatsapi.objects.contact.Contact">Contact</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.delete_chat">
+<code class="descname">delete_chat</code><span class="sig-paren">(</span><em>chat_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.delete_chat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.delete_chat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a chat</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chat_id</strong> – id of chat</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_all_chat_ids">
+<code class="descname">get_all_chat_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_all_chat_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_all_chat_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches all chat ids</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of chat ids</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)">str</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="webwhatsapi.WhatsAPIDriver.get_all_chats">
 <code class="descname">get_all_chats</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_all_chats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_all_chats" title="Permalink to this definition">¶</a></dt>
@@ -79,7 +148,31 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of chats</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[<a class="reference internal" href="#webwhatsapi.objects.chat.Chat" title="webwhatsapi.objects.chat.Chat">Chat</a>]</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference internal" href="#webwhatsapi.objects.chat.Chat" title="webwhatsapi.objects.chat.Chat">Chat</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_all_message_ids_in_chat">
+<code class="descname">get_all_message_ids_in_chat</code><span class="sig-paren">(</span><em>chat</em>, <em>include_me=False</em>, <em>include_notifications=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_all_message_ids_in_chat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_all_message_ids_in_chat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches message ids in chat</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em> or </em><em>None</em>) – Include user’s messages</li>
+<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em> or </em><em>None</em>) – Include events happening on chat</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of message ids in chat</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)">str</a>]</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -94,16 +187,48 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><em>None</em>) – Include user’s messages</li>
-<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><em>None</em>) – Include events happening on chat</li>
+<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em> or </em><em>None</em>) – Include user’s messages</li>
+<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em> or </em><em>None</em>) – Include events happening on chat</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of messages in chat</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list[<a class="reference internal" href="#webwhatsapi.objects.message.Message" title="webwhatsapi.objects.message.Message">Message</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference internal" href="#webwhatsapi.objects.message.Message" title="webwhatsapi.objects.message.Message">Message</a>]</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_battery_level">
+<code class="descname">get_battery_level</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_battery_level"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_battery_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the battery level of device</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">int: Battery level</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_chat_from_id">
+<code class="descname">get_chat_from_id</code><span class="sig-paren">(</span><em>chat_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_chat_from_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_chat_from_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches a chat given its ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chat_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Chat ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Chat or Error</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#webwhatsapi.objects.chat.Chat" title="webwhatsapi.objects.chat.Chat">Chat</a></td>
 </tr>
 </tbody>
 </table>
@@ -112,8 +237,8 @@
 <dl class="method">
 <dt id="webwhatsapi.WhatsAPIDriver.get_chat_from_phone_number">
 <code class="descname">get_chat_from_phone_number</code><span class="sig-paren">(</span><em>number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_chat_from_phone_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_chat_from_phone_number" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets chat by phone number</p>
-<p>Number format should be as it appears in Whatsapp ID
+<dd><p>Gets chat by phone number
+Number format should be as it appears in Whatsapp ID
 For example, for the number:
 +972-51-234-5678
 This function would receive:
@@ -133,10 +258,28 @@ This function would receive:
 </dd></dl>
 
 <dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_contact_from_id">
+<code class="descname">get_contact_from_id</code><span class="sig-paren">(</span><em>contact_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_contact_from_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_contact_from_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches a contact given its ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>contact_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Contact ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Contact or Error</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#webwhatsapi.objects.contact.Contact" title="webwhatsapi.objects.contact.Contact">Contact</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="webwhatsapi.WhatsAPIDriver.get_contacts">
 <code class="descname">get_contacts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_contacts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_contacts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetches list of all contacts</p>
-<p>This will return chats with people from the address book only
+<dd><p>Fetches list of all contacts
+This will return chats with people from the address book only
 Use get_all_chats for all chats</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -144,7 +287,41 @@ Use get_all_chats for all chats</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of contacts</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[<a class="reference internal" href="#webwhatsapi.objects.contact.Contact" title="webwhatsapi.objects.contact.Contact">Contact</a>]</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference internal" href="#webwhatsapi.objects.contact.Contact" title="webwhatsapi.objects.contact.Contact">Contact</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_message_by_id">
+<code class="descname">get_message_by_id</code><span class="sig-paren">(</span><em>message_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_message_by_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_message_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch a message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Message ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Message or False</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#webwhatsapi.objects.message.Message" title="webwhatsapi.objects.message.Message">Message</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_my_contacts">
+<code class="descname">get_my_contacts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_my_contacts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_my_contacts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches list of added contacts</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of contacts</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference internal" href="#webwhatsapi.objects.contact.Contact" title="webwhatsapi.objects.contact.Contact">Contact</a>]</td>
 </tr>
 </tbody>
 </table>
@@ -152,32 +329,102 @@ Use get_all_chats for all chats</p>
 
 <dl class="method">
 <dt id="webwhatsapi.WhatsAPIDriver.get_qr">
-<code class="descname">get_qr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_qr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_qr" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_qr</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_qr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_qr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get pairing QR code from client</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_status">
+<code class="descname">get_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns status of the driver</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Status</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">WhatsAPIDriverStatus</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="webwhatsapi.WhatsAPIDriver.get_unread">
-<code class="descname">get_unread</code><span class="sig-paren">(</span><em>include_me=False</em>, <em>include_notifications=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_unread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_unread" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_unread</code><span class="sig-paren">(</span><em>include_me=False</em>, <em>include_notifications=False</em>, <em>use_unread_count=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_unread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_unread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetches unread messages</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><em>None</em>) – Include user’s messages</li>
-<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><em>None</em>) – Include events happening on chat</li>
+<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em> or </em><em>None</em>) – Include user’s messages</li>
+<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em> or </em><em>None</em>) – Include events happening on chat</li>
+<li><strong>use_unread_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – If set uses chat’s ‘unreadCount’ attribute to fetch last n messages from chat</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of unread messages grouped by chats</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list[<a class="reference internal" href="#webwhatsapi.objects.message.MessageGroup" title="webwhatsapi.objects.message.MessageGroup">MessageGroup</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a>[<a class="reference internal" href="#webwhatsapi.objects.message.MessageGroup" title="webwhatsapi.objects.message.MessageGroup">MessageGroup</a>]</p>
 </td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.get_unread_messages_in_chat">
+<code class="descname">get_unread_messages_in_chat</code><span class="sig-paren">(</span><em>id</em>, <em>include_me=False</em>, <em>include_notifications=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.get_unread_messages_in_chat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.get_unread_messages_in_chat" title="Permalink to this definition">¶</a></dt>
+<dd><p>I fetch unread messages from an asked chat.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – chat id</li>
+<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – if user’s messages are to be included</li>
+<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – if events happening on chat are to be included</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of unread messages from asked chat</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.is_logged_in">
+<code class="descname">is_logged_in</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.is_logged_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.is_logged_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns if user is logged. Can be used if non-block needed for wait_for_login</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.leave_group">
+<code class="descname">leave_group</code><span class="sig-paren">(</span><em>chat_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.leave_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.leave_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Leave a group</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chat_id</strong> – id of group</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.mark_default_unread_messages">
+<code class="descname">mark_default_unread_messages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.mark_default_unread_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.mark_default_unread_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look for the latest unreplied messages received and mark them as unread.</p>
 </dd></dl>
 
 <dl class="method">
@@ -187,8 +434,26 @@ Use get_all_chats for all chats</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="webwhatsapi.WhatsAPIDriver.send_message_to_id">
+<code class="descname">send_message_to_id</code><span class="sig-paren">(</span><em>recipient</em>, <em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.send_message_to_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.send_message_to_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a message to a chat given its ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>recipient</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Chat ID</li>
+<li><strong>message</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Plain-text message to be sent.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="webwhatsapi.WhatsAPIDriver.wait_for_login">
-<code class="descname">wait_for_login</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.wait_for_login"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.wait_for_login" title="Permalink to this definition">¶</a></dt>
+<code class="descname">wait_for_login</code><span class="sig-paren">(</span><em>timeout=90</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi.html#WhatsAPIDriver.wait_for_login"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.WhatsAPIDriver.wait_for_login" title="Permalink to this definition">¶</a></dt>
 <dd><p>Waits for the QR to go away</p>
 </dd></dl>
 
@@ -206,6 +471,16 @@ Use get_all_chats for all chats</p>
 <dt id="webwhatsapi.objects.contact.Contact">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.contact.</code><code class="descname">Contact</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/contact.html#Contact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.contact.Contact" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class which represents a Contact on user’s phone</p>
+<dl class="method">
+<dt id="webwhatsapi.objects.contact.Contact.get_chat">
+<code class="descname">get_chat</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.contact.Contact.get_chat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.contact.Contact.get_common_groups">
+<code class="descname">get_common_groups</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.contact.Contact.get_common_groups" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="webwhatsapi.objects.contact.Contact.get_safe_name">
 <code class="descname">get_safe_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/contact.html#Contact.get_safe_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.contact.Contact.get_safe_name" title="Permalink to this definition">¶</a></dt>
@@ -231,19 +506,112 @@ Use get_all_chats for all chats</p>
 <dl class="class">
 <dt id="webwhatsapi.objects.chat.Chat">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.chat.</code><code class="descname">Chat</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#Chat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.Chat" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.get_messages">
+<code class="descname">get_messages</code><span class="sig-paren">(</span><em>include_me=False</em>, <em>include_notifications=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#Chat.get_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.get_messages" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.get_unread_messages">
+<code class="descname">get_unread_messages</code><span class="sig-paren">(</span><em>include_me=False</em>, <em>include_notifications=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#Chat.get_unread_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.get_unread_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>I fetch unread messages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>include_me</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – if user’s messages are to be included</li>
+<li><strong>include_notifications</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – if events happening on chat are to be included</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of unread messages</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.6)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.load_all_earlier_messages">
+<code class="descname">load_all_earlier_messages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#Chat.load_all_earlier_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.load_all_earlier_messages" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.load_earlier_messages">
+<code class="descname">load_earlier_messages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#Chat.load_earlier_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.load_earlier_messages" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.load_earlier_messages_till">
+<code class="descname">load_earlier_messages_till</code><span class="sig-paren">(</span><em>last</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#Chat.load_earlier_messages_till"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.load_earlier_messages_till" title="Permalink to this definition">¶</a></dt>
+<dd><p>Triggers loading of messages till a specific point in time</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>last</strong> (<em>datetime</em>) – Datetime object for the last message to be loaded</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Nothing</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.send_message">
+<code class="descname">send_message</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.send_message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.Chat.send_seen">
+<code class="descname">send_seen</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.chat.Chat.send_seen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 <dl class="class">
 <dt id="webwhatsapi.objects.chat.GroupChat">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.chat.</code><code class="descname">GroupChat</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#GroupChat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.GroupChat" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="webwhatsapi.objects.chat.GroupChat.get_admins">
+<code class="descname">get_admins</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.chat.GroupChat.get_admins" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.GroupChat.get_participants">
+<code class="descname">get_participants</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.chat.GroupChat.get_participants" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.chat.GroupChat.get_participants_ids">
+<code class="descname">get_participants_ids</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#webwhatsapi.objects.chat.GroupChat.get_participants_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 <dl class="class">
 <dt id="webwhatsapi.objects.chat.UserChat">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.chat.</code><code class="descname">UserChat</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#UserChat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.UserChat" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="function">
+<dt id="webwhatsapi.objects.chat.factory_chat">
+<code class="descclassname">webwhatsapi.objects.chat.</code><code class="descname">factory_chat</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/chat.html#factory_chat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.chat.factory_chat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory function for creating appropriate object given selenium JS object</p>
+</dd></dl>
+
 <span class="target" id="module-webwhatsapi.objects.message"></span><dl class="class">
+<dt id="webwhatsapi.objects.message.GeoMessage">
+<em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">GeoMessage</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#GeoMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.GeoMessage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
 <dt id="webwhatsapi.objects.message.MMSMessage">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">MMSMessage</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#MMSMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.MMSMessage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents MMS messages</p>
@@ -253,7 +621,17 @@ Use get_all_chats for all chats</p>
 <dl class="class">
 <dt id="webwhatsapi.objects.message.MediaMessage">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">MediaMessage</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#MediaMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.MediaMessage" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="webwhatsapi.objects.message.MediaMessage.crypt_keys">
+<code class="descname">crypt_keys</code><em class="property"> = {'document': '576861747341707020446f63756d656e74204b657973', 'image': '576861747341707020496d616765204b657973', 'ptt': '576861747341707020417564696f204b657973', 'video': '576861747341707020566964656f204b657973'}</em><a class="headerlink" href="#webwhatsapi.objects.message.MediaMessage.crypt_keys" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="webwhatsapi.objects.message.MediaMessage.save_media">
+<code class="descname">save_media</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#MediaMessage.save_media"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.MediaMessage.save_media" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 <dl class="class">
 <dt id="webwhatsapi.objects.message.Message">
@@ -263,8 +641,7 @@ Use get_all_chats for all chats</p>
 <dl class="class">
 <dt id="webwhatsapi.objects.message.MessageGroup">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">MessageGroup</code><span class="sig-paren">(</span><em>chat</em>, <em>messages</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#MessageGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.MessageGroup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Represents a set of messages</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="class">
 <dt id="webwhatsapi.objects.message.NotificationMessage">
@@ -274,6 +651,17 @@ Use get_all_chats for all chats</p>
 <dl class="class">
 <dt id="webwhatsapi.objects.message.VCardMessage">
 <em class="property">class </em><code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">VCardMessage</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#VCardMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.VCardMessage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="webwhatsapi.objects.message.factory_message">
+<code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">factory_message</code><span class="sig-paren">(</span><em>js_obj</em>, <em>driver</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#factory_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.factory_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory function for creating appropriate object given selenium JS object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="webwhatsapi.objects.message.getContacts">
+<code class="descclassname">webwhatsapi.objects.message.</code><code class="descname">getContacts</code><span class="sig-paren">(</span><em>x</em>, <em>driver</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/webwhatsapi/objects/message.html#getContacts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#webwhatsapi.objects.message.getContacts" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -328,7 +716,7 @@ Use get_all_chats for all chats</p>
       &copy;2018, Mukul Hase, Adarsh Sanjeev.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

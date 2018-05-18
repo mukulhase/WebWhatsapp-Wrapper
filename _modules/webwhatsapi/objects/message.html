@@ -4,7 +4,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>webwhatsapi.objects.message &#8212; WebWhatsAPI 2.0.1 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
@@ -35,29 +35,46 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
 
+<span class="kn">from</span> <span class="nn">webwhatsapi</span> <span class="k">import</span> <span class="n">Contact</span>
 <span class="kn">from</span> <span class="nn">webwhatsapi.helper</span> <span class="k">import</span> <span class="n">safe_str</span>
 <span class="kn">from</span> <span class="nn">webwhatsapi.objects.contact</span> <span class="k">import</span> <span class="n">Contact</span>
 <span class="kn">from</span> <span class="nn">webwhatsapi.objects.whatsapp_object</span> <span class="k">import</span> <span class="n">WhatsappObject</span>
 
 
-<span class="k">def</span> <span class="nf">factory_message</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">):</span>
+<div class="viewcode-block" id="getContacts"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.getContacts">[docs]</a><span class="k">def</span> <span class="nf">getContacts</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">driver</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">contact</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">get_contact_from_id</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">contact</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="factory_message"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.factory_message">[docs]</a><span class="k">def</span> <span class="nf">factory_message</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Factory function for creating appropriate object given selenium JS object&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;lng&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">GeoMessage</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;isMedia&quot;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">MediaMessage</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;isNotification&quot;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">NotificationMessage</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;isMMS&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="s1">&#39;isMMS&#39;</span> <span class="ow">in</span> <span class="n">js_obj</span> <span class="ow">and</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;isMMS&quot;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">MMSMessage</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;vcard&quot;</span><span class="p">,</span> <span class="s2">&quot;multi_vcard&quot;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">VCardMessage</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">Message</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Message</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Message"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.Message">[docs]</a><span class="k">class</span> <span class="nc">Message</span><span class="p">(</span><span class="n">WhatsappObject</span><span class="p">):</span>
+
+    <span class="n">sender</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Contact</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -67,45 +84,63 @@
 <span class="sd">        :type js_obj: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Message</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sender</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;sender&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span> <span class="k">else</span> <span class="n">Contact</span><span class="p">(</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;sender&quot;</span><span class="p">],</span> <span class="n">driver</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sender</span> <span class="o">=</span> <span class="n">Contact</span><span class="p">(</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;sender&quot;</span><span class="p">],</span> <span class="n">driver</span><span class="p">)</span> <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;sender&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chat_id</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s1">&#39;chatId&#39;</span><span class="p">]</span>
+
         <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">safe_content</span> <span class="o">=</span> <span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">25</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;...&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">js_obj</span> <span class="o">=</span> <span class="n">js_obj</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;revoked&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">safe_content</span> <span class="o">=</span> <span class="s1">&#39;...&#39;</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;Message - from </span><span class="si">{sender}</span><span class="s2"> at </span><span class="si">{timestamp}</span><span class="s2">: </span><span class="si">{content}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Message - </span><span class="si">{type}</span><span class="s2"> from </span><span class="si">{sender}</span><span class="s2"> at </span><span class="si">{timestamp}</span><span class="s2">: </span><span class="si">{content}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
             <span class="n">sender</span><span class="o">=</span><span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">()),</span>
-            <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span></div>
-            <span class="n">content</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">safe_content</span><span class="p">)</span>
+            <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+            <span class="n">content</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">safe_content</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MediaMessage"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.MediaMessage">[docs]</a><span class="k">class</span> <span class="nc">MediaMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
+    <span class="n">crypt_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;document&#39;</span><span class="p">:</span> <span class="s1">&#39;576861747341707020446f63756d656e74204b657973&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;image&#39;</span>   <span class="p">:</span> <span class="s1">&#39;576861747341707020496d616765204b657973&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;video&#39;</span>   <span class="p">:</span> <span class="s1">&#39;576861747341707020566964656f204b657973&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;ptt&#39;</span>     <span class="p">:</span> <span class="s1">&#39;576861747341707020417564696f204b657973&#39;</span><span class="p">}</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MediaMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;mime&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span><span class="p">[</span><span class="s2">&quot;mimetype&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;caption&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span><span class="p">[</span><span class="s2">&quot;caption&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">caption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span><span class="p">[</span><span class="s2">&quot;caption&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">media_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mediaKey&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_js_obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clientUrl&#39;</span><span class="p">)</span>
 
         <span class="n">extension</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_extension</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mime</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;__x_filehash&quot;</span><span class="p">],</span> <span class="n">extension</span><span class="p">])</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)),</span> <span class="n">extension</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)),</span> <span class="n">extension</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">save_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
-            <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b64decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
+<div class="viewcode-block" id="MediaMessage.save_media"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.MediaMessage.save_media">[docs]</a>    <span class="k">def</span> <span class="nf">save_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="c1"># gets full media</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">ioobj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">download_media</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ioobj</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">filename</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;MediaMessage - </span><span class="si">{type}</span><span class="s2"> from </span><span class="si">{sender}</span><span class="s2"> at </span><span class="si">{timestamp}</span><span class="s2"> (</span><span class="si">{filename}</span><span class="s2">)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
             <span class="n">sender</span><span class="o">=</span><span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">()),</span>
             <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
-            <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span></div>
-        <span class="p">)</span>
+            <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MMSMessage"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.MMSMessage">[docs]</a><span class="k">class</span> <span class="nc">MMSMessage</span><span class="p">(</span><span class="n">MediaMessage</span><span class="p">):</span>
@@ -122,8 +157,8 @@
         <span class="k">return</span> <span class="s2">&quot;&lt;MMSMessage - </span><span class="si">{type}</span><span class="s2"> from </span><span class="si">{sender}</span><span class="s2"> at </span><span class="si">{timestamp}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
             <span class="n">sender</span><span class="o">=</span><span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">()),</span>
-            <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span></div>
-        <span class="p">)</span>
+            <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="VCardMessage"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.VCardMessage">[docs]</a><span class="k">class</span> <span class="nc">VCardMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
@@ -131,24 +166,48 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">VCardMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">contacts</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contacts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;vcardList&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">card</span><span class="p">[</span><span class="s2">&quot;vcard&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;VCardMessage - </span><span class="si">{type}</span><span class="s2"> from </span><span class="si">{sender}</span><span class="s2"> at </span><span class="si">{timestamp}</span><span class="s2"> (</span><span class="si">{contacts}</span><span class="s2">)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
             <span class="n">sender</span><span class="o">=</span><span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">()),</span>
             <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
-            <span class="n">contacts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contacts</span></div>
-        <span class="p">)</span>
+            <span class="n">contacts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">contacts</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GeoMessage"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.GeoMessage">[docs]</a><span class="k">class</span> <span class="nc">GeoMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GeoMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;lng&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GeoMessage - </span><span class="si">{type}</span><span class="s2"> from </span><span class="si">{sender}</span><span class="s2"> at </span><span class="si">{timestamp}</span><span class="s2"> (</span><span class="si">{lat}</span><span class="s2">, </span><span class="si">{lng}</span><span class="s2">)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+            <span class="n">sender</span><span class="o">=</span><span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">()),</span>
+            <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+            <span class="n">lat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
+            <span class="n">lng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NotificationMessage"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.NotificationMessage">[docs]</a><span class="k">class</span> <span class="nc">NotificationMessage</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">NotificationMessage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">js_obj</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">subtype</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;subtype&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtype</span> <span class="o">=</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;subtype&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;recipients&quot;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">recipients</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">get_contact_from_id</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;recipients&quot;</span><span class="p">]]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recipients</span> <span class="o">=</span> <span class="p">[</span><span class="n">getContacts</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">driver</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">js_obj</span><span class="p">[</span><span class="s2">&quot;recipients&quot;</span><span class="p">]]</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">readable</span> <span class="o">=</span> <span class="p">{</span>
@@ -159,6 +218,7 @@
                 <span class="s1">&#39;encrypt&#39;</span><span class="p">:</span> <span class="s2">&quot;Messages now Encrypted&quot;</span>
             <span class="p">},</span>
             <span class="s1">&#39;gp2&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;invite&#39;</span><span class="p">:</span> <span class="s2">&quot;Joined an invite link&quot;</span><span class="p">,</span>
                 <span class="s1">&#39;create&#39;</span><span class="p">:</span> <span class="s2">&quot;Created group&quot;</span><span class="p">,</span>
                 <span class="s1">&#39;add&#39;</span><span class="p">:</span> <span class="s2">&quot;Added to group&quot;</span><span class="p">,</span>
                 <span class="s1">&#39;remove&#39;</span><span class="p">:</span> <span class="s2">&quot;Removed from group&quot;</span><span class="p">,</span>
@@ -171,14 +231,11 @@
             <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span>
             <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
             <span class="n">recip</span><span class="o">=</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;recipients&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">safe_str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">recipients</span><span class="p">]),</span></div>
-        <span class="p">)</span>
+                <span class="p">[</span><span class="n">safe_str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_safe_name</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">recipients</span><span class="p">]),</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MessageGroup"><a class="viewcode-back" href="../../../index.html#webwhatsapi.objects.message.MessageGroup">[docs]</a><span class="k">class</span> <span class="nc">MessageGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Represents a set of messages</span>
-<span class="sd">    &quot;&quot;&quot;</span>      
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chat</span><span class="p">,</span> <span class="n">messages</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Constructor</span>
@@ -195,8 +252,8 @@
         <span class="n">safe_chat_name</span> <span class="o">=</span> <span class="n">safe_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;MessageGroup - </span><span class="si">{num}</span><span class="s2"> </span><span class="si">{messages}</span><span class="s2"> in </span><span class="si">{chat}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">num</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="p">),</span>
-            <span class="n">messages</span><span class="o">=</span><span class="s2">&quot;message&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;messages&quot;</span><span class="p">,</span></div>
-            <span class="n">chat</span><span class="o">=</span><span class="n">safe_chat_name</span><span class="p">)</span>
+            <span class="n">messages</span><span class="o">=</span><span class="s2">&quot;message&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;messages&quot;</span><span class="p">,</span>
+            <span class="n">chat</span><span class="o">=</span><span class="n">safe_chat_name</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -234,7 +291,7 @@
       &copy;2018, Mukul Hase, Adarsh Sanjeev.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
