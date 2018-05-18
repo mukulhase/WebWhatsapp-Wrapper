@@ -18,6 +18,9 @@ def getContacts(x, driver):
 
 
 def factory_message(js_obj, driver):
+    if js_obj["lat"] and js_obj["lng"]:
+        return GeoMessage(js_obj, driver)
+
     if js_obj["isMedia"]:
         return MediaMessage(js_obj, driver)
 
@@ -76,7 +79,8 @@ class MediaMessage(Message):
 
         self.size = self._js_obj["size"]
         self.mime = self._js_obj["mimetype"]
-        self.caption = self._js_obj["caption"]
+        if "caption" in self._js_obj and self._js_obj["caption"]:
+            self.caption = self._js_obj["caption"]
 
         self.media_key = self._js_obj.get('mediaKey')
         self.client_url = self._js_obj.get('clientUrl')
@@ -90,6 +94,7 @@ class MediaMessage(Message):
         ioobj = self.driver.download_media(self)
         with open(filename, "wb") as f:
             f.write(ioobj.getvalue())
+        return filename
 
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
@@ -123,7 +128,13 @@ class VCardMessage(Message):
         super(VCardMessage, self).__init__(js_obj, driver)
 
         self.type = js_obj["type"]
-        self.contacts = js_obj["content"].encode("ascii", "ignore")
+        self.contacts = list()
+
+        if js_obj["content"]:
+            self.contacts.append(js_obj["content"].encode("ascii", "ignore"))
+        else:
+            for card in js_obj["vcardList"]:
+                self.contacts.append(card["vcard"].encode("ascii", "ignore"))
 
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
@@ -131,6 +142,24 @@ class VCardMessage(Message):
             sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
             contacts=self.contacts
+        )
+
+
+class GeoMessage(Message):
+    def __init__(self, js_obj, driver=None):
+        super(GeoMessage, self).__init__(js_obj, driver)
+
+        self.type = js_obj["type"]
+        self.latitude = js_obj["lat"]
+        self.longitude = js_obj["lng"]
+
+    def __repr__(self):
+        return "<GeoMessage - {type} from {sender} at {timestamp} ({lat}, {lng})>".format(
+            type=self.type,
+            sender=safe_str(self.sender.get_safe_name()),
+            timestamp=self.timestamp,
+            lat=self.latitude,
+            lng=self.longitude
         )
 
 

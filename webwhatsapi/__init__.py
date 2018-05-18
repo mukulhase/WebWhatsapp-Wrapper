@@ -305,17 +305,19 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.getAllChatIds()
 
-    def get_unread(self, include_me=False, include_notifications=False):
+    def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
         """
         Fetches unread messages
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
         :type include_notifications: bool or None
+        :param use_unread_count: If set uses chat's 'unreadCount' attribute to fetch last n messages from chat
+        :type use_unread_count: bool
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications, use_unread_count)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -431,13 +433,15 @@ class WhatsAPIDriver(object):
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
             return chat
-	if(createIfNotFound):		
+        
+	      if(createIfNotFound):		
             self.create_chat_by_number(number)
             self.wait_for_login()
             for chat in self.get_all_chats():
                 if not isinstance(chat, UserChat) or number not in chat.id:
                     continue
                 return chat
+        
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
@@ -544,6 +548,36 @@ class WhatsAPIDriver(object):
         cr_obj = Cipher(algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend())
         decryptor = cr_obj.decryptor()
         return BytesIO(decryptor.update(e_file) + decryptor.finalize())
+
+    def mark_default_unread_messages(self):
+        """
+        Look for the latest unreplied messages received and mark them as unread.
+
+        """
+        self.wapi_functions.markDefaultUnreadMessages()
+
+    def get_battery_level(self):
+        """
+        Check the battery level of device
+        :return: int: Battery level
+        """
+        return self.wapi_functions.getBatteryLevel()
+
+    def leave_group(self, chat_id):
+        """
+        Leave a group
+        :param chat_id: id of group
+        :return:
+        """
+        return self.wapi_functions.leaveGroup(chat_id)
+
+    def delete_chat(self, chat_id):
+        """
+        Delete a chat
+        :param chat_id: id of chat
+        :return:
+        """
+        return self.wapi_functions.deleteConversation(chat_id)
 
     def quit(self):
         self.driver.quit()
