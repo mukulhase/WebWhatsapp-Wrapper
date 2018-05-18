@@ -3,9 +3,9 @@ from webwhatsapi import WhatsAPIDriver
 from webwhatsapi.objects.message import Message, MediaMessage
 
 print "Environment", os.environ
-try:  
+try:
    os.environ["SELENIUM"]
-except KeyError: 
+except KeyError:
    print "Please set the environment variable SELENIUM to Selenium URL"
    sys.exit(1)
 
@@ -26,10 +26,10 @@ while True:
             print 'type', message.type
             print 'timestamp', message.timestamp
             print 'chat_id', message.chat_id
-            print 'sender', message.sender    
+            print 'sender', message.sender
             print 'sender.id', message.sender.id
             print 'sender.safe_name', message.sender.get_safe_name()
-            if message.type == 'chat': 
+            if message.type == 'chat':
                 print '-- Chat'
                 print 'safe_content', message.safe_content
                 print 'content', message.content
