@@ -308,7 +308,6 @@ class WhatsAPIDriver(object):
     def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
         """
         Fetches unread messages
-
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
@@ -418,7 +417,7 @@ class WhatsAPIDriver(object):
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
-    def get_chat_from_phone_number(self, number):
+    def get_chat_from_phone_number(self, number, createIfNotFound = False):
         """
         Gets chat by phone number
         Number format should be as it appears in Whatsapp ID
@@ -434,13 +433,15 @@ class WhatsAPIDriver(object):
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
             return chat
-			
-        self.create_chat_by_number(number)
-        self.wait_for_login()
-        for chat in self.get_all_chats():
-            if not isinstance(chat, UserChat) or number not in chat.id:
-                continue
-            return chat
+        
+	      if(createIfNotFound):		
+            self.create_chat_by_number(number)
+            self.wait_for_login()
+            for chat in self.get_all_chats():
+                if not isinstance(chat, UserChat) or number not in chat.id:
+                    continue
+                return chat
+        
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
@@ -469,6 +470,13 @@ class WhatsAPIDriver(object):
 
     def chat_send_message(self, chat_id, message):
         result = self.wapi_functions.sendMessage(chat_id, message)
+
+        if not isinstance(result, bool):
+            return factory_message(result, self)
+        return result
+
+    def chat_reply_message(self, message_id, message):
+        result = self.wapi_functions.ReplyMessage(message_id, message)
 
         if not isinstance(result, bool):
             return factory_message(result, self)
