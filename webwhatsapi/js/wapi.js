@@ -177,7 +177,7 @@ window.WAPI.getChat = function (id, done) {
 };
 
 window.WAPI.getAllMessagesAfter = function (unix_timestamp, done) {
-    messageObjs = Store.Msg.models.filter((msg) => msg.__x_t >= unix_timestamp);
+    messageObjs = Store.Msg.models.filter((msg) => msg.__x_t > unix_timestamp);
     output = []
     for (const i in messageObjs) {
         if (i === "remove") {
