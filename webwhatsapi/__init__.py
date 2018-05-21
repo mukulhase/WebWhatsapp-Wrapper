@@ -17,7 +17,7 @@ from Crypto.Cipher import AES
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.firefox.options import Options
@@ -84,7 +84,8 @@ class WhatsAPIDriver(object):
         'UnreadChatBanner': '.message-list',
         'ReconnectLink': '.action',
         'WhatsappQrIcon': 'span.icon:nth-child(2)',
-        'QRReloader': 'div > span > div[role=\"button\"]'
+        'QRReloader': 'div > span > div[role=\"button\"]',
+        'not_whatsappable': '._3lLzD'
     }
 
     _CLASSES = {
@@ -519,10 +520,12 @@ class WhatsAPIDriver(object):
             self.create_chat(phone_number)
             self.wait_for_login()
             try:
-                fail_chat_popup = EC.visibility_of_element_located((By.CSS_SELECTOR, '._3lLzD'))
-                fail_chat_popup.__call__(self.driver)  # if popup shows, then it didn't find the number
+                popup = self.driver.find_element_by_css_selector(
+                    self._SELECTORS['not_whatsappable'])
                 return False
             except NoSuchElementException:
                 # popup didn't show so the number does exist
                 return True
+            except WebDriverException as wd:
+                logging.warning(wd)
 
