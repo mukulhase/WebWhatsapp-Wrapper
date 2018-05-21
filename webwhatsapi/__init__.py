@@ -235,7 +235,7 @@ class WhatsAPIDriver(object):
         self.username = username
         self.wapi_functions = WapiJsWrapper(self.driver)
 
-        self.driver.set_script_timeout(500)
+        self.driver.set_script_timeout(30)
         self.driver.implicitly_wait(10)
 
         if autoconnect:
@@ -252,7 +252,7 @@ class WhatsAPIDriver(object):
 
     def wait_for_login(self):
         """Waits for the QR to go away"""
-        WebDriverWait(self.driver, 90).until(
+        WebDriverWait(self.driver, 30).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
         )
 
