@@ -5,22 +5,22 @@ WebWhatsAPI module
 """
 
 import binascii
+
 import logging
 import os
-import shutil
 import tempfile
-from base64 import b64decode
-from io import BytesIO
-from json import dumps, loads
-
 from Crypto.Cipher import AES
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
+from base64 import b64decode
+from io import BytesIO
+from json import dumps, loads
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -108,31 +108,7 @@ class WhatsAPIDriver(object):
         self.driver.execute_script(''.join(["window.localStorage.setItem('{}', '{}');".format(k, v)
                                             for k, v in data.items()]))
 
-    def save_firefox_profile(self, remove_old=False):
-        "Function to save the firefox profile to the permanant one"
-        self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
-
-        if remove_old:
-            if os.path.exists(self._profile_path):
-                try:
-                    shutil.rmtree(self._profile_path)
-                except OSError:
-                    pass
-
-            shutil.copytree(os.path.join(self._profile.path), self._profile_path,
-                            ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
-        else:
-            for item in os.listdir(self._profile.path):
-                if item in ["parent.lock", "lock", ".parentlock"]:
-                    continue
-                s = os.path.join(self._profile.path, item)
-                d = os.path.join(self._profile_path, item)
-                if os.path.isdir(s):
-                    shutil.copytree(s, d,
-                                    ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
-                else:
-                    shutil.copy2(s, d)
-
+    def save_profile(self):
         with open(os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE), 'w') as f:
             f.write(dumps(self.get_local_storage()))
 
@@ -147,17 +123,7 @@ class WhatsAPIDriver(object):
             except ChatNotFoundError as e:
                 self.logger.debug("chat not found", c)
 
-
-    def set_proxy(self, proxy):
-        self.logger.info("Setting proxy to %s" % proxy)
-        proxy_address, proxy_port = proxy.split(":")
-        self._profile.set_preference("network.proxy.type", 1)
-        self._profile.set_preference("network.proxy.http", proxy_address)
-        self._profile.set_preference("network.proxy.http_port", int(proxy_port))
-        self._profile.set_preference("network.proxy.ssl", proxy_address)
-        self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
-
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
+    def __init__(self, client="firefox", username="API", command_executor=None, loadstyles=False,
                  profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
         "Initialises the webdriver"
 
@@ -175,11 +141,6 @@ class WhatsAPIDriver(object):
         else:
             self._profile_path = None
 
-        if self._profile_path is not None:
-            self._profile = webdriver.FirefoxProfile(self._profile_path)
-        else:
-            self._profile = webdriver.FirefoxProfile()
-
         if self.client == "firefox":
             if self._profile_path is not None:
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
@@ -193,10 +154,8 @@ class WhatsAPIDriver(object):
                 # Disable Flash
                 self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
                                              'false')
-            if proxy is not None:
-                self.set_proxy(proxy)
 
-            options = Options()
+            options = FirefoxOptions()
 
             if headless:
                 options.set_headless()
@@ -207,30 +166,25 @@ class WhatsAPIDriver(object):
             capabilities['webStorageEnabled'] = True
 
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
+            self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
+                                            **extra_params)
 
         elif self.client == "chrome":
-            self._profile = webdriver.chrome.options.Options()
-            if self._profile_path is not None:
-                self._profile.add_argument("user-data-dir=%s" % self._profile_path)
-            if proxy is not None:
-                profile.add_argument('--proxy-server=%s' % proxy)
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
-        elif client == 'remote':
-            capabilities = DesiredCapabilities.FIREFOX.copy()
-            options = Options()
+        elif client == 'remote_chrome' or client == 'remote_firefox':
+            if client == 'remote_firefox':
+                options = FirefoxOptions()
+            else:
+                options = ChromeOptions()
 
             if headless:
                 options.set_headless()
 
             options.profile = self._profile
 
-            self.driver = webdriver.Remote(browser_profile=self._profile,
-                                           options=options,
+            self.driver = webdriver.Remote(options=options,
                                            command_executor=command_executor,
-                                           desired_capabilities=capabilities,
-                                           **extra_params
-                                           )
+                                           **extra_params)
         else:
             self.logger.error("Invalid client: %s" % client)
         self.username = username
@@ -244,7 +198,7 @@ class WhatsAPIDriver(object):
 
     def connect(self):
         self.driver.get(self._URL)
-        local_storage_file = os.path.join(self._profile.path, self._LOCAL_STORAGE_FILE)
+        local_storage_file = os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE)
         if os.path.exists(local_storage_file):
             with open(local_storage_file) as f:
                 self.set_local_storage(loads(f.read()))
@@ -313,7 +267,8 @@ class WhatsAPIDriver(object):
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
-            messages = [factory_message(message, self) for message in raw_message_group['messages']]
+            messages = [factory_message(message, self) for message in
+                        raw_message_group['messages']]
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
@@ -420,7 +375,8 @@ class WhatsAPIDriver(object):
         return self.wapi_functions.sendMessage(chat_id, message)
 
     def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
-        message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
+        message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me,
+                                                                include_notifications)
         for message in message_objs:
             yield factory_message(message, self)
 
@@ -480,7 +436,8 @@ class WhatsAPIDriver(object):
 
         media_key = b64decode(media_msg.media_key)
         derivative = HKDFv3().deriveSecrets(media_key,
-                                            binascii.unhexlify(media_msg.crypt_keys[media_msg.type]),
+                                            binascii.unhexlify(
+                                                media_msg.crypt_keys[media_msg.type]),
                                             112)
 
         parts = ByteUtil.split(derivative, 16, 32)
@@ -528,4 +485,3 @@ class WhatsAPIDriver(object):
                 return True
             except WebDriverException as wd:
                 logging.warning(wd)
-
