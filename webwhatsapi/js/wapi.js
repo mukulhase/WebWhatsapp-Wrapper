@@ -80,6 +80,23 @@ window.WAPI._serializeMessageObj = (obj) => {
     });
 };
 
+window.WAPI.getConnectionInfo = function (done) {
+    if (done !== undefined) {
+        done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.memoizedProps.children[5].props.conn);
+    } else {
+        return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.memoizedProps.children[5].props.conn;
+    }
+}
+
+window.WAPI.getChatsModel = function (done) {
+    if (done !== undefined) {
+        done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats);
+    } else {
+        return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats;
+        ;
+    }
+}
+
 /**
  * Fetches all contact objects from store
  *
@@ -135,7 +152,7 @@ window.WAPI.getContact = function (id, done) {
  * @returns {Array|*} List of chats
  */
 window.WAPI.getAllChats = function (done) {
-    const chats = Store.Chat.models.map((chat) => WAPI._serializeChatObj(chat));
+    const chats = window.WAPI.getChatsModel().map((chat) => WAPI._serializeChatObj(chat));
 
     if (done !== undefined) {
         done(chats);
@@ -151,7 +168,7 @@ window.WAPI.getAllChats = function (done) {
  * @returns {Array|*} List of chat id's
  */
 window.WAPI.getAllChatIds = function (done) {
-    const chatIds = Store.Chat.models.map((chat) => chat.id);
+    const chatIds = window.WAPI.getChatsModel().map((chat) => chat.id);
 
     if (done !== undefined) {
         done(chatIds);
@@ -184,7 +201,7 @@ window.WAPI.getAllGroups = function (done) {
  * @returns {T|*} Chat object
  */
 window.WAPI.getChat = function (id, done) {
-    const found = Store.Chat.models.find((chat) => chat.id === id);
+    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
     if (done !== undefined) {
         done(found);
     } else {
@@ -257,7 +274,7 @@ window.WAPI.getUnreadMessagesInChat = function (
         let message = WAPI.processMessageObj(messageObj,
                                              includeMe,
                                              includeNotifications);
-		
+
         // save processed message on result list
         if (message) output.push(message);
     }
@@ -280,7 +297,7 @@ window.WAPI.getUnreadMessagesInChat = function (
  * @returns None
  */
 window.WAPI.loadEarlierMessages = function (id, done) {
-    const found = Store.Chat.models.find((chat) => chat.id === id);
+    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
     if (done !== undefined) {
         found.loadEarlierMsgs().then(function(){done()});
     } else {
@@ -297,7 +314,7 @@ window.WAPI.loadEarlierMessages = function (id, done) {
  */
 
 window.WAPI.loadAllEarlierMessages = function (id, done) {
-    const found = Store.Chat.models.find((chat) => chat.id === id);
+    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
     x = function(){
         if (!found.msgs.msgLoadState.__x_noEarlierMsgs){
             found.loadEarlierMsgs().then(x);
@@ -314,7 +331,7 @@ window.WAPI.asyncLoadAllEarlierMessages = function (id, done) {
 };
 
 window.WAPI.areAllMessagesLoaded = function (id, done) {
-    const found = Store.Chat.models.find((chat) => chat.id === id);
+    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
     if (!found.msgs.msgLoadState.__x_noEarlierMsgs) {
         if (done) {
             done(false);
@@ -339,7 +356,7 @@ window.WAPI.areAllMessagesLoaded = function (id, done) {
  */
 
 window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
-    const found = Store.Chat.models.find((chat) => chat.id === id);
+    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
     x = function(){
         if(found.msgs.models[0].t>lastMessage){
             found.loadEarlierMsgs().then(x);
@@ -520,7 +537,7 @@ window.WAPI.ReplyMessage = function (idMessage,message,done) {
 		}
 	}
 	messageObject = messageObject.value();
-	const Chats = Store.Chat.models;
+	const Chats = window.WAPI.getChatsModel();
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -569,17 +586,17 @@ window.WAPI.ReplyMessage = function (idMessage,message,done) {
 };
 
 window.WAPI.sendMessageToID = function (id, message, done) {
-    if(Store.Chat.models.length == 0)
+    if(window.WAPI.getChatsModel().length == 0)
         return false;
 
-    var originalID = Store.Chat.models[0].id;
-    Store.Chat.models[0].id = id;
+    var originalID = window.WAPI.getChatsModel()[0].id;
+    window.WAPI.getChatsModel()[0].id = id;
     if (done !== undefined) {
-        Store.Chat.models[0].sendMessage(message).then(function(){ Store.Chat.models[0].id = originalID; done(true); });
+        window.WAPI.getChatsModel()[0].sendMessage(message).then(function(){ window.WAPI.getChatsModel()[0].id = originalID; done(true); });
         return true;
     } else {
-        Store.Chat.models[0].sendMessage(message);
-        Store.Chat.models[0].id = originalID;
+        window.WAPI.getChatsModel()[0].sendMessage(message);
+        window.WAPI.getChatsModel()[0].id = originalID;
         return true;
     }
 
@@ -592,7 +609,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
 }
 
 window.WAPI.sendMessage = function (id, message, done) {
-    const Chats = Store.Chat.models;
+    const Chats = window.WAPI.getChatsModel();
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -642,7 +659,7 @@ window.WAPI.sendMessage = function (id, message, done) {
 
 
 window.WAPI.sendSeen = function (id, done) {
-    const Chats = Store.Chat.models;
+    const Chats = window.WAPI.getChatsModel();
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -687,7 +704,7 @@ function isChatMessage(message) {
 
 
 window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
-    const chats = Store.Chat.models;
+    const chats = window.WAPI.getChatsModel();
     let output = [];
     for (let chat in chats) {
         if (isNaN(chat)) {
@@ -701,7 +718,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
         const messages = messageGroupObj.msgs.models;
         for (let i = messages.length - 1; i >= 0; i--) {
             let messageObj = messages[i];
-            if (messageObj.__x_isNewMsg || messageObj.__x_MustSent) {
+            if (messageObj.__x_isNewMsg === true || messageObj.__x_MustSent) {
                 let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                 if(message){
                     messageObj.__x_isNewMsg = false;
@@ -721,13 +738,13 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
                 for (let i = messages.length - 1; i >= 0; i--) {
                     let messageObj = messages[i];
                     if (n > 0) {
-                        if (!messageObj.__x_isSentByMe) {
+                        if (!messageObj.__x_isSentByMe === true) {
                             let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                             messageGroup.messages.unshift(message);
                             n -= 1;
                         }
                     } else if (n === -1) { // chat was marked as unread so will fetch last message as unread
-                        if (!messageObj.__x_isSentByMe) {
+                        if (!messageObj.__x_isSentByMe === true) {
                             let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                             messageGroup.messages.unshift(message);
                             break;
@@ -751,7 +768,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
 };
 
 window.WAPI.markDefaultUnreadMessages = function (done) {
-    const chats = Store.Chat.models;
+    const chats = window.WAPI.getChatsModel();
     let output = [];
     for (let chat in chats) {
         if (isNaN(chat)) {
@@ -812,7 +829,7 @@ window.WAPI.getCommonGroups = async function (id, done) {
 };
 
 window.WAPI.getBatteryLevel = function (done) {
-    let output = Store.Conn.__x_battery;
+    let output = window.WAPI.getConnectionInfo().__x_battery;
     if (done !== undefined) {
         done(output);
     }
@@ -828,7 +845,7 @@ window.WAPI.leaveGroup = function (groupId, done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let conversation = Store.Chat.models.find((chat) => chat.id === chatId);
+    let conversation = window.WAPI.getChatsModel().find((chat) => chat.id === chatId);
     let lastReceivedKey = conversation.__x_lastReceivedKey;
     Store.Wap.sendConversationDelete(chatId, lastReceivedKey).then(
         function(response){
