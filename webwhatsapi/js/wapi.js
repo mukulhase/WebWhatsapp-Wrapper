@@ -90,9 +90,18 @@ window.WAPI.getConnectionInfo = function (done) {
 
 window.WAPI.getChatsModel = function (done) {
     if (done !== undefined) {
+        if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0) {
+            done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].collection.models);
+        } else {
+            done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats);
+        }
         done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats);
     } else {
-        return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats;
+        if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0) {
+            return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].collection.models;
+        } else {
+            return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats;
+        }
         ;
     }
 }
@@ -243,10 +252,7 @@ window.WAPI.getChatById = function (id, done) {
  * :returns: list of unread messages from asked chat
  * :rtype: object
  */
-window.WAPI.getUnreadMessagesInChat = function (
-    id, includeMe, includeNotifications, done
-)
-{
+window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotifications, done) {
     // get chat and its messages
     let chat = WAPI.getChat(id);
     let messages = chat.msgs.models;
@@ -266,19 +272,20 @@ window.WAPI.getUnreadMessagesInChat = function (
         let messageObj = messages[i];
 
         // found a read message: stop looking for others
-         if (typeof (messageObj.__x_isNewMsg) != "boolean" || messageObj.__x_isNewMsg === false) {
+        if (typeof (messageObj.__x_isNewMsg) !== "boolean" || messageObj.__x_isNewMsg === false) {
             continue;
-			}
-		messageObj.__x_isNewMsg = false;
-        // process it
-        let message = WAPI.processMessageObj(messageObj,
-                                             includeMe,
-                                             includeNotifications);
-		
-        // save processed message on result list
-        if (message) output.push(message);
-    }
+        } else {
+            messageObj.__x_isNewMsg = false;
+            // process it
+            let message = WAPI.processMessageObj(messageObj,
+                    includeMe,
+                    includeNotifications);
 
+            // save processed message on result list
+            if (message)
+                output.push(message);
+        }
+    }
     // callback was passed: run it
     if (done !== undefined) {
         done(output);
@@ -286,7 +293,8 @@ window.WAPI.getUnreadMessagesInChat = function (
 
     // return result list
     return output;
-};
+}
+;
 
 
 /**
