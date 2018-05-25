@@ -106,6 +106,38 @@ window.WAPI.getChatsModel = function (done) {
     }
 }
 
+window.WAPI.getContactsModel = function (done) {
+    if (done !== undefined) {
+        if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0) {
+            done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].contact.collection.models);
+        } else {
+            done([]);
+        }
+    } else {
+        if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0) {
+            return (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].contact.collection.models);
+        } else {
+            return ([]);
+        }
+    }
+}
+
+window.WAPI.getMsgsModel = function (done) {
+    if (done !== undefined) {
+        if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0 && document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models.length > 0) {
+            done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models[0].collection.models);
+        } else {
+            done([]);
+        }
+    } else {
+        if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0 && document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models.length > 0) {
+            return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models[0].collection.models;
+        } else {
+            return [];
+        }
+    }
+}
+
 /**
  * Fetches all contact objects from store
  *
@@ -113,7 +145,7 @@ window.WAPI.getChatsModel = function (done) {
  * @returns {Array|*} List of contacts
  */
 window.WAPI.getAllContacts = function (done) {
-    const contacts = Store.Contact.models.map((contact) => WAPI._serializeContactObj(contact));
+    const contacts = window.WAPI.getContactsModel().map((contact) => WAPI._serializeContactObj(contact));
 
     if (done !== undefined) {
         done(contacts);
@@ -128,7 +160,7 @@ window.WAPI.getAllContacts = function (done) {
  * @returns {Array|*} List of contacts
  */
 window.WAPI.getMyContacts = function (done) {
-    const contacts = Store.Contact.models.filter(d => d.__x_isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
+    const contacts = window.WAPI.getContactsModel().filter(d => d.__x_isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
 
     if (done !== undefined) {
         done(contacts);
@@ -145,7 +177,7 @@ window.WAPI.getMyContacts = function (done) {
  * @returns {T|*} Contact object
  */
 window.WAPI.getContact = function (id, done) {
-    const found = Store.Contact.models.find((contact) => contact.id === id);
+    const found = window.WAPI.getContactsModel().find((contact) => contact.id === id);
 
     if (done !== undefined) {
         done(window.WAPI._serializeContactObj(found));
@@ -462,7 +494,7 @@ window.WAPI.getGroupAdmins = async function (id, done) {
  * @returns {Array|*|$q.all}
  */
 window.WAPI.getMe = function (done) {
-    const contacts = window.Store.Contact.models;
+    const contacts = window.window.WAPI.getContactsModel();
 
     const rawMe = contacts.find((contact) => contact.all.isMe, contacts);
 
@@ -528,14 +560,14 @@ window.WAPI.getAllMessageIdsInChat = function (id, includeMe, includeNotificatio
 
 window.WAPI.getMessageById = function (id, done) {
     try {
-        Store.Msg.find(id).then((item) => done(WAPI.processMessageObj(item, true, true)))
+        window.WAPI.getMsgsModel().find(id).then((item) => done(WAPI.processMessageObj(item, true, true)))
     } catch (err) {
         done(false);
     }
 };
 
 window.WAPI.ReplyMessage = function (idMessage,message,done) {
-	var messageObject = Store.Msg.find(idMessage);
+	var messageObject = window.WAPI.getMsgsModel().find(idMessage);
 	if(messageObject===undefined){
 		if (done !== undefined) {
 			done(false);
