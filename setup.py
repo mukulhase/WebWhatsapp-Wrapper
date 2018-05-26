@@ -97,11 +97,12 @@ setup(
     # simple. Or you can use find_packages().
     packages=[PACKAGE_NAME, ],
     install_requires=[
+        # 'aiohttp', see https://github.com/mukulhase/WebWhatsAPI/issues/159
         'python-dateutil>=2.6.0',
         'selenium>=3.4.3',
         'six>=1.10.0',
         'python-axolotl',
-        'pycrypto'
+        'cryptography'
     ],
     extras_require={
     },

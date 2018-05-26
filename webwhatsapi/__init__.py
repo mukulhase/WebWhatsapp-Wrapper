@@ -2,7 +2,6 @@
 WebWhatsAPI module
 
 .. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
-
 """
 
 import binascii
@@ -12,7 +11,8 @@ from json import dumps, loads
 import os
 import shutil
 import tempfile
-from Crypto.Cipher import AES
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
@@ -25,7 +25,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from .objects.chat import UserChat, factory_chat
+from .objects.chat import Chat, UserChat, factory_chat
 from .objects.contact import Contact
 from .objects.message import MessageGroup, factory_message
 from .wapi_js_wrapper import WapiJsWrapper
@@ -56,11 +56,8 @@ class ContactNotFoundError(WhatsAPIException):
 class WhatsAPIDriver(object):
     """
     This is our main driver objects.
-
         .. note::
-
            Runs its own instance of selenium
-
         """
     _PROXY = None
 
@@ -110,7 +107,7 @@ class WhatsAPIDriver(object):
                                             for k, v in data.items()]))
 
     def save_firefox_profile(self, remove_old=False):
-        "Function to save the firefox profile to the permanant one"
+        """Function to save the firefox profile to the permanant one"""
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
 
         if remove_old:
@@ -147,11 +144,12 @@ class WhatsAPIDriver(object):
         self._profile.set_preference("network.proxy.ssl_port", int(proxy_port))
 
     def close(self):
+        """Closes the selenium instance"""
         self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None):
-        "Initialises the webdriver"
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None):
+        """Initialises the webdriver"""
 
         self.logger = logger or self.logger
         extra_params = extra_params or {}
@@ -201,6 +199,8 @@ class WhatsAPIDriver(object):
                 self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
                 profile.add_argument('--proxy-server=%s' % proxy)
+            for option in chrome_options:
+                self._profile.add_argument(option)
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == 'remote':
@@ -238,6 +238,7 @@ class WhatsAPIDriver(object):
 
     def is_logged_in(self):
         """Returns if user is logged. Can be used if non-block needed for wait_for_login"""
+
         # self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
         # it becomes ridiculously slow if the element is not found.
 
@@ -261,7 +262,7 @@ class WhatsAPIDriver(object):
         if filename is None:
             fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
         else:
-            fd = os.open(filename, os.O_RDWR | os.CREAT)
+            fd = os.open(filename, os.O_RDWR | os.O_CREAT)
             fn_png = os.path.abspath(filename)
         self.logger.debug("QRcode image saved at %s" % fn_png)
         qr.screenshot(fn_png)
@@ -274,7 +275,6 @@ class WhatsAPIDriver(object):
     def get_contacts(self):
         """
         Fetches list of all contacts
-
         This will return chats with people from the address book only
         Use get_all_chats for all chats
 
@@ -312,18 +312,19 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.getAllChatIds()
 
-    def get_unread(self, include_me=False, include_notifications=False):
+    def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
         """
         Fetches unread messages
-
         :param include_me: Include user's messages
         :type include_me: bool or None
         :param include_notifications: Include events happening on chat
         :type include_notifications: bool or None
+        :param use_unread_count: If set uses chat's 'unreadCount' attribute to fetch last n messages from chat
+        :type use_unread_count: bool
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications, use_unread_count)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -332,6 +333,37 @@ class WhatsAPIDriver(object):
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
+
+    def get_unread_messages_in_chat(self,
+                                    id,
+                                    include_me=False,
+                                    include_notifications=False):
+        """
+        I fetch unread messages from an asked chat.
+
+        :param id: chat id
+        :type  id: str
+        :param include_me: if user's messages are to be included
+        :type  include_me: bool
+        :param include_notifications: if events happening on chat are to be included
+        :type  include_notifications: bool
+        :return: list of unread messages from asked chat
+        :rtype: list
+        """
+        # get unread messages
+        messages = self.wapi_functions.getUnreadMessagesInChat(
+            id,
+            include_me,
+            include_notifications
+        )
+
+        # process them
+        unread = [factory_message(message, self) for message in messages]
+
+        # return them
+        return unread
+
+    # get_unread_messages_in_chat()
 
     def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         """
@@ -348,9 +380,7 @@ class WhatsAPIDriver(object):
 
         messages = []
         for message in message_objs:
-            messages.append(factory_message(message, self))
-
-        return messages
+            yield(factory_message(message, self))
 
     def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
         """
@@ -369,6 +399,8 @@ class WhatsAPIDriver(object):
         """
         Fetch a message
 
+        :param message_id: Message ID
+        :type message_id: str
         :return: Message or False
         :rtype: Message
         """
@@ -380,6 +412,14 @@ class WhatsAPIDriver(object):
         return result
 
     def get_contact_from_id(self, contact_id):
+        """
+        Fetches a contact given its ID
+
+        :param contact_id: Contact ID
+        :type contact_id: str
+        :return: Contact or Error
+        :rtype: Contact
+        """
         contact = self.wapi_functions.getContact(contact_id)
 
         if contact is None:
@@ -388,16 +428,23 @@ class WhatsAPIDriver(object):
         return Contact(contact, self)
 
     def get_chat_from_id(self, chat_id):
+        """
+        Fetches a chat given its ID
+
+        :param chat_id: Chat ID
+        :type chat_id: str
+        :return: Chat or Error
+        :rtype: Chat
+        """
         chat = self.wapi_functions.getChatById(chat_id)
         if chat:
             return factory_chat(chat, self)
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
-    def get_chat_from_phone_number(self, number):
+    def get_chat_from_phone_number(self, number, createIfNotFound = False):
         """
         Gets chat by phone number
-
         Number format should be as it appears in Whatsapp ID
         For example, for the number:
         +972-51-234-5678
@@ -412,6 +459,13 @@ class WhatsAPIDriver(object):
             if not isinstance(chat, UserChat) or number not in chat.id:
                 continue
             return chat
+        if createIfNotFound:
+            self.create_chat_by_number(number)
+            self.wait_for_login()
+            for chat in self.get_all_chats():
+                if not isinstance(chat, UserChat) or number not in chat.id:
+                    continue
+                return chat
 
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
@@ -419,6 +473,12 @@ class WhatsAPIDriver(object):
         self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
 
     def get_status(self):
+        """
+        Returns status of the driver
+
+        :return: Status
+        :rtype: WhatsAPIDriverStatus
+        """
         if self.driver is None:
             return WhatsAPIDriverStatus.NotConnected
         if self.driver.session_id is None:
@@ -436,6 +496,12 @@ class WhatsAPIDriver(object):
         return WhatsAPIDriverStatus.Unknown
 
     def contact_get_common_groups(self, contact_id):
+        """
+        Returns groups common between a user and the contact with given id.
+
+        :return: Contact or Error
+        :rtype: Contact
+        """
         for group in self.wapi_functions.getCommonGroups(contact_id):
             yield factory_chat(group, self)
 
@@ -446,16 +512,32 @@ class WhatsAPIDriver(object):
             return factory_message(result, self)
         return result
 
+    def chat_reply_message(self, message_id, message):
+        result = self.wapi_functions.ReplyMessage(message_id, message)
+
+        if not isinstance(result, bool):
+            return factory_message(result, self)
+        return result
+
     def send_message_to_id(self, recipient, message):
+        """
+        Send a message to a chat given its ID
+
+        :param recipient: Chat ID
+        :type recipient: str
+        :param message: Plain-text message to be sent.
+        :type message: str
+        """
         return self.wapi_functions.sendMessageToID(recipient, message)
 
     def chat_send_seen(self, chat_id):
-        return self.wapi_functions.sendSeen(chat_id)
+        """
+        Send a seen to a chat given its ID
 
-    def chat_get_messages(self, chat_id, include_me=False, include_notifications=False):
-        message_objs = self.wapi_functions.getAllMessagesInChat(chat_id, include_me, include_notifications)
-        for message in message_objs:
-            yield factory_message(message, self)
+        :param chat_id: Chat ID
+        :type chat_id: str
+        """
+        return self.wapi_functions.sendSeen(chat_id)
 
     def chat_load_earlier_messages(self, chat_id):
         self.wapi_functions.loadEarlierMessages(chat_id)
@@ -513,10 +595,46 @@ class WhatsAPIDriver(object):
         cipher_key = parts[1]
         e_file = file_data[:-10]
 
-        AES.key_size = 128
-        cr_obj = AES.new(key=cipher_key, mode=AES.MODE_CBC, IV=iv)
+        cr_obj = Cipher(algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cr_obj.decryptor()
+        return BytesIO(decryptor.update(e_file) + decryptor.finalize())
 
-        return BytesIO(cr_obj.decrypt(e_file))
+    def mark_default_unread_messages(self):
+        """
+        Look for the latest unreplied messages received and mark them as unread.
+
+        """
+        self.wapi_functions.markDefaultUnreadMessages()
+
+    def get_battery_level(self):
+        """
+        Check the battery level of device
+
+        :return: int: Battery level
+        """
+        return self.wapi_functions.getBatteryLevel()
+
+    def leave_group(self, chat_id):
+        """
+        Leave a group
+
+        :param chat_id: id of group
+        :return:
+        """
+        return self.wapi_functions.leaveGroup(chat_id)
+
+    def delete_chat(self, chat_id):
+        """
+        Delete a chat
+
+        :param chat_id: id of chat
+        :return:
+        """
+        return self.wapi_functions.deleteConversation(chat_id)
 
     def quit(self):
         self.driver.quit()
+
+    def create_chat_by_number(self, number):
+        url = self._URL + "/send?phone=" + number
+        self.driver.get(url)

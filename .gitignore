@@ -12,3 +12,5 @@ profiles
 .idea
 docs/_build
 .coverage
+.eggs
+*.sublime-*
