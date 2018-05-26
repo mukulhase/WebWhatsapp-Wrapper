@@ -87,17 +87,11 @@ window.WAPI._serializeMessageObj = (obj) => {
  * @returns {Array|*} List of contacts
  */
 
-window.WAPI.init = function () {
-    if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0) {
-        window.WAPI.chatCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].collection;
-    }
-    if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0 && document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models.length > 0) {
-        window.WAPI.msgCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models[0].collection;
-    }
-    if (document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats.length > 0) {
-        window.WAPI.contactCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].contact.collection;
-    }
-};
+const chatCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].collection;
+const msgCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models[0].collection;
+const contactCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].contact.collection;
+
+
 
 window.WAPI.getConnectionInfo = function (done) {
     if (done !== undefined) {
@@ -109,14 +103,14 @@ window.WAPI.getConnectionInfo = function (done) {
 
 window.WAPI.getChatsModel = function (done) {
     if (done !== undefined) {
-        if (window.WAPI.chatCollection !== undefined) {
-            done(window.WAPI.chatCollection.models);
+        if (chatCollection !== undefined) {
+            done(chatCollection.models);
         } else {
             done([]);
         }
     } else {
-        if (window.WAPI.chatCollection !== undefined) {
-            return (window.WAPI.chatCollection.models);
+        if (chatCollection !== undefined) {
+            return (chatCollection.models);
         } else {
             return ([]);
         }
@@ -125,14 +119,14 @@ window.WAPI.getChatsModel = function (done) {
 
 window.WAPI.getContactsModel = function (done) {
     if (done !== undefined) {
-        if (window.WAPI.contactCollection !== undefined) {
-            done(window.WAPI.contactCollection.models);
+        if (contactCollection !== undefined) {
+            done(contactCollection.models);
         } else {
             done([]);
         }
     } else {
-        if (window.WAPI.contactCollection !== undefined) {
-            return (window.WAPI.contactCollection.models);
+        if (contactCollection !== undefined) {
+            return (contactCollection.models);
         } else {
             return ([]);
         }
@@ -141,14 +135,14 @@ window.WAPI.getContactsModel = function (done) {
 
 window.WAPI.getMsgsModel = function (done) {
     if (done !== undefined) {
-        if (window.WAPI.msgCollection !== undefined) {
-            done(window.WAPI.msgCollection.models);
+        if (msgCollection !== undefined) {
+            done(msgCollection.models);
         } else {
             done([]);
         }
     } else {
-        if (window.WAPI.msgCollection !== undefined) {
-            return (window.WAPI.msgCollection.models);
+        if (msgCollection !== undefined) {
+            return (msgCollection.models);
         } else {
             return ([]);
         }
@@ -957,7 +951,4 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
-window.addEventListener("load", function () {
-    window.WAPI.init();
-});
 
