@@ -138,6 +138,35 @@ window.WAPI.getMsgsModel = function (done) {
     }
 }
 
+window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
+    var chatDatabase = window.WAPI.getChatByName('DATABASEPICBOT');
+    var msgWithImg = chatDatabase.msgs.models.find((msg) => msg.__x_caption == picId);
+    if (msgWithImg === undefined) {
+        return false;
+    }
+    var chatSend = WAPI.getChat(chatId);
+    if (chatSend === undefined) {
+        return false;
+    }
+    var newMsg = chatSend.createMessageFromText(".");
+    newMsg.__x_body = msgWithImg.__x_body;
+    newMsg.__x_clientUrl = msgWithImg.__x_clientUrl;
+    newMsg.__x_directPath = msgWithImg.__x_directPath;
+    newMsg.__x_filehash = msgWithImg.__x_filehash;
+    newMsg.__x_isMMS = msgWithImg.__x_isMMS;
+    newMsg.__x_isMedia = msgWithImg.__x_isMedia;
+    newMsg.__x_mediaData = msgWithImg.__x_mediaData;
+    newMsg.__x_mediaKey = msgWithImg.__x_mediaKey;
+    newMsg.__x_mimetype = msgWithImg.__x_mimetype;
+    newMsg._mediaObject = msgWithImg._mediaObject;
+    newMsg.__x_type = msgWithImg.__x_type;
+    if (caption !== undefined && caption !== '') {
+        newMsg.__x_caption = caption;
+    }
+    chatSend.addAndSendMsg(newMsg);
+    return true;
+};
+
 /**
  * Fetches all contact objects from store
  *
