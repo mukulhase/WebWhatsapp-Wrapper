@@ -136,7 +136,16 @@ window.WAPI.getMsgsModel = function (done) {
             return [];
         }
     }
-}
+};
+
+window.WAPI.getChatByName = function (name, done) {
+    const found = window.WAPI.getChatsModel().find((chat) => chat.name === name);
+    if (done !== undefined) {
+        done(found);
+    } else {
+        return found;
+    }
+};
 
 window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     var chatDatabase = window.WAPI.getChatByName('DATABASEPICBOT');
