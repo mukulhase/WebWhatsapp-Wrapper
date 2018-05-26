@@ -42,6 +42,8 @@ def factory_message(js_obj, driver):
 
 class Message(WhatsappObject):
 
+    sender = Union[Contact, bool]
+
     def __init__(self, js_obj, driver=None):
         """
         Constructor
