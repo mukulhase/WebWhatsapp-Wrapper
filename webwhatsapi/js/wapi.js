@@ -650,10 +650,10 @@ window.WAPI.getMessageById = function (id, done) {
     try {
         let msg = window.WAPI.getMsgsModel().find((item) => item.id._serialized === id);
         if (msg) {
-            result = WAPI.processMessageObj(item, true, true);
+            result = WAPI.processMessageObj(msg, true, true);
         }
     } catch (err) { }
-    
+
     if (done !== undefined) {
         done(result);
     } else {
