@@ -970,4 +970,16 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
-
+window.WAPI.getAllMessagesAfter = function (unix_timestamp, done) {
+    messageObjs = Store.Msg.models.filter((msg) => msg.__x_t > unix_timestamp);
+    output = []
+    for (const i in messageObjs) {
+        if (i === "remove") {
+            continue;
+        }
+        const messageObj = messageObjs[i];
+        let message = WAPI.processMessageObj(messageObj, true, false)
+        if (message)output.push(message);
+    }
+    return output
+};

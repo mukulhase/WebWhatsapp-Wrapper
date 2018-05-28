@@ -50,6 +50,7 @@ class WhatsappObject(object):
         return self._js_obj
 
 
+
 class WhatsappObjectWithId(WhatsappObject):
     """
     Base class for Whatsapp objects
