@@ -44,6 +44,7 @@ class Message(WhatsappObject):
 
     sender = Union[Contact, bool]
 
+
     def __init__(self, js_obj, driver=None):
         """
         Constructor
@@ -58,7 +59,6 @@ class Message(WhatsappObject):
         self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
-
         if js_obj["content"]:
             self.content = js_obj["content"]
             self.safe_content = safe_str(self.content[0:25]) + '...'

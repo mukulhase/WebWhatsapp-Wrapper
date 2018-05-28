@@ -8,7 +8,6 @@ class Contact(WhatsappObjectWithId):
     """
     Class which represents a Contact on user's phone
     """
-
     def __init__(self, js_obj, driver=None):
         """
 
@@ -17,12 +16,12 @@ class Contact(WhatsappObjectWithId):
         :type driver: WhatsAPIDriver
         """
         super(Contact, self).__init__(js_obj, driver)
-        if 'shortName' in js_obj:
-            self.short_name = js_obj["shortName"]
-        if 'pushname' in js_obj:
-            self.push_name = js_obj["pushname"]
-        if 'formattedName' in js_obj:
-            self.formatted_name = js_obj["formattedName"]
+        self.short_name = js_obj["shortName"]
+        self.push_name = js_obj["pushname"]
+        self.formatted_name = js_obj["formattedName"]
+        self.is_me = js_obj["isMe"]
+        if self.id:
+            self.phone_number = "+" + self.id.split('@')[0]
 
     @driver_needed
     def get_common_groups(self):

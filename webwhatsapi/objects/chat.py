@@ -9,6 +9,7 @@ def factory_chat(js_obj, driver=None):
     if js_obj["kind"] not in ["chat", "group", "broadcast"]:
         raise AssertionError("Expected chat, group or broadcast object, got {0}".format(js_obj["kind"]))
 
+
     if js_obj["isGroup"]:
         return GroupChat(js_obj, driver)
 
@@ -19,7 +20,6 @@ def factory_chat(js_obj, driver=None):
 
 
 class Chat(WhatsappObjectWithId):
-
     def __init__(self, js_obj, driver=None):
         super(Chat, self).__init__(js_obj, driver)
 
@@ -32,6 +32,7 @@ class Chat(WhatsappObjectWithId):
         return self.driver.chat_send_seen(self.id)
 
     def get_messages(self, include_me=False, include_notifications=False):
+
         return list(self.driver.chat_get_messages(self.id, include_me, include_notifications))
 
 
@@ -75,6 +76,7 @@ class Chat(WhatsappObjectWithId):
         """
         timestamp = time.mktime(last.timetuple())
         self.driver.wapi_functions.loadEarlierMessagesTillDate(self.id, timestamp)
+
 
 
 class UserChat(Chat):

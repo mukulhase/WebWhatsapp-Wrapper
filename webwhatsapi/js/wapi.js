@@ -62,6 +62,51 @@ window.WAPI._serializeMessageObj = (obj) => {
     }
 
     return Object.assign(window.WAPI._serializeRawObj(obj), {
+
+window.WAPI._serializeRawObj = (obj) => {
+    return obj.all;
+};
+
+window.WAPI._serializeContactObj = (obj) => ({
+    formattedName: obj.__x_formattedName,
+    formattedShortName: obj.__x_formattedShortName,
+    shortName: obj.__x_formattedShortName,
+    formattedShortNameWithNonBreakingSpaces: obj.__x_formattedShortNameWithNonBreakingSpaces,
+    formattedUser: obj.__x_formattedUser,
+    id: obj.__x_id,
+    isHighLevelVerified: obj.__x_isHighLevelVerified,
+    isMe: obj.__x_isMe,
+    isMyContact: obj.__x_isMyContact,
+    isPSA: obj.__x_isPSA,
+    isUser: obj.__x_isUser,
+    isVerified: obj.__x_isVerified,
+    isWAContact: obj.__x_isWAContact,
+    name: obj.__x_name,
+    profilePicThumb: obj.__x_profilePicThumb ? obj.__x_profilePicThumb.__x_imgFull : "none",
+    statusMute: obj.__x_statusMute,
+    pushname: obj.__x_pushname
+});
+
+window.WAPI._serializeNotificationObj = (obj) => ({
+    sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : false,
+    isGroupMsg: obj.__x_isGroupMsg,
+    content: obj["body"],
+    isLink: obj.__x_isLink,
+    isMMS: obj.__x_isMMS,
+    isMedia: obj.__x_isMedia,
+    isNotification: obj.__x_isNotification,
+    timestamp: obj["t"],
+    type: obj.__x_type,
+    subtype: obj.__x_subtype,
+    recipients: obj.__x_recipients,
+});
+
+//TODO: Add chat ref
+
+window.WAPI._serializeMessageObj = function(obj) {
+
+    let data = {
+        sender: WAPI._serializeContactObj(obj["senderObj"]),
         id: obj.id._serialized,
         sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : null,
         timestamp: obj["t"],
@@ -77,9 +122,25 @@ window.WAPI._serializeMessageObj = (obj) => {
         chatId: obj.id.remote,
         quotedMsgObj: WAPI._serializeMessageObj(obj['_quotedMsgObj']),
         mediaData: window.WAPI._serializeRawObj(obj['mediaData'])
-    });
-};
+        size: obj.__x_size,
+        mime: obj.__x_mimetype,
+    }
 
+    if (data.isMedia || data.isMMS) {
+        data['clientUrl'] = obj['__x_clientUrl'];
+        data['mediaKey'] = obj['__x_mediaKey'];
+        data['mediaData'] = {
+            duration: obj['__x_mediaData']['__x_duration'],
+            filehash: obj['__x_mediaData']['__x_filehash'],
+            mimetype: obj['__x_mediaData']['__x_mimetype'],
+            encriptationKey: obj['__x_mediaData']['__x_encryptionKey'],
+            fullHeight: obj['__x_mediaData']['__x_fullHeight'],
+            fullWidth: obj['__x_mediaData']['__x_fullWidth'],
+            size: obj['__x_mediaData']['__x_size'],
+        }
+    }
+    return data
+}
 /**
  * Fetches all contact objects from store
  *
@@ -411,6 +472,19 @@ window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotificati
 }
 ;
 
+window.WAPI.getAllMessagesAfter = function (unix_timestamp, done) {
+    messageObjs = Store.Msg.models.filter((msg) => msg.__x_t > unix_timestamp);
+    output = []
+    for (const i in messageObjs) {
+        if (i === "remove") {
+            continue;
+        }
+        const messageObj = messageObjs[i];
+        let message = WAPI.processMessageObj(messageObj, true, false)
+        if (message)output.push(message);
+    }
+    return output
+};
 
 /**
  * Load more messages in chat object from store by ID
@@ -867,40 +941,73 @@ function isChatMessage(message) {
 
 
 window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done) {
-    const chats = window.WAPI.getChatsModel();
-    let output = [];
+    var Chats = Store.Chat.models;
+    var Output = [];
+
+    for (chat in Chats) {
+        if (isNaN(chat)) {
+            continue;
+        };
+        if (!Chats[chat].__x_hasUnread) {
+            continue;
+        };
+        console.log(Chats[chat]);
+        var temp = {};
+        temp.contact = Chats[chat].contact;
+        temp.id = Chats[chat].id;
+        temp.kind = Chats[chat].kind;
+        temp.isGroup = Chats[chat].isGroup;
+        temp.name = Chats[chat].name
+        temp.messages = [];
+        var messages = Chats[chat].msgs.models;
+        var readfrom = messages.length - 1;
+        var readuntil = readfrom - Chats[chat].__x_unreadCount;
+        for (var i = readfrom; i > readuntil; i--) {
+            temp.messages.push({
+                isMedia: messages[i].isMedia,
+                sender: messages[i].sender,
+                content: messages[i].body,
+                message: messages[i].body,
+                id: messages[i].__x_id._serialized,
+                chatId: messages[i].__x_id.remote,
+                isMMS: messages[i].isMMs,
+                isNotification: messages[i].isNotification,
+                type: messages[i].type,
+                contact: messages[i].contact,
+                timestamp: messages[i].__x_t
+            });
+        }
+        if (temp.messages.length > 0) {
+            Output.push(temp);
+            };
+
+        if(done !== undefined){
+                done(Output)
+        };
+    }
+    return Output;
+};
+
+window.WAPI.setUnreadMessages = function () {
+    const chats = Store.Chat.models;
     for (let chat in chats) {
         if (isNaN(chat)) {
             continue;
         }
 
         let messageGroupObj = chats[chat];
-        let messageGroup = WAPI._serializeChatObj(messageGroupObj);
-        messageGroup.messages = [];
+        let messageGroup = WAPI.serializeChat(messageGroupObj);
 
         const messages = messageGroupObj.msgs.models;
         for (let i = messages.length - 1; i >= 0; i--) {
             let messageObj = messages[i];
-            if (typeof (messageObj.__x_isNewMsg) != "boolean" || messageObj.__x_isNewMsg === false) {
-                continue;
-            } else {
-                messageObj.__x_isNewMsg = false;
-                let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
-                if (message) {
-                    messageGroup.messages.push(message);
-                }
-            }
+            messageObj.__x_isNewMsg = false;
         }
 
-        if (messageGroup.messages.length > 0) {
-            output.push(messageGroup);
-        }
+    return
     }
-    if (done !== undefined) {
-        done(output);
-    }
-    return output;
-};
+ };
+
 
 window.WAPI.getGroupOwnerID = async function (id, done) {
     const output = await WAPI.getGroupMetadata(id).owner.id;
