@@ -646,19 +646,18 @@ window.WAPI.getAllMessageIdsInChat = function (id, includeMe, includeNotificatio
 };
 
 window.WAPI.getMessageById = function (id, done) {
-    if (done !== undefined) {
-        try {
-            let msg = window.WAPI.getMsgsModel().find((item) => item.id._serialized === id);
-            if (msg) {
-                done(WAPI.processMessageObj(item, true, true));
-            } else {
-                done(false);
-            }
-        } catch (err) {
-            done(false);
+    let result = false;
+    try {
+        let msg = window.WAPI.getMsgsModel().find((item) => item.id._serialized === id);
+        if (msg) {
+            result = WAPI.processMessageObj(item, true, true);
         }
+    } catch (err) { }
+    
+    if (done !== undefined) {
+        done(result);
     } else {
-        return WAPI.processMessageObj(window.WAPI.getMsgsModel().find(id), true, true);
+        return result;
     }
 };
 
