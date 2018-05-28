@@ -722,7 +722,7 @@ class WhatsAPIDriver(object):
             .format(base_URL=self._URL, phone_number=phone_number)
         self.driver.get(url)
 
-    def whatsappable(self, phone_number):
+    def check_number_whatsappable(self, phone_number):
         """
         Check if number is whatsappable, note that the number HAS to be a contact on the phone
         :param phone_number:
