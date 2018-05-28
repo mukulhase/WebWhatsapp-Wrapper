@@ -950,7 +950,7 @@ window.WAPI.downloadFile = function (url, done) {
             } else {
                 console.error(xhr.statusText);
             }
-        } catch (err) {
+        } else {
             console.log(err);
             done(false);
         }
