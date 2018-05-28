@@ -648,7 +648,12 @@ window.WAPI.getAllMessageIdsInChat = function (id, includeMe, includeNotificatio
 window.WAPI.getMessageById = function (id, done) {
     if (done !== undefined) {
         try {
-            window.WAPI.getMsgsModel().find(id).then((item) => done(WAPI.processMessageObj(item, true, true)))
+            let msg = window.WAPI.getMsgsModel().find((item) => item.id._serialized === id);
+            if (msg) {
+                done(WAPI.processMessageObj(item, true, true));
+            } else {
+                done(false);
+            }
         } catch (err) {
             done(false);
         }
