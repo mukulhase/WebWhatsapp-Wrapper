@@ -87,30 +87,31 @@ window.WAPI._serializeMessageObj = (obj) => {
  * @returns {Array|*} List of contacts
  */
 
-const chatCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].collection;
-const msgCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].msgs.models[0].collection;
-const contactCollection = document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.child.sibling.sibling.sibling.sibling.sibling.child.child.child.child.memoizedState.chats[0].contact.collection;
 
+if (window.Store === undefined) {
+    webpackJsonp([], {"bcihgfbdeb": (x, y, z) => window.Store = z('"bcihgfbdeb"')}, "bcihgfbdeb");
+    webpackJsonp([], {"iaeeehaci": (x, y, z) => window.Store.Wap = z('"iaeeehaci"')}, "iaeeehaci");
+}
 
 
 window.WAPI.getConnectionInfo = function (done) {
     if (done !== undefined) {
-        done(document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.memoizedProps.children[5].props.conn);
+        done(Store.Conn);
     } else {
-        return document.querySelector("#app")._reactRootContainer.current.child.child.child.child.child.memoizedProps.children[5].props.conn;
+        return Store.Conn;
     }
 };
 
 window.WAPI.getChatsModel = function (done) {
     if (done !== undefined) {
-        if (chatCollection !== undefined) {
-            done(chatCollection.models);
+        if (Store.Chat !== undefined) {
+            done(Store.Chat.models);
         } else {
             done([]);
         }
     } else {
-        if (chatCollection !== undefined) {
-            return (chatCollection.models);
+        if (Store.Chat !== undefined) {
+            return (Store.Chat.models);
         } else {
             return ([]);
         }
@@ -119,14 +120,14 @@ window.WAPI.getChatsModel = function (done) {
 
 window.WAPI.getContactsModel = function (done) {
     if (done !== undefined) {
-        if (contactCollection !== undefined) {
-            done(contactCollection.models);
+        if (Store.Contact !== undefined) {
+            done(Store.Contact.models);
         } else {
             done([]);
         }
     } else {
-        if (contactCollection !== undefined) {
-            return (contactCollection.models);
+        if (Store.Contact !== undefined) {
+            return (Store.Contact.models);
         } else {
             return ([]);
         }
@@ -135,14 +136,14 @@ window.WAPI.getContactsModel = function (done) {
 
 window.WAPI.getMsgsModel = function (done) {
     if (done !== undefined) {
-        if (msgCollection !== undefined) {
-            done(msgCollection.models);
+        if (Store.Msg !== undefined) {
+            done(Store.Msg.models);
         } else {
             done([]);
         }
     } else {
-        if (msgCollection !== undefined) {
-            return (msgCollection.models);
+        if (Store.Msg !== undefined) {
+            return (Store.Msg.models);
         } else {
             return ([]);
         }
@@ -301,6 +302,24 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     msgWithImg.collection.send(msgWithImg).then(function (e) {
         msgWithImg.__x_caption = oldCaption;
     });
+
+    return true;
+};
+
+window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId) {
+    var chatSend = WAPI.getChat(chatId);
+    if (chatSend === undefined) {
+        return false;
+    }
+    var msgWithImg = chatSend.createMessageFromText(".");
+    msgWithImg.__x_hasLink = title;
+    msgWithImg.__x_body = description + '\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ' + url;
+    msgWithImg.__x_isLink = title;
+    msgWithImg.__x_description = description;
+    msgWithImg.__x_subtype = 'url';
+    msgWithImg.__x_title = title;
+    msgWithImg.__x_thumbnail = thumb;
+    return chatSend.addAndSendMsg(msgWithImg);
 
     return true;
 };
