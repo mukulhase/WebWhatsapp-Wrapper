@@ -169,12 +169,13 @@ class WhatsAPIDriverAsync:
             async with session.get(url) as resp:
                 return await resp.read()
 
-    async def download_media(self, media_msg):
-        try:
-            if media_msg.content:
-                return BytesIO(b64decode(self.content))
-        except AttributeError:
-            pass
+    async def download_media(self, media_msg, force_download=False):
+        if not force_download:
+            try:
+                if media_msg.content:
+                    return BytesIO(b64decode(media_msg.content))
+            except AttributeError:
+                pass
 
         file_data = await self.download_file(media_msg.client_url)
 
