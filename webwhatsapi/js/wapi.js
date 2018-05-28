@@ -996,4 +996,18 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
+window.WAPI.deleteConversation = function (chatId, done) {
+    let conversation = window.WAPI.getChatsModel().find((chat) => chat.id === chatId);
+    let lastReceivedKey = conversation.__x_lastReceivedKey;
+    Store.Wap.sendConversationDelete(chatId, lastReceivedKey).then(
+        function(response){
+            if (done !== undefined) {
+                done(response.status);
+            }
+        }
+    );
+
+    return true;
+};
+
 
