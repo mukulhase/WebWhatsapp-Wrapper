@@ -150,6 +150,14 @@ window.WAPI.getMsgsModel = function (done) {
     }
 };
 
+window.WAPI.createGroup = function (name, contactsId) {
+    if (!Array.isArray(contactsId)) {
+        contactsId = [contactsId];
+    }
+    Store.Wap.setSubProtocol(10);
+    return window.Store.Wap.createGroup(name, contactsId);
+};
+
 window.WAPI.getAllContacts = function (done) {
     const contacts = window.WAPI.getContactsModel().map((contact) => WAPI._serializeContactObj(contact));
 
