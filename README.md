@@ -1,4 +1,5 @@
 # WebWhatsAPI (Based on web.whatsapp.com)
+[![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
 
 ## What is it?
 This package is used to provide a python interface for interacting with WhatsAPP Web to send and receive Whatsapp messages.
@@ -135,3 +136,13 @@ If you would like to contribute, here are a few starters:
 - Additional features/ More integrations (This api has the minimum amount, but I don't mind having more data accessible to users)
 - Create an env/vagrant box to make it easy for others to contribute. (At the moment, all I have is a requirements.txt
 - Phantom JS support
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://github.com/kentcdodds/all-contributors#emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification. Contributions of any kind welcome!
