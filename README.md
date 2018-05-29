@@ -1,3 +1,6 @@
+
+<img alt="Logo" src="https://ibb.co/nrifvy">
+
 # WebWhatsAPI (Based on web.whatsapp.com)
 [![PyPI version](https://badge.fury.io/py/webwhatsapi.svg)](https://badge.fury.io/py/webwhatsapi)
 
