@@ -103,7 +103,7 @@ class MediaMessage(Message):
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
+            sender='None' if not self.sender else safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
             filename=self.filename
         )
