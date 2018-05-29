@@ -1,11 +1,8 @@
 import mimetypes
-from base64 import b64decode
-from datetime import datetime
-
 import os
+from datetime import datetime
 from typing import Union
 
-from webwhatsapi import Contact
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
 from webwhatsapi.objects.whatsapp_object import WhatsappObject
@@ -69,7 +66,7 @@ class Message(WhatsappObject):
     def __repr__(self):
         return "<Message - {type} from {sender} at {timestamp}: {content}>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             content=self.safe_content)
 
@@ -106,7 +103,7 @@ class MediaMessage(Message):
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             filename=self.filename
         )
@@ -125,7 +122,7 @@ class MMSMessage(MediaMessage):
     def __repr__(self):
         return "<MMSMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp
         )
 
@@ -146,7 +143,7 @@ class VCardMessage(Message):
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             contacts=self.contacts
         )
@@ -163,7 +160,7 @@ class GeoMessage(Message):
     def __repr__(self):
         return "<GeoMessage - {type} from {sender} at {timestamp} ({lat}, {lng})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             lat=self.latitude,
             lng=self.longitude
