@@ -52,7 +52,7 @@ class Message(WhatsappObject):
 
         self.id = js_obj["id"]
         self.type = js_obj["type"]
-        self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
+        self.sender = Contact(js_obj["sender"], driver) if 'sender' in js_obj and js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
 
@@ -93,7 +93,6 @@ class MediaMessage(Message):
         self.filename = ''.join([str(id(self)), extension or ''])
 
     def save_media(self, path):
-        # gets full media
         filename = os.path.join(path, self.filename)
         ioobj = self.driver.download_media(self)
         with open(filename, "wb") as f:
@@ -103,7 +102,7 @@ class MediaMessage(Message):
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
             type=self.type,
-            sender='None' if not self.sender else safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else 'None',
             timestamp=self.timestamp,
             filename=self.filename
         )
