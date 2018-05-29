@@ -91,6 +91,7 @@ window.WAPI._serializeMessageObj = (obj) => {
 if (window.Store === undefined) {
     webpackJsonp([], {"bcihgfbdeb": (x, y, z) => window.Store = z('"bcihgfbdeb"')}, "bcihgfbdeb");
     webpackJsonp([], {"iaeeehaci": (x, y, z) => window.Store.Wap = z('"iaeeehaci"')}, "iaeeehaci");
+    webpackJsonp([], {"babjejhfbf": (x, y, z) => window.Store.WapDelete = z('"babjejhfbf"')}, "babjejhfbf");
 }
 
 
@@ -1008,7 +1009,8 @@ window.WAPI.getBatteryLevel = function (done) {
 window.WAPI.deleteConversation = function (chatId, done) {
     let conversation = window.WAPI.getChatsModel().find((chat) => chat.id === chatId);
     let lastReceivedKey = conversation.__x_lastReceivedKey;
-    Store.Wap.sendConversationDelete(chatId, lastReceivedKey).then(
+    Store.WapDelete.setSubProtocol(10);
+    Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then(
         function(response){
             if (done !== undefined) {
                 done(response.status);
