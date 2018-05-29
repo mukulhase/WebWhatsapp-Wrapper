@@ -661,6 +661,26 @@ window.WAPI.getMessageById = function (id, done) {
     }
 };
 
+window.WAPI.sendMediaMessage = function (thumb, url, title, description, chatId) {
+    var chatSend = WAPI.getChat(chatId);
+    if (chatSend === undefined) {
+        return false;
+    }
+
+    var msgWithImg = chatSend.createMessageFromText(".");
+    msgWithImg.__x_hasLink = title;
+    msgWithImg.__x_body = description + '\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ' + url;
+    msgWithImg.__x_isLink = title;
+    msgWithImg.__x_description = description;
+    msgWithImg.__x_subtype = 'url';
+    msgWithImg.__x_title = title;
+    msgWithImg.__x_thumbnail = thumb;
+    return chatSend.addAndSendMsg(msgWithImg);
+
+    return true;
+};
+
+
 window.WAPI.ReplyMessage = function (idMessage, message, done) {
     var messageObject = window.WAPI.getMsgsModel().find(idMessage);
     if (messageObject === undefined) {

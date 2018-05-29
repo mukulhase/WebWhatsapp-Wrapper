@@ -1,6 +1,7 @@
 from .whatsapp_object import WhatsappObjectWithId, driver_needed
 from ..helper import safe_str
 import time
+from message import MediaMessage
 from datetime import datetime
 
 
@@ -25,6 +26,8 @@ class Chat(WhatsappObjectWithId):
 
     @driver_needed
     def send_message(self, message):
+        if isinstance(message, MediaMessage):
+            return self.driver
         return self.driver.chat_send_message(self.id, message)
 
     @driver_needed
@@ -33,7 +36,6 @@ class Chat(WhatsappObjectWithId):
 
     def get_messages(self, include_me=False, include_notifications=False):
         return list(self.driver.chat_get_messages(self.id, include_me, include_notifications))
-
 
     def get_unread_messages(self,
                             include_me=False,
