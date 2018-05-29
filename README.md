@@ -140,6 +140,9 @@ If you would like to contribute, here are a few starters:
 - Create an env/vagrant box to make it easy for others to contribute. (At the moment, all I have is a requirements.txt
 - Phantom JS support
 
+## Legal
+This code is in no way affiliated with, authorized, maintained, sponsored or endorsed by WhatsApp or any of its affiliates or subsidiaries. This is an independent and unofficial software. Use at your own risk.
+
 ## Contributors
 
 Thanks goes to these wonderful people ([emoji key](https://github.com/kentcdodds/all-contributors#emoji-key)):
