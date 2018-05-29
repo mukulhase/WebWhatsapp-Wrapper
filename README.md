@@ -1,4 +1,7 @@
-# WebWhatsAPI (Based on web.whatsapp.com)
+<img alt="Logo" src="https://image.ibb.co/n69aTJ/40603063_623504c6_628d_11e8_8529_4e33ef933166.png">
+
+## (Based on web.whatsapp.com)
+[![PyPI version](https://badge.fury.io/py/webwhatsapi.svg)](https://badge.fury.io/py/webwhatsapi)
 [![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
 
 ## What is it?

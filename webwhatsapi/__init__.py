@@ -312,7 +312,7 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.getAllChatIds()
 
-    def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
+    def get_unread(self, include_me=False, include_notifications=False):
         """
         Fetches unread messages
         :param include_me: Include user's messages
@@ -324,7 +324,7 @@ class WhatsAPIDriver(object):
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications, use_unread_count)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
@@ -572,14 +572,18 @@ class WhatsAPIDriver(object):
     def download_file(self, url):
         return b64decode(self.wapi_functions.downloadFile(url))
 
-    def download_media(self, media_msg):
-        try:
-            if media_msg.content:
-                return BytesIO(b64decode(self.content))
-        except AttributeError:
-            pass
+    def download_media(self, media_msg, force_download=False):
+        if not force_download:
+            try:
+                if media_msg.content:
+                    return BytesIO(b64decode(media_msg.content))
+            except AttributeError:
+                pass
 
         file_data = self.download_file(media_msg.client_url)
+
+        if not file_data:
+            raise Exception('Impossible to download file')
 
         media_key = b64decode(media_msg.media_key)
         derivative = HKDFv3().deriveSecrets(media_key,
