@@ -744,7 +744,8 @@ window.WAPI.sendMessageToID = function (id, message, done) {
 window.WAPI.sendMediaMessage = function (groupName, chatIds) {
     let chatDatabase = window.WAPI.getChatByName(groupName);
 
-    chatIds.forEach((chatId) => {
+    if (!!chatDatabase) {
+        chatIds.forEach((chatId) => {
         chatDatabase.msgs.models.forEach((msg) => {
             setTimeout(() => {
                 if (msg.__x_ack) {
@@ -760,6 +761,7 @@ window.WAPI.sendMediaMessage = function (groupName, chatIds) {
             }, 1500);
         });
     });
+    }
 
     return true;
 };

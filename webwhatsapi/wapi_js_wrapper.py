@@ -99,7 +99,6 @@ class JsFunction(object):
             command = "return WAPI.{0}(arguments[0])".format(self.function_name)
 
         try:
-            print(command)
             return self.driver.execute_script(command)
         except WebDriverException as e:
             if e.msg == 'Timed out':
