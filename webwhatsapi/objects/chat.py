@@ -1,7 +1,7 @@
 from .whatsapp_object import WhatsappObjectWithId, driver_needed
 from ..helper import safe_str
 import time
-from message import MediaMessage
+from .message import MediaMessage
 from datetime import datetime
 
 
@@ -23,11 +23,10 @@ class Chat(WhatsappObjectWithId):
 
     def __init__(self, js_obj, driver=None):
         super(Chat, self).__init__(js_obj, driver)
+        self.number = self.id.split('@')[0]
 
     @driver_needed
     def send_message(self, message):
-        if isinstance(message, MediaMessage):
-            return self.driver
         return self.driver.chat_send_message(self.id, message)
 
     @driver_needed
@@ -57,8 +56,6 @@ class Chat(WhatsappObjectWithId):
             include_me,
             include_notifications
         ))
-    # get_unread_messages()
-
 
     def load_earlier_messages(self):
         self.driver.chat_load_earlier_messages(self.id)

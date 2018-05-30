@@ -332,7 +332,6 @@ window.WAPI.getNewId = function () {
     return text;
 };
 
-
 window.WAPI.getChatById = function (id, done) {
     let found = window.WAPI.getChat(id);
     if (found) {
@@ -347,7 +346,6 @@ window.WAPI.getChatById = function (id, done) {
         return found;
     }
 };
-
 
 /**
  * I return all unread messages from an asked chat and mark them as read.
@@ -408,9 +406,7 @@ window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotificati
 
     // return result list
     return output;
-}
-;
-
+};
 
 /**
  * Load more messages in chat object from store by ID
@@ -479,7 +475,6 @@ window.WAPI.areAllMessagesLoaded = function (id, done) {
  * @param done Optional callback function for async execution
  * @returns None
  */
-
 window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
     const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
     x = function () {
@@ -491,7 +486,6 @@ window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
     };
     x();
 };
-
 
 /**
  * Fetches all group metadata objects from store
@@ -661,26 +655,6 @@ window.WAPI.getMessageById = function (id, done) {
     }
 };
 
-window.WAPI.sendMediaMessage = function (thumb, url, title, description, chatId) {
-    var chatSend = WAPI.getChat(chatId);
-    if (chatSend === undefined) {
-        return false;
-    }
-
-    var msgWithImg = chatSend.createMessageFromText(".");
-    msgWithImg.__x_hasLink = title;
-    msgWithImg.__x_body = description + '\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ' + url;
-    msgWithImg.__x_isLink = title;
-    msgWithImg.__x_description = description;
-    msgWithImg.__x_subtype = 'url';
-    msgWithImg.__x_title = title;
-    msgWithImg.__x_thumbnail = thumb;
-    return chatSend.addAndSendMsg(msgWithImg);
-
-    return true;
-};
-
-
 window.WAPI.ReplyMessage = function (idMessage, message, done) {
     var messageObject = window.WAPI.getMsgsModel().find(idMessage);
     if (messageObject === undefined) {
@@ -764,22 +738,96 @@ window.WAPI.sendMessageToID = function (id, message, done) {
         return false;
 
     return true;
-}
+};
+
+/*Send all messages from a chat give it's name to a list of chat ids*/
+window.WAPI.sendMediaMessage = function (groupName, chatIds) {
+    let chatDatabase = window.WAPI.getChatByName(groupName);
+
+    chatIds.forEach((chatId) => {
+        chatDatabase.msgs.models.forEach((msg) => {
+            setTimeout(() => {
+                if (msg.__x_ack) {
+                    msg.__x_id.id = window.WAPI.getNewId();
+                    msg.__x_t = Math.ceil(new Date().getTime() / 1000);
+                    msg.__x_id.remote = chatId;
+                    msg.__x_to = chatId;
+
+
+                    msg.collection.send(msg);
+                    return true;
+                }
+            }, 1500);
+        });
+    });
+
+    return true;
+};
+
+window.WAPI.sendMultipleMessages = function (ids, messages, done) {
+    const Chats = window.WAPI.getChatsModel();
+
+    try {
+        Chats.forEach((chat) => {
+            if (ids.indexOf(chat.id) > -1) {
+                messages.forEach((msg) => {
+                    try {
+                        if (!!done) {
+                            chat.sendMessage(msg).then(() => {
+                                function sleep(ms) {
+                                    return new Promise(resolve => setTimeout(resolve, ms));
+                                }
+
+                                let trials = 0;
+
+                                function check() {
+                                    for (let i=chat.msgs.models.length - 1; i >= 0; i--) {
+                                        let msg = chat.msgs.models[chat.msgs.models.length - 1];
+
+                                        if (!msg.senderObj.isMe || msg.body !== message) {
+                                            continue;
+                                        }
+
+                                        done(WAPI._serializeMessageObj(msg));
+                                        return true;
+                                    }
+
+                                    trials += 1;
+                                    if (trials > 30) {
+                                        done(true);
+                                        return ;
+                                    }
+                                    sleep(500).then(check);
+                                }
+                                check();
+                            });
+                            return true;
+                        } else {
+                            chat.sendMessage(msg);
+                            return true;
+                        }
+                    } catch (err) {
+                        console.log(err);
+                        return false;
+                    }
+                });
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+
+    return true;
+};
 
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = window.WAPI.getChatsModel();
 
-    for (const chat in Chats) {
-        if (isNaN(chat)) {
-            continue;
-        }
-
-        let temp = {};
-        temp.name = Chats[chat].__x__formattedTitle;
-        temp.id = Chats[chat].__x_id;
-        if (temp.id === id) {
+    for (let i=0; i<Chats.length; i++) {
+        if (Chats[i].__x_id === id) {
             if (done !== undefined) {
-                Chats[chat].sendMessage(message).then(function () {
+                Chats[i].sendMessage(message).then(function () {
                     function sleep(ms) {
                         return new Promise(resolve => setTimeout(resolve, ms));
                     }
@@ -787,12 +835,13 @@ window.WAPI.sendMessage = function (id, message, done) {
                     var trials = 0;
 
                     function check() {
-                        for (let i = Chats[chat].msgs.models.length - 1; i >= 0; i--) {
-                            let msg = Chats[chat].msgs.models[i];
+                        for (let i = Chats[i].msgs.models.length - 1; i >= 0; i--) {
+                            let msg = Chats[i].msgs.models[i];
 
-                            if (!msg.senderObj.isMe || msg.body != message) {
+                            if (!msg.senderObj.isMe || msg.body !== message) {
                                 continue;
                             }
+
                             done(WAPI._serializeMessageObj(msg));
                             return True;
                         }
@@ -808,7 +857,7 @@ window.WAPI.sendMessage = function (id, message, done) {
                 });
                 return true;
             } else {
-                Chats[chat].sendMessage(message);
+                Chats[i].sendMessage(message);
                 return true;
             }
         }
@@ -843,7 +892,6 @@ window.WAPI.sendMessage2 = async function (id, message, done) {
     }
     return false;
 };
-
 
 window.WAPI.sendSeen = function (id, done) {
     const Chats = window.WAPI.getChatsModel();
@@ -888,7 +936,6 @@ function isChatMessage(message) {
     }
     return true;
 }
-
 
 window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
     const chats = window.WAPI.getChatsModel();

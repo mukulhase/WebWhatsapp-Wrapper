@@ -442,7 +442,7 @@ class WhatsAPIDriver(object):
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
-    def get_chat_from_phone_number(self, number, createIfNotFound = False):
+    def get_chat_from_phone_number(self, number, createIfNotFound=False):
         """
         Gets chat by phone number
         Number format should be as it appears in Whatsapp ID
@@ -456,7 +456,7 @@ class WhatsAPIDriver(object):
         :rtype: Chat
         """
         for chat in self.get_all_chats():
-            if not isinstance(chat, UserChat) or number not in chat.id:
+            if not isinstance(chat, UserChat) or number.replace('+', '') not in chat.id:
                 continue
             return chat
         if createIfNotFound:
@@ -505,8 +505,15 @@ class WhatsAPIDriver(object):
         for group in self.wapi_functions.getCommonGroups(contact_id):
             yield factory_chat(group, self)
 
-    def chat_send_media_message(self, chat_id, message):
-        result = self.wapi_functions.sendMediaMessage(chat_id, message)
+    def chat_send_media_message(self, info):
+        result = self.wapi_functions.sendMediaMessage(info['group_name'], info['chat_id_list'])
+
+        if not isinstance(result, bool):
+            return factory_message(result, self)
+        return result
+
+    def chat_send_multiple_message(self, chat_ids, messages):
+        result = self.wapi_functions.sendMultipleMessages(chat_ids, messages)
 
         if not isinstance(result, bool):
             return factory_message(result, self)
