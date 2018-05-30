@@ -873,7 +873,33 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
 
         if (messageGroup.messages.length > 0) {
             output.push(messageGroup);
-        }
+        } else { // no messages with isNewMsg true
+           if (use_unread_count) {
+               let n = messageGroupObj.__x_unreadCount; // will use unreadCount attribute to fetch last n messages from sender
+               for (let i = messages.length - 1; i >= 0; i--) {
+                   let messageObj = messages[i];
+                   if (n > 0) {
+                       if (!messageObj.__x_isSentByMe) {
+                           let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
+                           messageGroup.messages.unshift(message);
+                           n -= 1;
+                       }
+                   } else if (n === -1) { // chat was marked as unread so will fetch last message as unread
+                       if (!messageObj.__x_isSentByMe) {
+                           let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
+                           messageGroup.messages.unshift(message);
+                           break;
+                       }
+                   } else { // unreadCount = 0
+                       break;
+                   }
+               }
+               if (messageGroup.messages.length > 0) {
+                   messageGroupObj.__x_unreadCount = 0; // reset unread counter
+                   output.push(messageGroup);
+               }
+           }
+         }
     }
     if (done !== undefined) {
         done(output);
