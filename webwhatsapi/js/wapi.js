@@ -89,7 +89,7 @@ window.WAPI._serializeContactObj = (obj) => {
 
     return Object.assign(window.WAPI._serializeRawObj(obj), {
         formattedName: obj.formattedName,
-        isHighLevelVerified: obj.__x_isHighLevelVerified,
+        isHighLevelVerified: obj.isHighLevelVerified,
         isMe: obj.isMe,
         isMyContact: obj.isMyContact,
         isPSA: obj.isPSA,
@@ -845,7 +845,7 @@ function isChatMessage(message) {
 }
 
 
-window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done) {
+window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
     const chats = window.Store.Chat.models;
     let output = [];
     for (let chat in chats) {
@@ -860,10 +860,10 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
         const messages = messageGroupObj.msgs.models;
         for (let i = messages.length - 1; i >= 0; i--) {
             let messageObj = messages[i];
-            if (typeof (messageObj.__x_isNewMsg) != "boolean" || messageObj.__x_isNewMsg === false) {
+            if (typeof (messageObj.isNewMsg) != "boolean" || messageObj.isNewMsg === false) {
                 continue;
             } else {
-                messageObj.__x_isNewMsg = false;
+                messageObj.isNewMsg = false;
                 let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                 if (message) {
                     messageGroup.messages.push(message);
@@ -875,17 +875,17 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
             output.push(messageGroup);
         } else { // no messages with isNewMsg true
            if (use_unread_count) {
-               let n = messageGroupObj.__x_unreadCount; // will use unreadCount attribute to fetch last n messages from sender
+               let n = messageGroupObj.unreadCount; // will use unreadCount attribute to fetch last n messages from sender
                for (let i = messages.length - 1; i >= 0; i--) {
                    let messageObj = messages[i];
                    if (n > 0) {
-                       if (!messageObj.__x_isSentByMe) {
+                       if (!messageObj.isSentByMe) {
                            let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                            messageGroup.messages.unshift(message);
                            n -= 1;
                        }
                    } else if (n === -1) { // chat was marked as unread so will fetch last message as unread
-                       if (!messageObj.__x_isSentByMe) {
+                       if (!messageObj.isSentByMe) {
                            let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                            messageGroup.messages.unshift(message);
                            break;
@@ -895,7 +895,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, done)
                    }
                }
                if (messageGroup.messages.length > 0) {
-                   messageGroupObj.__x_unreadCount = 0; // reset unread counter
+                   messageGroupObj.unreadCount = 0; // reset unread counter
                    output.push(messageGroup);
                }
            }
