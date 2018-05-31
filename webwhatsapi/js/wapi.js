@@ -91,6 +91,8 @@ window.WAPI._serializeMessageObj = (obj) => {
 if (window.Store === undefined) {
     webpackJsonp([], {"bcihgfbdeb": (x, y, z) => window.Store = z('"bcihgfbdeb"')}, "bcihgfbdeb");
     webpackJsonp([], {"iaeeehaci": (x, y, z) => window.Store.Wap = z('"iaeeehaci"')}, "iaeeehaci");
+    webpackJsonp([], {"jfefjijii": (x, y, z) => window.Store.Conn = z('"jfefjijii"')}, "jfefjijii");
+    window.Store.Conn = window.Store.Conn.default;
 }
 
 
@@ -148,6 +150,14 @@ window.WAPI.getMsgsModel = function (done) {
             return ([]);
         }
     }
+};
+
+window.WAPI.createGroup = function (name, contactsId) {
+    if (!Array.isArray(contactsId)) {
+        contactsId = [contactsId];
+    }
+    Store.Wap.setSubProtocol(10);
+    return window.Store.Wap.createGroup(name, contactsId);
 };
 
 window.WAPI.getAllContacts = function (done) {
