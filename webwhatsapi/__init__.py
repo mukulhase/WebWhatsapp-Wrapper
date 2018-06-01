@@ -254,6 +254,10 @@ class WhatsAPIDriver(object):
     def get_qr_plain(self):
         return self.driver.find_element_by_css_selector(self._SELECTORS['qrCodePlain']).get_attribute("data-ref")
 
+    def get_qr_b64(self):
+        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCodePlain'])
+        return qr.screenshot_as_base64
+
     def get_qr(self, filename=None):
         """Get pairing QR code from client"""
         if "Click to reload QR code" in self.driver.page_source:
