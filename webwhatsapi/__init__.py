@@ -324,7 +324,7 @@ class WhatsAPIDriver(object):
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications, use_unread_count)
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
