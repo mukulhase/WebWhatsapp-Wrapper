@@ -8,7 +8,7 @@ if (!window.Store) {
                 if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
                     let first = Object.values(modules[idx])[0];
                     if ((typeof first === "object") && (first.exports)) {
-                        let store, wap, conn, eventListener;
+                        let store, wap, wapDelete, conn, eventListener;
                         for (let idx2 in modules[idx]) {
                             let module = modules(idx2);
 
@@ -16,34 +16,42 @@ if (!window.Store) {
                                 continue;
                             }
                             
+                            if(module.sendConversationDelete && module.sendConversationDelete.length == 2) {
+                                wapDelete = module;
+                                if(store && wap && conn && eventListener) {
+                                    break;
+                                }
+                            }
+                            
                             if(!eventListener && (module.listenTo || (module.default && module.default.listenTo))) {
                                 eventListener = (module.listenTo) ? module : module.default;
-                                if(store && wap && conn) {
+                                if(store && wap && conn && wapDelete) {
                                     break;
                                 }
                             }
 
                             if (module.Chat && module.Msg) {
                                 store = module;
-                                if (wap && conn && eventListener) {
+                                if (wap && conn && eventListener && wapDelete) {
                                     break;
                                 }
                             }
                             if (module.createGroup) {
                                 wap = module;
-                                if (store && conn && eventListener) {
+                                if (store && conn && eventListener && wapDelete) {
                                     break;
                                 }
                             }
                             if (module.default && module.default.ref && module.default.refTTL) {
                                 conn = module.default;
-                                if (store && wap && eventListener) {
+                                if (store && wap && eventListener && wapDelete) {
                                     break;
                                 }
                             }
                         }
                         window.Store = store;
                         store.Wap = wap;
+                        store.WapDelete = wapDelete;
                         store.Conn = conn;
                         store.EventListener = eventListener;
 
@@ -997,19 +1005,40 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
-window.WAPI.newMessagesCallback = null;
+window.WAPI.deleteConversation = function (chatId, done) {
+    let conversation = window.Store.Chat.find((chat) => chat.id === chatId);
+    let lastReceivedKey = conversation.__x_lastReceivedKey;
+    Store.WapDelete.setSubProtocol(10);
+    Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then(
+        function(response){
+            if (done !== undefined) {
+                done(response.status);
+            }
+        }
+    );
+
+    return true;
+};
+
+window.WAPI.newMessagesCallbacks = [];
 window.WAPI.newMessagesListener = null;
 window.WAPI.waitNewMessages = function(rmCallbackAfterUse = true, done) {
-    window.WAPI.newMessagesCallback = done;
+    window.WAPI.newMessagesCallbacks.push({callback: done, rmAfterUse: rmCallbackAfterUse});
     if(window.WAPI.newMessagesListener == null) {
         window.WAPI.newMessagesListener = window.Store.EventListener.listenTo(window.Store.Msg, 'add', function(e) {
             if (e && e.isNewMsg && !e.isSentByMe) {
-                if(window.WAPI.newMessagesCallback != null && window.WAPI.newMessagesCallback != undefined) {
-                    window.WAPI.newMessagesCallback(e);
-                    if(rmCallbackAfterUse === true) {
-                        window.WAPI.newMessagesCallback = null;
+                var removeCallbacks = [];
+                window.WAPI.newMessagesCallbacks.forEach(function(callbackObj) {
+                    callbackObj.callback(e);
+                    if(callbackObj.rmAfterUse === true) {
+                        removeCallbacks.push(callbackObj);
                     }
-                }
+                });
+                
+                // Remove removable callbacks.
+                removeCallbacks.forEach(function(rmCallbackObj) {
+                    window.WAPI.newMessagesCallbacks.splice(window.WAPI.newMessagesCallbacks.indexOf(rmCallbackObj), 1);
+                });
             }
         });
     }
