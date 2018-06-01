@@ -4,11 +4,11 @@ from concurrent.futures import ThreadPoolExecutor
 from logging import getLogger
 
 import aiohttp
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from functools import partial
 from io import BytesIO
 from selenium.common.exceptions import TimeoutException
@@ -75,10 +75,11 @@ class WhatsAPIDriverAsync:
     async def get_all_chat_ids(self):
         return await self._run_async(self._driver.get_all_chat_ids)
 
-    async def get_unread(self, include_me=False, include_notifications=False):
+    async def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
         return await self._run_async(self._driver.get_unread,
                                      include_me=include_me,
-                                     include_notifications=include_notifications)
+                                     include_notifications=include_notifications,
+                                     use_unread_count=use_unread_count)
 
     async def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         return await self._run_async(self._driver.get_all_messages_in_chat,
