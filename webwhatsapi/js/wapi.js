@@ -1006,7 +1006,7 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let conversation = window.Store.Chat.find((chat) => chat.id === chatId);
+    let conversation = window.Store.Chat.models.find((chat) => chat.id === chatId);
     let lastReceivedKey = conversation.__x_lastReceivedKey;
     Store.WapDelete.setSubProtocol(10);
     Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then(
