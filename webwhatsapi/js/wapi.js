@@ -8,29 +8,36 @@ if (!window.Store) {
                 if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
                     let first = Object.values(modules[idx])[0];
                     if ((typeof first === "object") && (first.exports)) {
-                        let store, wap, conn;
+                        let store, wap, conn, eventListener;
                         for (let idx2 in modules[idx]) {
                             let module = modules(idx2);
 
                             if (!module) {
                                 continue;
                             }
+                            
+                            if(!eventListener && (module && module.listenTo) || (module.default && module.default.listenTo)) {
+                                eventListener = module;
+                                if(store && wap && conn) {
+                                    break;
+                                }
+                            }
 
                             if (module.Chat && module.Msg) {
                                 store = module;
-                                if (wap && conn) {
+                                if (wap && conn && eventListener) {
                                     break;
                                 }
                             }
                             if (module.createGroup) {
                                 wap = module;
-                                if (store&& conn) {
+                                if (store && conn && eventListener) {
                                     break;
                                 }
                             }
                             if (module.default && module.default.ref && module.default.refTTL) {
                                 conn = module.default;
-                                if (store && wap) {
+                                if (store && wap && eventListener) {
                                     break;
                                 }
                             }
@@ -38,6 +45,7 @@ if (!window.Store) {
                         window.Store = store;
                         store.Wap = wap;
                         store.Conn = conn;
+                        store.EventListener = eventListener;
 
                         return store;
                     }
@@ -989,4 +997,16 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
-
+window.WAPI.waitNewMessages = function(done) {
+    var alreadyReturned = false;
+    window.Store.EventListener.listenTo(window.Store.Msg, 'add', function(e) {
+        console.log('e called', e);
+        if (e && (e.isSentByMe && !this.notSpam && (this.notSpam = !0), "i" !== e.eventType)) {
+            if(done != undefined && alreadyReturned) {
+                done(true);
+            }
+            alreadyReturned = true;            
+        }
+    });
+    return true;
+}
