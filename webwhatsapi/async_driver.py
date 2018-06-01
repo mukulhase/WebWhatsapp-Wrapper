@@ -75,10 +75,11 @@ class WhatsAPIDriverAsync:
     async def get_all_chat_ids(self):
         return await self._run_async(self._driver.get_all_chat_ids)
 
-    async def get_unread(self, include_me=False, include_notifications=False):
+    async def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
         return await self._run_async(self._driver.get_unread,
                                      include_me=include_me,
-                                     include_notifications=include_notifications)
+                                     include_notifications=include_notifications,
+                                     use_unread_count=use_unread_count)
 
     async def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
         return await self._run_async(self._driver.get_all_messages_in_chat,
