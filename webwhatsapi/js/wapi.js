@@ -16,8 +16,8 @@ if (!window.Store) {
                                 continue;
                             }
                             
-                            if(!eventListener && (module && module.listenTo) || (module.default && module.default.listenTo)) {
-                                eventListener = module;
+                            if(!eventListener && (module.listenTo || (module.default && module.default.listenTo))) {
+                                eventListener = (module.listenTo) ? module : module.default;
                                 if(store && wap && conn) {
                                     break;
                                 }
@@ -997,16 +997,18 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
+window.WAPI.newMessagesCallback = null;
+window.WAPI.newMessagesListener = null;
 window.WAPI.waitNewMessages = function(done) {
-    var alreadyReturned = false;
-    window.Store.EventListener.listenTo(window.Store.Msg, 'add', function(e) {
-        console.log('e called', e);
-        if (e && (e.isSentByMe && !this.notSpam && (this.notSpam = !0), "i" !== e.eventType)) {
-            if(done != undefined && alreadyReturned) {
-                done(true);
+    window.WAPI.newMessagesCallback = done;
+    if(window.WAPI.newMessagesListener == null) {
+        window.WAPI.newMessagesListener = window.Store.EventListener.listenTo(window.Store.Msg, 'add', function(e) {
+            if (e && e.isNewMsg && !e.isSentByMe) {
+                if(window.WAPI.newMessagesCallback != null && window.WAPI.newMessagesCallback != undefined) {
+                    window.WAPI.newMessagesCallback(e);
+                }
             }
-            alreadyReturned = true;            
-        }
-    });
+        });
+    }
     return true;
 }
