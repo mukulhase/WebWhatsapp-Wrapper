@@ -999,13 +999,16 @@ window.WAPI.getBatteryLevel = function (done) {
 
 window.WAPI.newMessagesCallback = null;
 window.WAPI.newMessagesListener = null;
-window.WAPI.waitNewMessages = function(done) {
+window.WAPI.waitNewMessages = function(rmCallbackAfterUse = true, done) {
     window.WAPI.newMessagesCallback = done;
     if(window.WAPI.newMessagesListener == null) {
         window.WAPI.newMessagesListener = window.Store.EventListener.listenTo(window.Store.Msg, 'add', function(e) {
             if (e && e.isNewMsg && !e.isSentByMe) {
                 if(window.WAPI.newMessagesCallback != null && window.WAPI.newMessagesCallback != undefined) {
                     window.WAPI.newMessagesCallback(e);
+                    if(rmCallbackAfterUse === true) {
+                        window.WAPI.newMessagesCallback = null;
+                    }
                 }
             }
         });
