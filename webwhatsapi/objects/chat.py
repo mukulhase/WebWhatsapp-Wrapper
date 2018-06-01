@@ -1,8 +1,8 @@
+import time
+from datetime import datetime
+
 from .whatsapp_object import WhatsappObjectWithId, driver_needed
 from ..helper import safe_str
-import time
-from .message import MediaMessage
-from datetime import datetime
 
 
 def factory_chat(js_obj, driver=None):
@@ -24,6 +24,7 @@ class Chat(WhatsappObjectWithId):
     def __init__(self, js_obj, driver=None):
         super(Chat, self).__init__(js_obj, driver)
         self.number = self.id.split('@')[0]
+        self.last_interact = None
 
     @driver_needed
     def send_message(self, message):
