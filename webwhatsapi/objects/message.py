@@ -58,6 +58,7 @@ class Message(WhatsappObject):
         self.sender = Contact(js_obj["sender"], driver) if 'sender' in js_obj and js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
+        self.is_media = False
 
         if js_obj["content"]:
             self.content = js_obj["content"]
@@ -88,6 +89,8 @@ class MediaMessage(Message):
         self.mime = self._js_obj["mimetype"]
         if "caption" in self._js_obj and self._js_obj["caption"]:
             self.caption = self._js_obj["caption"]
+        else:
+            self.caption = ''
 
         self.media_key = self._js_obj.get('mediaKey')
         self.client_url = self._js_obj.get('clientUrl')
