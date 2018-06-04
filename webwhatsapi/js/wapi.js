@@ -1,45 +1,56 @@
 /**
  * This script contains WAPI functions that need to be run in the context of the webpage
  */
+
+/**
+ * Auto discovery the webpack object references of instances that contains all functions used by the WAPI
+ * functions and creates the Store object.
+ */
 if (!window.Store) {
     (function() {
         function getStore(modules) {
+            let foundCount = 0;
+            let neededObjects = [
+                { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
+                { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
+                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
+                { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null }
+            ];
+
             for (let idx in modules) {
                 if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
                     let first = Object.values(modules[idx])[0];
                     if ((typeof first === "object") && (first.exports)) {
-                        let store, wap, conn;
                         for (let idx2 in modules[idx]) {
                             let module = modules(idx2);
-
                             if (!module) {
                                 continue;
                             }
 
-                            if (module.Chat && module.Msg) {
-                                store = module;
-                                if (wap && conn) {
-                                    break;
+                            neededObjects.forEach((needObj) => {
+                                if(!needObj.conditions || needObj.foundedModule) return;
+                                let neededModule = needObj.conditions(module);
+                                if(neededModule !== null) {
+                                    foundCount++;
+                                    needObj.foundedModule = neededModule;
                                 }
-                            }
-                            if (module.createGroup) {
-                                wap = module;
-                                if (store&& conn) {
-                                    break;
-                                }
-                            }
-                            if (module.default && module.default.ref && module.default.refTTL) {
-                                conn = module.default;
-                                if (store && wap) {
-                                    break;
-                                }
+                            });
+
+                            if(foundCount == neededObjects.length) {
+                                break;
                             }
                         }
-                        window.Store = store;
-                        store.Wap = wap;
-                        store.Conn = conn;
 
-                        return store;
+                        let neededStore = neededObjects.find((needObj) => needObj.id === "Store");
+                        window.Store = neededStore.foundedModule ? neededStore.foundedModule : {};
+                        neededObjects.splice(neededObjects.indexOf(neededStore), 1);
+                        neededObjects.forEach((needObj) => {
+                            if(needObj.foundedModule) {
+                                window.Store[needObj.id] = needObj.foundedModule;
+                            }
+                        });
+
+                        return window.Store;
                     }
                 }
             }
@@ -126,6 +137,27 @@ window.WAPI._serializeMessageObj = (obj) => {
     });
 };
 
+window.WAPI._serializeNumberStatusObj = (obj) => {
+    if (obj == undefined) {
+        return null;
+    }
+
+    return Object.assign({}, {
+        id: obj.jid,
+        status: obj.status,
+        isBusiness: (obj.biz === true),
+        canReceiveMessage: (obj.status === 200)
+    });
+};
+
+window.WAPI.createGroup = function (name, contactsId) {
+    if (!Array.isArray(contactsId)) {
+        contactsId = [contactsId];
+    }
+    Store.Wap.setSubProtocol(10);
+    return window.Store.Wap.createGroup(name, contactsId);
+};
+
 window.WAPI.getAllContacts = function (done) {
     const contacts = window.Store.Contact.map((contact) => WAPI._serializeContactObj(contact));
 
@@ -135,6 +167,7 @@ window.WAPI.getAllContacts = function (done) {
         return contacts;
     }
 };
+
 /**
  * Fetches all contact objects from store, filters them
  *
@@ -978,4 +1011,21 @@ window.WAPI.getBatteryLevel = function (done) {
         done(output);
     }
     return output;
+};
+
+window.WAPI.deleteConversation = function (chatId, done) {
+    let conversation = window.Store.Chat.get(chatId);
+    let lastReceivedKey = conversation.lastReceivedKey;
+    window.Store.WapDelete.setSubProtocol(10);
+    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
+        if (done !== undefined) {
+            done(response.status);
+        }
+    }).catch((error) => {
+        if (done !== undefined) {
+            done({error: error});
+        }
+    });
+
+    return true;
 };
