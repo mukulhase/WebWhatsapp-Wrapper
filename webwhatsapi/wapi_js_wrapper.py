@@ -1,5 +1,7 @@
 import os
 import time
+import collections
+import numpy as np
 
 from selenium.common.exceptions import WebDriverException
 from six import string_types
@@ -135,7 +137,7 @@ class NewMessagesObservable(Thread):
                 self.webdriver.set_script_timeout(115200)  # One hour timeout for this execution
                 new_js_messages = self.wapi_js_wrapper.waitNewMessages(True)
 
-                if not isinstance(new_js_messages, list):
+                if not isinstance(new_js_messages, (collections.Sequence, np.ndarray)):
                     raise Exception('Page reloaded or JS error, retrying in 2 seconds.')
 
                 new_messages = []
