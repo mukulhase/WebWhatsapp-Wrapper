@@ -144,7 +144,7 @@ window.WAPI._serializeNumberStatusObj = (obj) => {
         return null;
     }
 
-    return Object.assign(window.WAPI._serializeRawObj(obj), {
+    return Object.assign({}, {
         id: obj.jid,
         status: obj.status,
         isBusiness: (obj.biz === true),
