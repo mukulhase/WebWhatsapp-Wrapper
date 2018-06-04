@@ -219,7 +219,7 @@ class WhatsAPIDriver(object):
         else:
             self.logger.error("Invalid client: %s" % client)
         self.username = username
-        self.wapi_functions = WapiJsWrapper(self.driver)
+        self.wapi_functions = WapiJsWrapper(self.driver, self)
 
         self.driver.set_script_timeout(500)
         self.driver.implicitly_wait(10)
@@ -642,6 +642,12 @@ class WhatsAPIDriver(object):
         """
         number_status = self.wapi_functions.checkNumberStatus(number_id)
         return NumberStatus(number_status, self)
+
+    def subscribe_new_messages(self, observer):
+        self.wapi_functions.new_messages_observable.subscribe(observer)
+
+    def unsubscribe_new_messages(self, observer):
+        self.wapi_functions.new_messages_observable.unsubscribe(observer)
 
     def quit(self):
         self.driver.quit()
