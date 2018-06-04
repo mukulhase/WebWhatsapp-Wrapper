@@ -114,7 +114,6 @@ class JsFunction(object):
             command = "return WAPI.{0}(arguments[0])".format(self.function_name)
 
         try:
-            self.driver.set_script_timeout(500)
             return self.driver.execute_async_script(command)
         except WebDriverException as e:
             if e.msg == 'Timed out':
@@ -134,22 +133,17 @@ class NewMessagesObservable(Thread):
     def run(self):
         while True:
             try:
-                self.webdriver.set_script_timeout(115200)  # One hour timeout for this execution
-                new_js_messages = self.wapi_js_wrapper.waitNewMessages(True)
+                new_js_messages = self.wapi_js_wrapper.getBufferedNewMessages()
+                if isinstance(new_js_messages, (collections.Sequence, np.ndarray)) and new_js_messages.length > 0:
+                    new_messages = []
+                    for js_message in new_js_messages:
+                        new_messages.append(factory_message(js_message, self.wapi_driver))
 
-                if not isinstance(new_js_messages, (collections.Sequence, np.ndarray)):
-                    raise Exception('Page reloaded or JS error, retrying in 2 seconds.')
-
-                new_messages = []
-                for js_message in new_js_messages:
-                    new_messages.append(factory_message(js_message, self.wapi_driver))
-
-                self._inform_all(new_messages)
-            except WapiPhoneNotConnectedException as e:
-                pass
+                    self._inform_all(new_messages)
             except Exception as e:
-                time.sleep(2)
                 pass
+
+            time.sleep(2)
 
     def subscribe(self, observer):
         inform_method = getattr(observer, "on_message_received", None)

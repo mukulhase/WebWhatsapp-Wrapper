@@ -1053,6 +1053,7 @@ window.WAPI.checkNumberStatus = function(id, done) {
  * New messages observable functions.
  */
 window.WAPI._newMessagesQueue = [];
+window.WAPI._newMessagesBuffer = [];
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
 window.WAPI._newMessagesListener = window.Store.EventListener.listenTo(window.Store.Msg, 'add', function(newMessage) {
@@ -1060,6 +1061,7 @@ window.WAPI._newMessagesListener = window.Store.EventListener.listenTo(window.St
         let message = window.WAPI.processMessageObj(newMessage, false, false);
         if (message) {
             window.WAPI._newMessagesQueue.push(message);
+            window.WAPI._newMessagesBuffer.push(message);
         }
 
         // Starts debouncer time to don't call a callback for each message if more than one message arrives in the same
@@ -1072,7 +1074,9 @@ window.WAPI._newMessagesListener = window.Store.EventListener.listenTo(window.St
 
                 let removeCallbacks = [];
                 window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
-                    callbackObj.callback(queuedMessages);
+                    if(callbackObj.callback !== undefined) {
+                        callbackObj.callback(queuedMessages);
+                    }
                     if(callbackObj.rmAfterUse === true) {
                         removeCallbacks.push(callbackObj);
                     }
@@ -1090,7 +1094,9 @@ window.WAPI._newMessagesListener = window.Store.EventListener.listenTo(window.St
 
 window.WAPI._unloadInform = (event) => {
     window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
-        callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
+        if(callbackObj.callback !== undefined) {
+            callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
+        }
     });
 };
 window.addEventListener("unload", window.WAPI._unloadInform, false);
@@ -1106,5 +1112,19 @@ window.addEventListener("pageunload", window.WAPI._unloadInform, false);
 window.WAPI.waitNewMessages = function(rmCallbackAfterUse = true, done) {
     window.WAPI._newMessagesCallbacks.push({callback: done, rmAfterUse: rmCallbackAfterUse});
     return true;
+};
+
+/**
+ * Reads buffered new messages.
+ * @param done - function - Callback function to be called contained the buffered messages.
+ * @returns {Array}
+ */
+window.WAPI.getBufferedNewMessages = function(done) {
+    let bufferedMessages = window.WAPI._newMessagesBuffer;
+    window.WAPI._newMessagesBuffer = [];
+    if(done !== undefined) {
+        done(bufferedMessages);
+    }
+    return bufferedMessages;
 };
 /** End new messages observable functions **/
