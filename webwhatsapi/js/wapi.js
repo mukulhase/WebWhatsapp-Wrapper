@@ -15,7 +15,6 @@ if (!window.Store) {
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
-                { id: "EventListener", conditions: (module) => (module.listenTo) ? module : ((module.default && module.default.listenTo) ? module.default: null) },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
             ];
 
@@ -1057,7 +1056,8 @@ if(!window.WAPI._newMessagesListener) {
     window.WAPI._newMessagesBuffer = [];
     window.WAPI._newMessagesDebouncer = null;
     window.WAPI._newMessagesCallbacks = [];
-    window.WAPI._newMessagesListener = window.Store.EventListener.listenTo(window.Store.Msg, 'add', (newMessage) => {
+    window.Store.Msg.off('add');
+    window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
         if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
             let message = window.WAPI.processMessageObj(newMessage, false, false);
             if (message) {
