@@ -1,5 +1,4 @@
 import os
-import abc
 
 from selenium.common.exceptions import WebDriverException
 from six import string_types
@@ -120,15 +119,6 @@ class JsFunction(object):
             raise JsException("Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
 
 
-class NewMessageObserver(metaclass=abc.ABCMeta):
-    def __init__(self):
-        pass
-
-    @abc.abstractmethod
-    def on_message_received(self, new_messages):
-        return
-
-
 class NewMessagesObservable(Thread):
     def __init__(self, wapi_js_wrapper, wapi_driver, webdriver):
         Thread.__init__(self)
@@ -154,8 +144,9 @@ class NewMessagesObservable(Thread):
                 pass
 
     def subscribe(self, observer):
-        if str(type(observer)) != "<type 'NewMessageObserver'>":
-            raise Exception('You need to inform an observable that extends \'NewMessageObserver\'.')
+        inform_method = getattr(observer, "on_message_received", None)
+        if not callable(inform_method):
+            raise Exception('You need to inform an observable that implements \'on_message_received(new_messages)\'.')
 
         self.observers.append(observer)
 
