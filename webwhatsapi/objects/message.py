@@ -58,7 +58,6 @@ class Message(WhatsappObject):
         self.sender = Contact(js_obj["sender"], driver) if 'sender' in js_obj and js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
-        self.is_media = False
 
         if js_obj["content"]:
             self.content = js_obj["content"]
@@ -138,12 +137,17 @@ class VCardMessage(Message):
 
         self.type = js_obj["type"]
         self.contacts = list()
+        self.contacts_dict = list()
 
         if js_obj["content"]:
-            self.contacts.append(js_obj["content"].encode("ascii", "ignore"))
+            self.contacts.append(js_obj["content"])
         else:
             for card in js_obj["vcardList"]:
-                self.contacts.append(card["vcard"].encode("ascii", "ignore"))
+                self.contacts_dict.append({
+                    'name': card['displayName'],
+                    'number': card['vcard'].split('waid=')[1].split(':')[0]
+                })
+                self.contacts.append(card["vcard"])
 
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
