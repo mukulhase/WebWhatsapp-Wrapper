@@ -2,6 +2,65 @@
  * This script contains WAPI functions that need to be run in the context of the webpage
  */
 
+/**
+ * Auto discovery the webpack object references of instances that contains all functions used by the WAPI
+ * functions and creates the Store object.
+ */
+if (!window.Store) {
+    (function() {
+        function getStore(modules) {
+            let foundCount = 0;
+            let neededObjects = [
+                { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
+                { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
+                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
+                { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
+                { id: "EventListener", conditions: (module) => (module.listenTo) ? module : ((module.default && module.default.listenTo) ? module.default: null) },
+                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
+            ];
+
+            for (let idx in modules) {
+                if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
+                    let first = Object.values(modules[idx])[0];
+                    if ((typeof first === "object") && (first.exports)) {
+                        for (let idx2 in modules[idx]) {
+                            let module = modules(idx2);
+                            if (!module) {
+                                continue;
+                            }
+
+                            neededObjects.forEach((needObj) => {
+                                if(!needObj.conditions || needObj.foundedModule) return;
+                                let neededModule = needObj.conditions(module);
+                                if(neededModule !== null) {
+                                    foundCount++;
+                                    needObj.foundedModule = neededModule;
+                                }
+                            });
+
+                            if(foundCount == neededObjects.length) {
+                                break;
+                            }
+                        }
+
+                        let neededStore = neededObjects.find((needObj) => needObj.id === "Store");
+                        window.Store = neededStore.foundedModule ? neededStore.foundedModule : {};
+                        neededObjects.splice(neededObjects.indexOf(neededStore), 1);
+                        neededObjects.forEach((needObj) => {
+                            if(needObj.foundedModule) {
+                                window.Store[needObj.id] = needObj.foundedModule;
+                            }
+                        });
+
+                        return window.Store;
+                    }
+                }
+            }
+        }
+
+        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, 'parasite');
+    })();
+}
 
 window.WAPI = {
     lastRead: {}
@@ -43,7 +102,7 @@ window.WAPI._serializeContactObj = (obj) => {
 
     return Object.assign(window.WAPI._serializeRawObj(obj), {
         formattedName: obj.formattedName,
-        isHighLevelVerified: obj.__x_isHighLevelVerified,
+        isHighLevelVerified: obj.isHighLevelVerified,
         isMe: obj.isMe,
         isMyContact: obj.isMyContact,
         isPSA: obj.isPSA,
@@ -80,79 +139,29 @@ window.WAPI._serializeMessageObj = (obj) => {
     });
 };
 
-/**
- * Fetches all contact objects from store
- *
- * @param done Optional callback function for async execution
- * @returns {Array|*} List of contacts
- */
-
-
-if (window.Store === undefined) {
-    webpackJsonp([], {"bcihgfbdeb": (x, y, z) => window.Store = z('"bcihgfbdeb"')}, "bcihgfbdeb");
-    webpackJsonp([], {"iaeeehaci": (x, y, z) => window.Store.Wap = z('"iaeeehaci"')}, "iaeeehaci");
-    webpackJsonp([], {"babjejhfbf": (x, y, z) => window.Store.WapDelete = z('"babjejhfbf"')}, "babjejhfbf");
-}
-
-
-window.WAPI.getConnectionInfo = function (done) {
-    if (done !== undefined) {
-        done(Store.Conn);
-    } else {
-        return Store.Conn;
+window.WAPI._serializeNumberStatusObj = (obj) => {
+    if (obj == undefined) {
+        return null;
     }
+
+    return Object.assign({}, {
+        id: obj.jid,
+        status: obj.status,
+        isBusiness: (obj.biz === true),
+        canReceiveMessage: (obj.status === 200)
+    });
 };
 
-window.WAPI.getChatsModel = function (done) {
-    if (done !== undefined) {
-        if (Store.Chat !== undefined) {
-            done(Store.Chat.models);
-        } else {
-            done([]);
-        }
-    } else {
-        if (Store.Chat !== undefined) {
-            return (Store.Chat.models);
-        } else {
-            return ([]);
-        }
+window.WAPI.createGroup = function (name, contactsId) {
+    if (!Array.isArray(contactsId)) {
+        contactsId = [contactsId];
     }
-};
-
-window.WAPI.getContactsModel = function (done) {
-    if (done !== undefined) {
-        if (Store.Contact !== undefined) {
-            done(Store.Contact.models);
-        } else {
-            done([]);
-        }
-    } else {
-        if (Store.Contact !== undefined) {
-            return (Store.Contact.models);
-        } else {
-            return ([]);
-        }
-    }
-};
-
-window.WAPI.getMsgsModel = function (done) {
-    if (done !== undefined) {
-        if (Store.Msg !== undefined) {
-            done(Store.Msg.models);
-        } else {
-            done([]);
-        }
-    } else {
-        if (Store.Msg !== undefined) {
-            return (Store.Msg.models);
-        } else {
-            return ([]);
-        }
-    }
+    Store.Wap.setSubProtocol(10);
+    return window.Store.Wap.createGroup(name, contactsId);
 };
 
 window.WAPI.getAllContacts = function (done) {
-    const contacts = window.WAPI.getContactsModel().map((contact) => WAPI._serializeContactObj(contact));
+    const contacts = window.Store.Contact.map((contact) => WAPI._serializeContactObj(contact));
 
     if (done !== undefined) {
         done(contacts);
@@ -160,6 +169,7 @@ window.WAPI.getAllContacts = function (done) {
         return contacts;
     }
 };
+
 /**
  * Fetches all contact objects from store, filters them
  *
@@ -167,7 +177,7 @@ window.WAPI.getAllContacts = function (done) {
  * @returns {Array|*} List of contacts
  */
 window.WAPI.getMyContacts = function (done) {
-    const contacts = window.WAPI.getContactsModel().filter(d => d.__x_isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
+    const contacts = window.Store.Contact.filter((contact) => contact.isMyContact === true).map((contact) => WAPI._serializeContactObj(contact));
 
     if (done !== undefined) {
         done(contacts);
@@ -184,7 +194,7 @@ window.WAPI.getMyContacts = function (done) {
  * @returns {T|*} Contact object
  */
 window.WAPI.getContact = function (id, done) {
-    const found = window.WAPI.getContactsModel().find((contact) => contact.id === id);
+    const found = window.Store.Contact.get(id);
 
     if (done !== undefined) {
         done(window.WAPI._serializeContactObj(found));
@@ -200,7 +210,7 @@ window.WAPI.getContact = function (id, done) {
  * @returns {Array|*} List of chats
  */
 window.WAPI.getAllChats = function (done) {
-    const chats = window.WAPI.getChatsModel().map((chat) => WAPI._serializeChatObj(chat));
+    const chats = window.Store.Chat.map((chat) => WAPI._serializeChatObj(chat));
 
     if (done !== undefined) {
         done(chats);
@@ -214,7 +224,7 @@ window.WAPI.haveNewMsg = function (chat) {
 };
 
 window.WAPI.getAllChatsWithNewMsg = function (done) {
-    const chats = window.WAPI.getChatsModel().filter(window.WAPI.haveNewMsg).map((chat) => WAPI._serializeChatObj(chat));
+    const chats = window.Store.Chat.filter(window.WAPI.haveNewMsg).map((chat) => WAPI._serializeChatObj(chat));
 
     if (done !== undefined) {
         done(chats);
@@ -230,7 +240,7 @@ window.WAPI.getAllChatsWithNewMsg = function (done) {
  * @returns {Array|*} List of chat id's
  */
 window.WAPI.getAllChatIds = function (done) {
-    const chatIds = window.WAPI.getChatsModel().map((chat) => chat.id);
+    const chatIds = window.Store.Chat.map((chat) => chat.id);
 
     if (done !== undefined) {
         done(chatIds);
@@ -246,7 +256,7 @@ window.WAPI.getAllChatIds = function (done) {
  * @returns {Array|*} List of chats
  */
 window.WAPI.getAllGroups = function (done) {
-    const groups = window.WAPI.getChatsModel().filter((chat) => chat.isGroup);
+    const groups = window.Store.Chat.filter((chat) => chat.isGroup);
 
     if (done !== undefined) {
         done(groups);
@@ -263,7 +273,7 @@ window.WAPI.getAllGroups = function (done) {
  * @returns {T|*} Chat object
  */
 window.WAPI.getChat = function (id, done) {
-    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
+    const found = window.Store.Chat.get(id);
     if (done !== undefined) {
         done(found);
     } else {
@@ -272,7 +282,7 @@ window.WAPI.getChat = function (id, done) {
 };
 
 window.WAPI.getChatByName = function (name, done) {
-    const found = window.WAPI.getChatsModel().find((chat) => chat.name === name);
+    const found = window.Store.Chat.find((chat) => chat.name === name);
     if (done !== undefined) {
         done(found);
     } else {
@@ -282,7 +292,7 @@ window.WAPI.getChatByName = function (name, done) {
 
 window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     var chatDatabase = window.WAPI.getChatByName('DATABASEPICBOT');
-    var msgWithImg = chatDatabase.msgs.models.find((msg) => msg.__x_caption == picId);
+    var msgWithImg = chatDatabase.msgs.find((msg) => msg.caption == picId);
     if (msgWithImg === undefined) {
         return false;
     }
@@ -290,18 +300,18 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     if (chatSend === undefined) {
         return false;
     }
-    const oldCaption = msgWithImg.__x_caption;
-    msgWithImg.__x_id.id = window.WAPI.getNewId();
-    msgWithImg.__x_id.remote = chatId;
-    msgWithImg.__x_t = Math.ceil(new Date().getTime() / 1000);
-    msgWithImg.__x_to = chatId;
+    const oldCaption = msgWithImg.caption;
+    msgWithImg.id.id = window.WAPI.getNewId();
+    msgWithImg.id.remote = chatId;
+    msgWithImg.t = Math.ceil(new Date().getTime() / 1000);
+    msgWithImg.to = chatId;
     if (caption !== undefined && caption !== '') {
-        msgWithImg.__x_caption = caption;
+        msgWithImg.caption = caption;
     } else {
-        msgWithImg.__x_caption = '';
+        msgWithImg.caption = '';
     }
     msgWithImg.collection.send(msgWithImg).then(function (e) {
-        msgWithImg.__x_caption = oldCaption;
+        msgWithImg.caption = oldCaption;
     });
 
     return true;
@@ -313,13 +323,13 @@ window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, cha
         return false;
     }
     var msgWithImg = chatSend.createMessageFromText(".");
-    msgWithImg.__x_hasLink = title;
-    msgWithImg.__x_body = description + '\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ' + url;
-    msgWithImg.__x_isLink = title;
-    msgWithImg.__x_description = description;
-    msgWithImg.__x_subtype = 'url';
-    msgWithImg.__x_title = title;
-    msgWithImg.__x_thumbnail = thumb;
+    msgWithImg.hasLink = title;
+    msgWithImg.body = description + '\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ' + url;
+    msgWithImg.isLink = title;
+    msgWithImg.description = description;
+    msgWithImg.subtype = 'url';
+    msgWithImg.title = title;
+    msgWithImg.thumbnail = thumb;
     return chatSend.addAndSendMsg(msgWithImg);
 
     return true;
@@ -388,10 +398,10 @@ window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotificati
         let messageObj = messages[i];
 
         // found a read message: stop looking for others
-        if (typeof (messageObj.__x_isNewMsg) !== "boolean" || messageObj.__x_isNewMsg === false) {
+        if (typeof (messageObj.isNewMsg) !== "boolean" || messageObj.isNewMsg === false) {
             continue;
         } else {
-            messageObj.__x_isNewMsg = false;
+            messageObj.isNewMsg = false;
             // process it
             let message = WAPI.processMessageObj(messageObj,
                     includeMe,
@@ -421,7 +431,7 @@ window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotificati
  * @returns None
  */
 window.WAPI.loadEarlierMessages = function (id, done) {
-    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
+    const found = window.Store.Chat.get(id);
     if (done !== undefined) {
         found.loadEarlierMsgs().then(function () {
             done()
@@ -440,9 +450,9 @@ window.WAPI.loadEarlierMessages = function (id, done) {
  */
 
 window.WAPI.loadAllEarlierMessages = function (id, done) {
-    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
+    const found = window.Store.Chat.get(id);
     x = function () {
-        if (!found.msgs.msgLoadState.__x_noEarlierMsgs) {
+        if (!found.msgs.msgLoadState.noEarlierMsgs) {
             found.loadEarlierMsgs().then(x);
         } else if (done) {
             done();
@@ -457,8 +467,8 @@ window.WAPI.asyncLoadAllEarlierMessages = function (id, done) {
 };
 
 window.WAPI.areAllMessagesLoaded = function (id, done) {
-    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
-    if (!found.msgs.msgLoadState.__x_noEarlierMsgs) {
+    const found = window.Store.Chat.get(id);
+    if (!found.msgs.msgLoadState.noEarlierMsgs) {
         if (done) {
             done(false);
         } else {
@@ -482,7 +492,7 @@ window.WAPI.areAllMessagesLoaded = function (id, done) {
  */
 
 window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
-    const found = window.WAPI.getChatsModel().find((chat) => chat.id === id);
+    const found = window.Store.Chat.get(id);
     x = function () {
         if (found.msgs.models[0].t > lastMessage) {
             found.loadEarlierMsgs().then(x);
@@ -501,7 +511,7 @@ window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
  * @returns {Array|*} List of group metadata
  */
 window.WAPI.getAllGroupMetadata = function (done) {
-    const groupData = Store.GroupMetadata.models.map((groupData) => groupData.all);
+    const groupData = window.Store.GroupMetadata.map((groupData) => groupData.all);
 
     if (done !== undefined) {
         done(groupData);
@@ -518,7 +528,7 @@ window.WAPI.getAllGroupMetadata = function (done) {
  * @returns {T|*} Group metadata object
  */
 window.WAPI.getGroupMetadata = async function (id, done) {
-    let output = Store.GroupMetadata.models.find((groupData) => groupData.id === id);
+    let output = window.Store.GroupMetadata.get(id);
 
     if (output !== undefined) {
         if (output.stale) {
@@ -580,9 +590,7 @@ window.WAPI.getGroupAdmins = async function (id, done) {
  * @returns {Array|*|$q.all}
  */
 window.WAPI.getMe = function (done) {
-    const contacts = window.window.WAPI.getContactsModel();
-
-    const rawMe = contacts.find((contact) => contact.all.isMe, contacts);
+    const rawMe = window.Store.Contact.get(window.Store.Conn.me);
 
     if (done !== undefined) {
         done(rawMe.all);
@@ -649,7 +657,7 @@ window.WAPI.getAllMessageIdsInChat = function (id, includeMe, includeNotificatio
 window.WAPI.getMessageById = function (id, done) {
     let result = false;
     try {
-        let msg = window.WAPI.getMsgsModel().find((item) => item.id._serialized === id);
+        let msg = window.Store.Msg.get(id);
         if (msg) {
             result = WAPI.processMessageObj(msg, true, true);
         }
@@ -663,7 +671,7 @@ window.WAPI.getMessageById = function (id, done) {
 };
 
 window.WAPI.ReplyMessage = function (idMessage, message, done) {
-    var messageObject = window.WAPI.getMsgsModel().find(idMessage);
+    var messageObject = window.Store.Msg.get(idMessage);
     if (messageObject === undefined) {
         if (done !== undefined) {
             done(false);
@@ -673,7 +681,7 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
         }
     }
     messageObject = messageObject.value();
-    const Chats = window.WAPI.getChatsModel();
+    const Chats = window.Store.Chat.models;
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -681,8 +689,8 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
         }
 
         let temp = {};
-        temp.name = Chats[chat].__x__formattedTitle;
-        temp.id = Chats[chat].__x_id;
+        temp.name = Chats[chat].formattedTitle;
+        temp.id = Chats[chat].id;
         if (temp.id === messageObject.chat.id) {
             if (done !== undefined) {
                 Chats[chat].sendMessage(message, null, messageObject).then(function () {
@@ -722,20 +730,21 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
 };
 
 window.WAPI.sendMessageToID = function (id, message, done) {
-    if (window.WAPI.getChatsModel().length == 0)
+    if (window.Store.Chat.length == 0)
         return false;
 
-    var originalID = window.WAPI.getChatsModel()[0].id;
-    window.WAPI.getChatsModel()[0].id = id;
+    firstChat = Store.Chat.models[0];
+    var originalID = firstChat.id;
+    firstChat.id = id;
     if (done !== undefined) {
-        window.WAPI.getChatsModel()[0].sendMessage(message).then(function () {
-            window.WAPI.getChatsModel()[0].id = originalID;
+        firstChat.sendMessage(message).then(function () {
+            firstChat.id = originalID;
             done(true);
         });
         return true;
     } else {
-        window.WAPI.getChatsModel()[0].sendMessage(message);
-        window.WAPI.getChatsModel()[0].id = originalID;
+        firstChat.sendMessage(message);
+        firstChat.id = originalID;
         return true;
     }
 
@@ -748,7 +757,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
 }
 
 window.WAPI.sendMessage = function (id, message, done) {
-    const Chats = window.WAPI.getChatsModel();
+    const Chats = window.Store.Chat.models;
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -756,8 +765,8 @@ window.WAPI.sendMessage = function (id, message, done) {
         }
 
         let temp = {};
-        temp.name = Chats[chat].__x__formattedTitle;
-        temp.id = Chats[chat].__x_id;
+        temp.name = Chats[chat].formattedTitle;
+        temp.id = Chats[chat].id;
         if (temp.id === id) {
             if (done !== undefined) {
                 Chats[chat].sendMessage(message).then(function () {
@@ -796,8 +805,8 @@ window.WAPI.sendMessage = function (id, message, done) {
     }
 };
 
-window.WAPI.sendMessage2 = async function (id, message, done) {
-    const Chats = window.WAPI.getChatsModel();
+window.WAPI.sendMessage2 = function (id, message, done) {
+    const Chats = window.Store.Chat.models;
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -805,8 +814,8 @@ window.WAPI.sendMessage2 = async function (id, message, done) {
         }
 
         let temp = {};
-        temp.name = Chats[chat].__x__formattedTitle;
-        temp.id = Chats[chat].__x_id;
+        temp.name = Chats[chat].formattedTitle;
+        temp.id = Chats[chat].id;
         if (temp.id === id) {
             try {
                 if (done !== undefined) {
@@ -827,7 +836,7 @@ window.WAPI.sendMessage2 = async function (id, message, done) {
 
 
 window.WAPI.sendSeen = function (id, done) {
-    const Chats = window.WAPI.getChatsModel();
+    const Chats = window.Store.Chat.models;
 
     for (const chat in Chats) {
         if (isNaN(chat)) {
@@ -835,8 +844,8 @@ window.WAPI.sendSeen = function (id, done) {
         }
 
         let temp = {};
-        temp.name = Chats[chat].__x__formattedTitle;
-        temp.id = Chats[chat].__x_id;
+        temp.name = Chats[chat].formattedTitle;
+        temp.id = Chats[chat].id;
         if (temp.id === id) {
             if (done !== undefined) {
                 Chats[chat].sendSeen(false).then(function () {
@@ -858,13 +867,13 @@ window.WAPI.sendSeen = function (id, done) {
 };
 
 function isChatMessage(message) {
-    if (message.__x_isSentByMe) {
+    if (message.isSentByMe) {
         return false;
     }
-    if (message.__x_isNotification) {
+    if (message.isNotification) {
         return false;
     }
-    if (!message.__x_isUserCreatedType) {
+    if (!message.isUserCreatedType) {
         return false;
     }
     return true;
@@ -872,7 +881,7 @@ function isChatMessage(message) {
 
 
 window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
-    const chats = window.WAPI.getChatsModel();
+    const chats = window.Store.Chat.models;
     let output = [];
     for (let chat in chats) {
         if (isNaN(chat)) {
@@ -886,10 +895,10 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
         const messages = messageGroupObj.msgs.models;
         for (let i = messages.length - 1; i >= 0; i--) {
             let messageObj = messages[i];
-            if (typeof (messageObj.__x_isNewMsg) != "boolean" || messageObj.__x_isNewMsg === false) {
+            if (typeof (messageObj.isNewMsg) != "boolean" || messageObj.isNewMsg === false) {
                 continue;
             } else {
-                messageObj.__x_isNewMsg = false;
+                messageObj.isNewMsg = false;
                 let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                 if (message) {
                     messageGroup.messages.push(message);
@@ -901,17 +910,17 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
             output.push(messageGroup);
         } else { // no messages with isNewMsg true
            if (use_unread_count) {
-               let n = messageGroupObj.__x_unreadCount; // will use unreadCount attribute to fetch last n messages from sender
+               let n = messageGroupObj.unreadCount; // will use unreadCount attribute to fetch last n messages from sender
                for (let i = messages.length - 1; i >= 0; i--) {
                    let messageObj = messages[i];
                    if (n > 0) {
-                       if (!messageObj.__x_isSentByMe) {
+                       if (!messageObj.isSentByMe) {
                            let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                            messageGroup.messages.unshift(message);
                            n -= 1;
                        }
                    } else if (n === -1) { // chat was marked as unread so will fetch last message as unread
-                       if (!messageObj.__x_isSentByMe) {
+                       if (!messageObj.isSentByMe) {
                            let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                            messageGroup.messages.unshift(message);
                            break;
@@ -921,7 +930,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
                    }
                }
                if (messageGroup.messages.length > 0) {
-                   messageGroupObj.__x_unreadCount = 0; // reset unread counter
+                   messageGroupObj.unreadCount = 0; // reset unread counter
                    output.push(messageGroup);
                }
            }
@@ -934,7 +943,7 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
 };
 
 window.WAPI.getGroupOwnerID = async function (id, done) {
-    const output = await WAPI.getGroupMetadata(id).owner.id;
+    const output = (await WAPI.getGroupMetadata(id)).owner.id;
     if (done !== undefined) {
         done(output);
     }
@@ -993,13 +1002,13 @@ window.WAPI.downloadFile = function (url, done) {
 };
 
 window.WAPI.getBatteryLevel = function (done) {
-    if (window.WAPI.getConnectionInfo().__x_plugged) {
+    if (window.Store.Conn.plugged) {
         if (done !== undefined) {
             done(100);
         }
         return 100;
     }
-    output = window.WAPI.getConnectionInfo().__x_battery;
+    output = window.Store.Conn.battery;
     if (done !== undefined) {
         done(output);
     }
@@ -1007,18 +1016,18 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let conversation = window.WAPI.getChatsModel().find((chat) => chat.id === chatId);
-    let lastReceivedKey = conversation.__x_lastReceivedKey;
-    Store.WapDelete.setSubProtocol(10);
-    Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then(
-        function(response){
-            if (done !== undefined) {
-                done(response.status);
-            }
+    let conversation = window.Store.Chat.get(chatId);
+    let lastReceivedKey = conversation.lastReceivedKey;
+    window.Store.WapDelete.setSubProtocol(10);
+    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
+        if (done !== undefined) {
+            done(response.status);
         }
-    );
+    }).catch((error) => {
+        if (done !== undefined) {
+            done({error: error});
+        }
+    });
 
     return true;
 };
-
-
