@@ -1,4 +1,5 @@
 import os
+import time
 
 from selenium.common.exceptions import WebDriverException
 from six import string_types
@@ -133,6 +134,10 @@ class NewMessagesObservable(Thread):
             try:
                 self.webdriver.set_script_timeout(115200)  # One hour timeout for this execution
                 new_js_messages = self.wapi_js_wrapper.waitNewMessages(True)
+
+                if not isinstance(new_js_messages, list):
+                    raise Exception('Page reloaded or JS error, retrying in 2 seconds.')
+
                 new_messages = []
                 for js_message in new_js_messages:
                     new_messages.append(factory_message(js_message, self.wapi_driver))
@@ -141,6 +146,7 @@ class NewMessagesObservable(Thread):
             except WapiPhoneNotConnectedException as e:
                 pass
             except Exception as e:
+                time.sleep(2)
                 pass
 
     def subscribe(self, observer):
