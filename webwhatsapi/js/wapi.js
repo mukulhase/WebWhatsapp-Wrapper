@@ -1043,4 +1043,4 @@ window.WAPI.waitNewMessages = function(rmCallbackAfterUse = true, done) {
         });
     }
     return true;
-}
+};
