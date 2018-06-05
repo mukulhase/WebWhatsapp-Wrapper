@@ -27,6 +27,7 @@ class WapiJsWrapper(object):
     def __init__(self, driver, wapi_driver):
         self.driver = driver
         self.wapi_driver = wapi_driver
+        self.available_functions = None
 
         # Starts new messages observable thread.
         self.new_messages_observable = NewMessagesObservable(self, wapi_driver, driver)
@@ -49,10 +50,13 @@ class WapiJsWrapper(object):
 
     def __dir__(self):
         """
-        Reloads wapi.js and returns its functions
+        Load wapi.js and returns its functions
 
         :return: List of functions in window.WAPI
         """
+        if self.available_functions is not None:
+            return self.available_functions
+
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
@@ -62,7 +66,8 @@ class WapiJsWrapper(object):
 
         result = self.driver.execute_script("return window.WAPI")
         if result:
-            return result.keys()
+            self.available_functions = result.keys()
+            return self.available_functions
         else:
             return []
 
