@@ -28,6 +28,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from .objects.chat import Chat, UserChat, factory_chat
 from .objects.contact import Contact
 from .objects.message import MessageGroup, factory_message
+from .objects.number_status import NumberStatus
 from .wapi_js_wrapper import WapiJsWrapper
 
 __version__ = '2.0.3'
@@ -218,7 +219,7 @@ class WhatsAPIDriver(object):
         else:
             self.logger.error("Invalid client: %s" % client)
         self.username = username
-        self.wapi_functions = WapiJsWrapper(self.driver)
+        self.wapi_functions = WapiJsWrapper(self.driver, self)
 
         self.driver.set_script_timeout(500)
         self.driver.implicitly_wait(10)
@@ -631,6 +632,22 @@ class WhatsAPIDriver(object):
         :return:
         """
         return self.wapi_functions.deleteConversation(chat_id)
+
+    def check_number_status(self, number_id):
+        """
+        Check if a number is valid/registered in the whatsapp service
+
+        :param number_id: number id
+        :return:
+        """
+        number_status = self.wapi_functions.checkNumberStatus(number_id)
+        return NumberStatus(number_status, self)
+
+    def subscribe_new_messages(self, observer):
+        self.wapi_functions.new_messages_observable.subscribe(observer)
+
+    def unsubscribe_new_messages(self, observer):
+        self.wapi_functions.new_messages_observable.unsubscribe(observer)
 
     def quit(self):
         self.driver.quit()

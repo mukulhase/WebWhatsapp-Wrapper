@@ -1,45 +1,57 @@
 /**
  * This script contains WAPI functions that need to be run in the context of the webpage
  */
+
+/**
+ * Auto discovery the webpack object references of instances that contains all functions used by the WAPI
+ * functions and creates the Store object.
+ */
 if (!window.Store) {
     (function() {
         function getStore(modules) {
+            let foundCount = 0;
+            let neededObjects = [
+                { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
+                { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
+                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
+                { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
+                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
+            ];
+
             for (let idx in modules) {
                 if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
                     let first = Object.values(modules[idx])[0];
                     if ((typeof first === "object") && (first.exports)) {
-                        let store, wap, conn;
                         for (let idx2 in modules[idx]) {
                             let module = modules(idx2);
-
                             if (!module) {
                                 continue;
                             }
 
-                            if (module.Chat && module.Msg) {
-                                store = module;
-                                if (wap && conn) {
-                                    break;
+                            neededObjects.forEach((needObj) => {
+                                if(!needObj.conditions || needObj.foundedModule) return;
+                                let neededModule = needObj.conditions(module);
+                                if(neededModule !== null) {
+                                    foundCount++;
+                                    needObj.foundedModule = neededModule;
                                 }
-                            }
-                            if (module.createGroup) {
-                                wap = module;
-                                if (store&& conn) {
-                                    break;
-                                }
-                            }
-                            if (module.default && module.default.ref && module.default.refTTL) {
-                                conn = module.default;
-                                if (store && wap) {
-                                    break;
-                                }
+                            });
+
+                            if(foundCount == neededObjects.length) {
+                                break;
                             }
                         }
-                        window.Store = store;
-                        store.Wap = wap;
-                        store.Conn = conn;
 
-                        return store;
+                        let neededStore = neededObjects.find((needObj) => needObj.id === "Store");
+                        window.Store = neededStore.foundedModule ? neededStore.foundedModule : {};
+                        neededObjects.splice(neededObjects.indexOf(neededStore), 1);
+                        neededObjects.forEach((needObj) => {
+                            if(needObj.foundedModule) {
+                                window.Store[needObj.id] = needObj.foundedModule;
+                            }
+                        });
+
+                        return window.Store;
                     }
                 }
             }
@@ -126,6 +138,27 @@ window.WAPI._serializeMessageObj = (obj) => {
     });
 };
 
+window.WAPI._serializeNumberStatusObj = (obj) => {
+    if (obj == undefined) {
+        return null;
+    }
+
+    return Object.assign({}, {
+        id: obj.jid,
+        status: obj.status,
+        isBusiness: (obj.biz === true),
+        canReceiveMessage: (obj.status === 200)
+    });
+};
+
+window.WAPI.createGroup = function (name, contactsId) {
+    if (!Array.isArray(contactsId)) {
+        contactsId = [contactsId];
+    }
+    Store.Wap.setSubProtocol(10);
+    return window.Store.Wap.createGroup(name, contactsId);
+};
+
 window.WAPI.getAllContacts = function (done) {
     const contacts = window.Store.Contact.map((contact) => WAPI._serializeContactObj(contact));
 
@@ -135,6 +168,7 @@ window.WAPI.getAllContacts = function (done) {
         return contacts;
     }
 };
+
 /**
  * Fetches all contact objects from store, filters them
  *
@@ -980,4 +1014,118 @@ window.WAPI.getBatteryLevel = function (done) {
     return output;
 };
 
+window.WAPI.deleteConversation = function (chatId, done) {
+    let conversation = window.Store.Chat.get(chatId);
+    let lastReceivedKey = conversation.lastReceivedKey;
+    window.Store.WapDelete.setSubProtocol(10);
+    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
+        if (done !== undefined) {
+            done(response.status);
+        }
+    }).catch((error) => {
+        if (done !== undefined) {
+            done({error: error});
+        }
+    });
 
+    return true;
+};
+
+window.WAPI.checkNumberStatus = function(id, done) {
+    window.Store.WapQuery.queryExist(id).then((result) => {
+        if(done !== undefined) {
+            done(window.WAPI._serializeNumberStatusObj(result));
+        }
+    }).catch(() => {
+        if(done !== undefined) {
+            done(window.WAPI._serializeNumberStatusObj({
+                status: 500,
+                jid: id
+            }));
+        }
+    });
+
+    return true;
+};
+
+/**
+ * New messages observable functions.
+ */
+if(!window.WAPI._newMessagesListener) {
+    window.WAPI._newMessagesQueue = [];
+    window.WAPI._newMessagesBuffer = [];
+    window.WAPI._newMessagesDebouncer = null;
+    window.WAPI._newMessagesCallbacks = [];
+    window.Store.Msg.off('add');
+    window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
+        if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
+            let message = window.WAPI.processMessageObj(newMessage, false, false);
+            if (message) {
+                window.WAPI._newMessagesQueue.push(message);
+                window.WAPI._newMessagesBuffer.push(message);
+            }
+    
+            // Starts debouncer time to don't call a callback for each message if more than one message arrives 
+            // in the same second
+            if(!window.WAPI._newMessagesDebouncer && window.WAPI._newMessagesQueue.length > 0) {
+                window.WAPI._newMessagesDebouncer = setTimeout(() => {
+                    window.WAPI._newMessagesDebouncer = null;
+                    let queuedMessages = window.WAPI._newMessagesQueue;
+                    window.WAPI._newMessagesQueue = [];
+    
+                    let removeCallbacks = [];
+                    window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
+                        if(callbackObj.callback !== undefined) {
+                            callbackObj.callback(queuedMessages);
+                        }
+                        if(callbackObj.rmAfterUse === true) {
+                            removeCallbacks.push(callbackObj);
+                        }
+                    });
+    
+                    // Remove removable callbacks.
+                    removeCallbacks.forEach(function(rmCallbackObj) {
+                        let callbackIndex = window.WAPI._newMessagesCallbacks.indexOf(rmCallbackObj);
+                        window.WAPI._newMessagesCallbacks.splice(callbackIndex, 1);
+                    });
+                }, 1000);
+            }
+        }
+    });
+    
+    window.WAPI._unloadInform = (event) => {
+        window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
+            if(callbackObj.callback !== undefined) {
+                callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
+            }
+        });
+    };
+    window.addEventListener("unload", window.WAPI._unloadInform, false);
+    window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
+    window.addEventListener("pageunload", window.WAPI._unloadInform, false);
+}
+/**
+ * Registers a callback to be called when a new message arrives the WAPI.
+ * @param rmCallbackAfterUse - Boolean - Specify if the callback need to be executed only once
+ * @param done - function - Callback function to be called when a new message arrives.
+ * @returns {boolean}
+ */
+window.WAPI.waitNewMessages = function(rmCallbackAfterUse = true, done) {
+    window.WAPI._newMessagesCallbacks.push({callback: done, rmAfterUse: rmCallbackAfterUse});
+    return true;
+};
+
+/**
+ * Reads buffered new messages.
+ * @param done - function - Callback function to be called contained the buffered messages.
+ * @returns {Array}
+ */
+window.WAPI.getBufferedNewMessages = function(done) {
+    let bufferedMessages = window.WAPI._newMessagesBuffer;
+    window.WAPI._newMessagesBuffer = [];
+    if(done !== undefined) {
+        done(bufferedMessages);
+    }
+    return bufferedMessages;
+};
+/** End new messages observable functions **/
