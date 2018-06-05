@@ -3,7 +3,7 @@ import time
 import collections
 import numpy as np
 
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, JavascriptException
 from six import string_types
 from threading import Thread
 from .objects.message import factory_message
@@ -46,7 +46,7 @@ class WapiJsWrapper(object):
         if item not in wapi_functions:
             raise AttributeError("Function {0} doesn't exist".format(item))
 
-        return JsFunction(item, self.driver)
+        return JsFunction(item, self.driver, self)
 
     def __dir__(self):
         """
@@ -57,6 +57,8 @@ class WapiJsWrapper(object):
         if self.available_functions is not None:
             return self.available_functions
 
+        """Sleep wait until WhatsApp loads and creates webpack objects"""
+        time.sleep(5)
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
@@ -105,9 +107,11 @@ class JsFunction(object):
     Callable object represents functions in window.WAPI
     """
 
-    def __init__(self, function_name, driver):
+    def __init__(self, function_name, driver, wapi_wrapper):
         self.driver = driver
         self.function_name = function_name
+        self.wapi_wrapper = wapi_wrapper
+        self.is_a_retry = False
 
     def __call__(self, *args, **kwargs):
         # Selenium's execute_async_script passes a callback function that should be called when the JS operation is done
@@ -120,6 +124,14 @@ class JsFunction(object):
 
         try:
             return self.driver.execute_async_script(command)
+        except JavascriptException as e:
+            if 'WAPI is not defined' in e.msg and self.is_a_retry is not True:
+                self.wapi_wrapper.available_functions = None
+                retry_command = getattr(self.wapi_wrapper, self.function_name)
+                retry_command.is_a_retry = True
+                retry_command(*args, **kwargs)
+            else:
+                raise JsException("Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
         except WebDriverException as e:
             if e.msg == 'Timed out':
                 raise WapiPhoneNotConnectedException("Phone not connected to Internet")
