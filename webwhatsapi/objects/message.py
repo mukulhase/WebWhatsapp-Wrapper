@@ -1,11 +1,8 @@
 import mimetypes
-from base64 import b64decode
-from datetime import datetime
-
 import os
+from datetime import datetime
 from typing import Union
 
-from webwhatsapi import Contact
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
 from webwhatsapi.objects.whatsapp_object import WhatsappObject
@@ -22,22 +19,25 @@ def getContacts(x, driver):
 def factory_message(js_obj, driver):
     """Factory function for creating appropriate object given selenium JS object"""
 
-    if js_obj["lat"] and js_obj["lng"]:
-        return GeoMessage(js_obj, driver)
+    if js_obj is not None:
+        if 'lat' in js_obj and 'lng' in js_obj and js_obj["lat"] and js_obj["lng"]:
+            return GeoMessage(js_obj, driver)
 
-    if js_obj["isMedia"]:
-        return MediaMessage(js_obj, driver)
+        if 'isMedia' in js_obj and js_obj["isMedia"]:
+            return MediaMessage(js_obj, driver)
 
-    if js_obj["isNotification"]:
-        return NotificationMessage(js_obj, driver)
+        if 'isNotification' in js_obj and js_obj["isNotification"]:
+            return NotificationMessage(js_obj, driver)
 
-    if 'isMMS' in js_obj and js_obj["isMMS"]:
-        return MMSMessage(js_obj, driver)
+        if 'isMMS' in js_obj and js_obj["isMMS"]:
+            return MMSMessage(js_obj, driver)
 
-    if js_obj["type"] in ["vcard", "multi_vcard"]:
-        return VCardMessage(js_obj, driver)
+        if 'type' in js_obj and js_obj["type"] in ["vcard", "multi_vcard"]:
+            return VCardMessage(js_obj, driver)
 
-    return Message(js_obj, driver)
+        return Message(js_obj, driver)
+
+    return js_obj
 
 
 class Message(WhatsappObject):
@@ -55,7 +55,7 @@ class Message(WhatsappObject):
 
         self.id = js_obj["id"]
         self.type = js_obj["type"]
-        self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
+        self.sender = Contact(js_obj["sender"], driver) if 'sender' in js_obj and js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
         self.chat_id = js_obj['chatId']
 
@@ -69,7 +69,7 @@ class Message(WhatsappObject):
     def __repr__(self):
         return "<Message - {type} from {sender} at {timestamp}: {content}>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             content=self.safe_content)
 
@@ -88,6 +88,8 @@ class MediaMessage(Message):
         self.mime = self._js_obj["mimetype"]
         if "caption" in self._js_obj and self._js_obj["caption"]:
             self.caption = self._js_obj["caption"]
+        else:
+            self.caption = ''
 
         self.media_key = self._js_obj.get('mediaKey')
         self.client_url = self._js_obj.get('clientUrl')
@@ -96,7 +98,6 @@ class MediaMessage(Message):
         self.filename = ''.join([str(id(self)), extension or ''])
 
     def save_media(self, path):
-        # gets full media
         filename = os.path.join(path, self.filename)
         ioobj = self.driver.download_media(self)
         with open(filename, "wb") as f:
@@ -106,7 +107,7 @@ class MediaMessage(Message):
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else 'None',
             timestamp=self.timestamp,
             filename=self.filename
         )
@@ -125,7 +126,7 @@ class MMSMessage(MediaMessage):
     def __repr__(self):
         return "<MMSMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp
         )
 
@@ -136,17 +137,22 @@ class VCardMessage(Message):
 
         self.type = js_obj["type"]
         self.contacts = list()
+        self.contacts_dict = list()
 
         if js_obj["content"]:
-            self.contacts.append(js_obj["content"].encode("ascii", "ignore"))
+            self.contacts.append(js_obj["content"])
         else:
             for card in js_obj["vcardList"]:
-                self.contacts.append(card["vcard"].encode("ascii", "ignore"))
+                self.contacts_dict.append({
+                    'name': card['displayName'],
+                    'number': card['vcard'].split('waid=')[1].split(':')[0]
+                })
+                self.contacts.append(card["vcard"])
 
     def __repr__(self):
         return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             contacts=self.contacts
         )
@@ -163,7 +169,7 @@ class GeoMessage(Message):
     def __repr__(self):
         return "<GeoMessage - {type} from {sender} at {timestamp} ({lat}, {lng})>".format(
             type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
+            sender=safe_str(self.sender.get_safe_name()) if isinstance(self.sender, Contact) else self.sender,
             timestamp=self.timestamp,
             lat=self.latitude,
             lng=self.longitude

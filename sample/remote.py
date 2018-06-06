@@ -43,4 +43,4 @@ while True:
                 print 'client_url', message.client_url
                 message.save_media('./')
             else:
-                print '-- Other'
+print '-- Other'

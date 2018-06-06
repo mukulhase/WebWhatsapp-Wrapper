@@ -202,6 +202,16 @@ window.WAPI.getContact = function (id, done) {
     }
 };
 
+window.WAPI.getChatsModel = function (done) {
+    const chats = window.Store.Chat.models;
+
+    if (!!done) {
+        done(chats);
+    } else {
+        return chats;
+    }
+};
+
 /**
  * Fetches all chat objects from store
  *
@@ -342,7 +352,6 @@ window.WAPI.getNewId = function () {
     return text;
 };
 
-
 window.WAPI.getChatById = function (id, done) {
     let found = window.WAPI.getChat(id);
     if (found) {
@@ -357,7 +366,6 @@ window.WAPI.getChatById = function (id, done) {
         return found;
     }
 };
-
 
 /**
  * I return all unread messages from an asked chat and mark them as read.
@@ -418,9 +426,7 @@ window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotificati
 
     // return result list
     return output;
-}
-;
-
+};
 
 /**
  * Load more messages in chat object from store by ID
@@ -489,7 +495,6 @@ window.WAPI.areAllMessagesLoaded = function (id, done) {
  * @param done Optional callback function for async execution
  * @returns None
  */
-
 window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
     const found = window.Store.Chat.get(id);
     x = function () {
@@ -501,7 +506,6 @@ window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
     };
     x();
 };
-
 
 /**
  * Fetches all group metadata objects from store
@@ -541,7 +545,6 @@ window.WAPI.getGroupMetadata = async function (id, done) {
     return output;
 
 };
-
 
 /**
  * Fetches group participants
@@ -753,7 +756,89 @@ window.WAPI.sendMessageToID = function (id, message, done) {
         return false;
 
     return true;
-}
+};
+
+/*Send all messages from a chat give it's name to a list of chat ids*/
+window.WAPI.sendMediaMessage = function (groupName, chatIds) {
+    let chatDatabase = window.WAPI.getChatByName(groupName);
+
+    if (!!chatDatabase) {
+        chatIds.forEach((chatId) => {
+        chatDatabase.msgs.models.forEach((msg) => {
+            setTimeout(() => {
+                if (msg.__x_ack) {
+                    msg.__x_id.id = window.WAPI.getNewId();
+                    msg.__x_t = Math.ceil(new Date().getTime() / 1000);
+                    msg.__x_id.remote = chatId;
+                    msg.__x_to = chatId;
+
+
+                    msg.collection.send(msg);
+                    return true;
+                }
+            }, 1500);
+        });
+    });
+    }
+
+    return true;
+};
+
+window.WAPI.sendMultipleMessages = function (ids, messages, done) {
+    const Chats = window.WAPI.getChatsModel();
+
+    try {
+        Chats.forEach((chat) => {
+            if (ids.indexOf(chat.id) > -1) {
+                messages.forEach((msg) => {
+                    try {
+                        if (!!done) {
+                            chat.sendMessage(msg).then(() => {
+                                function sleep(ms) {
+                                    return new Promise(resolve => setTimeout(resolve, ms));
+                                }
+
+                                let trials = 0;
+
+                                function check() {
+                                    for (let i=chat.msgs.models.length - 1; i >= 0; i--) {
+                                        let msg = chat.msgs.models[chat.msgs.models.length - 1];
+
+                                        if (!msg.senderObj.isMe || msg.body !== message) {
+                                            continue;
+                                        }
+
+                                        done(WAPI._serializeMessageObj(msg));
+                                        return true;
+                                    }
+
+                                    trials += 1;
+                                    if (trials > 30) {
+                                        done(true);
+                                        return ;
+                                    }
+                                    sleep(500).then(check);
+                                }
+                                check();
+                            });
+                            return true;
+                        } else {
+                            chat.sendMessage(msg);
+                            return true;
+                        }
+                    } catch (err) {
+                        console.log(err);
+                        return false;
+                    }
+                });
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+    return true;
+};
 
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = window.Store.Chat.models;
@@ -833,7 +918,6 @@ window.WAPI.sendMessage2 = function (id, message, done) {
     return false;
 };
 
-
 window.WAPI.sendSeen = function (id, done) {
     const Chats = window.Store.Chat.models;
 
@@ -877,69 +961,6 @@ function isChatMessage(message) {
     }
     return true;
 }
-
-
-window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
-    const chats = window.Store.Chat.models;
-    let output = [];
-    for (let chat in chats) {
-        if (isNaN(chat)) {
-            continue;
-        }
-
-        let messageGroupObj = chats[chat];
-        let messageGroup = WAPI._serializeChatObj(messageGroupObj);
-        messageGroup.messages = [];
-
-        const messages = messageGroupObj.msgs.models;
-        for (let i = messages.length - 1; i >= 0; i--) {
-            let messageObj = messages[i];
-            if (typeof (messageObj.isNewMsg) != "boolean" || messageObj.isNewMsg === false) {
-                continue;
-            } else {
-                messageObj.isNewMsg = false;
-                let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
-                if (message) {
-                    messageGroup.messages.push(message);
-                }
-            }
-        }
-
-        if (messageGroup.messages.length > 0) {
-            output.push(messageGroup);
-        } else { // no messages with isNewMsg true
-           if (use_unread_count) {
-               let n = messageGroupObj.unreadCount; // will use unreadCount attribute to fetch last n messages from sender
-               for (let i = messages.length - 1; i >= 0; i--) {
-                   let messageObj = messages[i];
-                   if (n > 0) {
-                       if (!messageObj.isSentByMe) {
-                           let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
-                           messageGroup.messages.unshift(message);
-                           n -= 1;
-                       }
-                   } else if (n === -1) { // chat was marked as unread so will fetch last message as unread
-                       if (!messageObj.isSentByMe) {
-                           let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
-                           messageGroup.messages.unshift(message);
-                           break;
-                       }
-                   } else { // unreadCount = 0
-                       break;
-                   }
-               }
-               if (messageGroup.messages.length > 0) {
-                   messageGroupObj.unreadCount = 0; // reset unread counter
-                   output.push(messageGroup);
-               }
-           }
-         }
-    }
-    if (done !== undefined) {
-        done(output);
-    }
-    return output;
-};
 
 window.WAPI.getGroupOwnerID = async function (id, done) {
     const output = (await WAPI.getGroupMetadata(id)).owner.id;
@@ -1064,15 +1085,15 @@ if(!window.WAPI._newMessagesListener) {
                 window.WAPI._newMessagesQueue.push(message);
                 window.WAPI._newMessagesBuffer.push(message);
             }
-    
-            // Starts debouncer time to don't call a callback for each message if more than one message arrives 
+
+            // Starts debouncer time to don't call a callback for each message if more than one message arrives
             // in the same second
             if(!window.WAPI._newMessagesDebouncer && window.WAPI._newMessagesQueue.length > 0) {
                 window.WAPI._newMessagesDebouncer = setTimeout(() => {
                     window.WAPI._newMessagesDebouncer = null;
                     let queuedMessages = window.WAPI._newMessagesQueue;
                     window.WAPI._newMessagesQueue = [];
-    
+
                     let removeCallbacks = [];
                     window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
                         if(callbackObj.callback !== undefined) {
@@ -1082,7 +1103,7 @@ if(!window.WAPI._newMessagesListener) {
                             removeCallbacks.push(callbackObj);
                         }
                     });
-    
+
                     // Remove removable callbacks.
                     removeCallbacks.forEach(function(rmCallbackObj) {
                         let callbackIndex = window.WAPI._newMessagesCallbacks.indexOf(rmCallbackObj);
@@ -1092,7 +1113,7 @@ if(!window.WAPI._newMessagesListener) {
             }
         }
     });
-    
+
     window.WAPI._unloadInform = (event) => {
         window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
             if(callbackObj.callback !== undefined) {
@@ -1129,3 +1150,125 @@ window.WAPI.getBufferedNewMessages = function(done) {
     return bufferedMessages;
 };
 /** End new messages observable functions **/
+
+/*
+    Edits
+*/
+
+
+/*Send all messages from a chat give it's name to a list of chat ids*/
+window.WAPI.sendMediaMessage = function (groupName, chatIds) {
+    let chatDatabase = window.WAPI.getChatByName(groupName);
+
+    if (!!chatDatabase) {
+        chatIds.forEach((chatId) => {
+            chatDatabase.msgs.models.forEach((msg) => {
+                setTimeout(() => {
+                    if (msg.__x_ack) {
+                        msg.__x_id.id = window.WAPI.getNewId();
+                        msg.__x_t = Math.ceil(new Date().getTime() / 1000);
+                        msg.__x_id.remote = chatId;
+                        msg.__x_to = chatId;
+
+
+                        msg.collection.send(msg);
+                        return true;
+                    }
+                }, 1500);
+            });
+        });
+    }
+
+    return true;
+};
+
+window.WAPI.sendMultipleMessages = function (ids, messages, done) {
+    const Chats = window.WAPI.getChatsModel();
+
+    try {
+        Chats.forEach((chat) => {
+            if (ids.indexOf(chat.id) > -1) {
+                messages.forEach((msg) => {
+                    try {
+                        if (!!done) {
+                            chat.sendMessage(msg).then(() => {
+                                function sleep(ms) {
+                                    return new Promise(resolve => setTimeout(resolve, ms));
+                                }
+
+                                let trials = 0;
+
+                                function check() {
+                                    for (let i=chat.msgs.models.length - 1; i >= 0; i--) {
+                                        let msg = chat.msgs.models[chat.msgs.models.length - 1];
+
+                                        if (!msg.senderObj.isMe || msg.body !== message) {
+                                            continue;
+                                        }
+
+                                        done(WAPI._serializeMessageObj(msg));
+                                        return true;
+                                    }
+
+                                    trials += 1;
+                                    if (trials > 30) {
+                                        done(true);
+                                        return ;
+                                    }
+                                    sleep(500).then(check);
+                                }
+                                check();
+                            });
+                            return true;
+                        } else {
+                            chat.sendMessage(msg);
+                            return true;
+                        }
+                    } catch (err) {
+                        console.log(err);
+                        return false;
+                    }
+                });
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+
+    return true;
+};
+
+window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
+    const Chats = window.WAPI.getChatsModel();
+    let chatsAndMessages = [];
+    
+    Chats.forEach((chat) => {
+        let chatObject = WAPI._serializeChatObj(chat);
+        
+        if (!!chatObject) {
+            chatObject.messages = [];
+        
+            chat.msgs.models.reverse().forEach((msg) => {
+                if (typeof(msg.__x_isNewMsg) === 'boolean' && msg.__x_isNewMsg) {
+
+                    msg.__x_isNewMsg = false;
+                    let processed = WAPI.processMessageObj(msg);
+                    if (!!processed) {
+                        chatObject.messages.push(processed);
+                    }
+                }
+            });
+            
+            if (chatObject.messages.length > 0) {
+                chatsAndMessages.push(chatObject);
+            }
+        }
+    });
+    
+    if (!!done) {
+        done(chatsAndMessages);
+    }
+    
+    return chatsAndMessages;
+};
