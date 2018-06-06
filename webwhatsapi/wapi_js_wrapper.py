@@ -1,10 +1,20 @@
 import os
+import time
+import collections
+import numpy as np
 
 from selenium.common.exceptions import WebDriverException
 from six import string_types
+from threading import Thread
+from .objects.message import factory_message
 
 
 class JsException(Exception):
+    def __init__(self, message=None):
+        super(Exception, self).__init__(message)
+
+
+class WapiPhoneNotConnectedException(Exception):
     def __init__(self, message=None):
         super(Exception, self).__init__(message)
 
@@ -14,8 +24,13 @@ class WapiJsWrapper(object):
     Wraps JS functions in window.WAPI for easier use from python
     """
 
-    def __init__(self, driver):
+    def __init__(self, driver, wapi_driver):
         self.driver = driver
+        self.wapi_driver = wapi_driver
+
+        # Starts new messages observable thread.
+        self.new_messages_observable = NewMessagesObservable(self, wapi_driver, driver)
+        self.new_messages_observable.start()
 
     def __getattr__(self, item):
         """
@@ -93,7 +108,7 @@ class JsFunction(object):
         # Selenium's execute_async_script passes a callback function that should be called when the JS operation is done
         # It is passed to the WAPI function using arguments[0]
         if len(args):
-            command = "return WAPI.{0}({1}, arguments[0])"\
+            command = "return WAPI.{0}({1}, arguments[0])" \
                 .format(self.function_name, ",".join([str(JsArg(arg)) for arg in args]))
         else:
             command = "return WAPI.{0}(arguments[0])".format(self.function_name)
@@ -102,5 +117,44 @@ class JsFunction(object):
             return self.driver.execute_script(command)
         except WebDriverException as e:
             if e.msg == 'Timed out':
-                raise Exception("Phone not connected to Internet")
+                raise WapiPhoneNotConnectedException("Phone not connected to Internet")
             raise JsException("Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
+
+
+class NewMessagesObservable(Thread):
+    def __init__(self, wapi_js_wrapper, wapi_driver, webdriver):
+        Thread.__init__(self)
+        self.daemon = True
+        self.wapi_js_wrapper = wapi_js_wrapper
+        self.wapi_driver = wapi_driver
+        self.webdriver = webdriver
+        self.observers = []
+
+    def run(self):
+        while True:
+            try:
+                new_js_messages = self.wapi_js_wrapper.getBufferedNewMessages()
+                if isinstance(new_js_messages, (collections.Sequence, np.ndarray)) and len(new_js_messages) > 0:
+                    new_messages = []
+                    for js_message in new_js_messages:
+                        new_messages.append(factory_message(js_message, self.wapi_driver))
+
+                    self._inform_all(new_messages)
+            except Exception as e:
+                pass
+
+            time.sleep(2)
+
+    def subscribe(self, observer):
+        inform_method = getattr(observer, "on_message_received", None)
+        if not callable(inform_method):
+            raise Exception('You need to inform an observable that implements \'on_message_received(new_messages)\'.')
+
+        self.observers.append(observer)
+
+    def unsubscribe(self, observer):
+        self.observers.remove(observer)
+
+    def _inform_all(self, new_messages):
+        for observer in self.observers:
+            observer.on_message_received(new_messages)
