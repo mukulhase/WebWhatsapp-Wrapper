@@ -7,7 +7,7 @@ class NumberStatus(WhatsappObjectWithId):
     """
 
     def __init__(self, js_obj, driver=None):
-        super(WhatsappObjectWithId, self).__init__(js_obj, driver)
+        super(NumberStatus, self).__init__(js_obj, driver)
 
         if 'status' in js_obj:
             self.status = js_obj["status"]
