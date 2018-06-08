@@ -1051,59 +1051,60 @@ window.WAPI.checkNumberStatus = function(id, done) {
 /**
  * New messages observable functions.
  */
-if(!window.WAPI._newMessagesListener) {
-    window.WAPI._newMessagesQueue = [];
-    window.WAPI._newMessagesBuffer = [];
-    window.WAPI._newMessagesDebouncer = null;
-    window.WAPI._newMessagesCallbacks = [];
-    window.Store.Msg.off('add');
-    window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
-        if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
-            let message = window.WAPI.processMessageObj(newMessage, false, false);
-            if (message) {
-                window.WAPI._newMessagesQueue.push(message);
-                window.WAPI._newMessagesBuffer.push(message);
-            }
-    
-            // Starts debouncer time to don't call a callback for each message if more than one message arrives 
-            // in the same second
-            if(!window.WAPI._newMessagesDebouncer && window.WAPI._newMessagesQueue.length > 0) {
-                window.WAPI._newMessagesDebouncer = setTimeout(() => {
-                    window.WAPI._newMessagesDebouncer = null;
-                    let queuedMessages = window.WAPI._newMessagesQueue;
-                    window.WAPI._newMessagesQueue = [];
-    
-                    let removeCallbacks = [];
-                    window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
-                        if(callbackObj.callback !== undefined) {
-                            callbackObj.callback(queuedMessages);
-                        }
-                        if(callbackObj.rmAfterUse === true) {
-                            removeCallbacks.push(callbackObj);
-                        }
-                    });
-    
-                    // Remove removable callbacks.
-                    removeCallbacks.forEach(function(rmCallbackObj) {
-                        let callbackIndex = window.WAPI._newMessagesCallbacks.indexOf(rmCallbackObj);
-                        window.WAPI._newMessagesCallbacks.splice(callbackIndex, 1);
-                    });
-                }, 1000);
-            }
+window.WAPI._newMessagesQueue = [];
+window.WAPI._newMessagesBuffer = [];
+window.WAPI._newMessagesDebouncer = null;
+window.WAPI._newMessagesCallbacks = [];
+window.Store.Msg.off('add');
+
+window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
+    if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
+        let message = window.WAPI.processMessageObj(newMessage, false, false);
+        if (message) {
+            window.WAPI._newMessagesQueue.push(message);
+            window.WAPI._newMessagesBuffer.push(message);
+        }
+
+        // Starts debouncer time to don't call a callback for each message if more than one message arrives
+        // in the same second
+        if(!window.WAPI._newMessagesDebouncer && window.WAPI._newMessagesQueue.length > 0) {
+            window.WAPI._newMessagesDebouncer = setTimeout(() => {
+                window.WAPI._newMessagesDebouncer = null;
+                let queuedMessages = window.WAPI._newMessagesQueue;
+                window.WAPI._newMessagesQueue = [];
+
+                let removeCallbacks = [];
+                window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
+                    if(callbackObj.callback !== undefined) {
+                        callbackObj.callback(queuedMessages);
+                    }
+                    if(callbackObj.rmAfterUse === true) {
+                        removeCallbacks.push(callbackObj);
+                    }
+                });
+
+                // Remove removable callbacks.
+                removeCallbacks.forEach(function(rmCallbackObj) {
+                    let callbackIndex = window.WAPI._newMessagesCallbacks.indexOf(rmCallbackObj);
+                    window.WAPI._newMessagesCallbacks.splice(callbackIndex, 1);
+                });
+            }, 1000);
+        }
+    }
+});
+
+window.WAPI._unloadInform = (event) => {
+    window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
+        if(callbackObj.callback !== undefined) {
+            callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
         }
     });
-    
-    window.WAPI._unloadInform = (event) => {
-        window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
-            if(callbackObj.callback !== undefined) {
-                callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
-            }
-        });
-    };
-    window.addEventListener("unload", window.WAPI._unloadInform, false);
-    window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
-    window.addEventListener("pageunload", window.WAPI._unloadInform, false);
-}
+};
+
+window.addEventListener("unload", window.WAPI._unloadInform, false);
+window.addEventListener("beforeunload", window.WAPI._unloadInform, false);
+window.addEventListener("pageunload", window.WAPI._unloadInform, false);
+
 /**
  * Registers a callback to be called when a new message arrives the WAPI.
  * @param rmCallbackAfterUse - Boolean - Specify if the callback need to be executed only once
