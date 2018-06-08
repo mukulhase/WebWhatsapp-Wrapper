@@ -291,7 +291,7 @@ window.WAPI.getChat = function (id, done) {
 };
 
 window.WAPI.getChatByName = function (name, done) {
-    const found = window.Store.Chat.find((chat) => chat.name === name);
+    const found = Store.Chat.models.find((chat) => chat.__x_name === name);
     if (done !== undefined) {
         done(found);
     } else {
@@ -758,88 +758,6 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     return true;
 };
 
-/*Send all messages from a chat give it's name to a list of chat ids*/
-window.WAPI.sendMediaMessage = function (groupName, chatIds) {
-    let chatDatabase = window.WAPI.getChatByName(groupName);
-
-    if (!!chatDatabase) {
-        chatIds.forEach((chatId) => {
-        chatDatabase.msgs.models.forEach((msg) => {
-            setTimeout(() => {
-                if (msg.__x_ack) {
-                    msg.__x_id.id = window.WAPI.getNewId();
-                    msg.__x_t = Math.ceil(new Date().getTime() / 1000);
-                    msg.__x_id.remote = chatId;
-                    msg.__x_to = chatId;
-
-
-                    msg.collection.send(msg);
-                    return true;
-                }
-            }, 1500);
-        });
-    });
-    }
-
-    return true;
-};
-
-window.WAPI.sendMultipleMessages = function (ids, messages, done) {
-    const Chats = window.WAPI.getChatsModel();
-
-    try {
-        Chats.forEach((chat) => {
-            if (ids.indexOf(chat.id) > -1) {
-                messages.forEach((msg) => {
-                    try {
-                        if (!!done) {
-                            chat.sendMessage(msg).then(() => {
-                                function sleep(ms) {
-                                    return new Promise(resolve => setTimeout(resolve, ms));
-                                }
-
-                                let trials = 0;
-
-                                function check() {
-                                    for (let i=chat.msgs.models.length - 1; i >= 0; i--) {
-                                        let msg = chat.msgs.models[chat.msgs.models.length - 1];
-
-                                        if (!msg.senderObj.isMe || msg.body !== message) {
-                                            continue;
-                                        }
-
-                                        done(WAPI._serializeMessageObj(msg));
-                                        return true;
-                                    }
-
-                                    trials += 1;
-                                    if (trials > 30) {
-                                        done(true);
-                                        return ;
-                                    }
-                                    sleep(500).then(check);
-                                }
-                                check();
-                            });
-                            return true;
-                        } else {
-                            chat.sendMessage(msg);
-                            return true;
-                        }
-                    } catch (err) {
-                        console.log(err);
-                        return false;
-                    }
-                });
-            }
-        });
-    } catch (err) {
-        console.log(err);
-        return false;
-    }
-    return true;
-};
-
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = window.Store.Chat.models;
 
@@ -1151,12 +1069,18 @@ window.WAPI.getBufferedNewMessages = function(done) {
 };
 /** End new messages observable functions **/
 
-/*
+/**
     Edits
-*/
+**/
 
 
-/*Send all messages from a chat give it's name to a list of chat ids*/
+/**
+ * Send all messages from a chat give it's name to a list of chat ids
+ *
+ * @param groupName, the name of the group where the messages are stored.
+ * @param chatIds, a list of chat ids to send the messages
+ * @returns {Boolean} True if success, False otherwise
+ */
 window.WAPI.sendMediaMessage = function (groupName, chatIds) {
     let chatDatabase = window.WAPI.getChatByName(groupName);
 
@@ -1164,7 +1088,7 @@ window.WAPI.sendMediaMessage = function (groupName, chatIds) {
         chatIds.forEach((chatId) => {
             chatDatabase.msgs.models.forEach((msg) => {
                 setTimeout(() => {
-                    if (msg.__x_ack) {
+                    if (msg.__x_type.indexOf('notification') <= -1) {
                         msg.__x_id.id = window.WAPI.getNewId();
                         msg.__x_t = Math.ceil(new Date().getTime() / 1000);
                         msg.__x_id.remote = chatId;
@@ -1182,6 +1106,14 @@ window.WAPI.sendMediaMessage = function (groupName, chatIds) {
     return true;
 };
 
+/**
+ * Send a list of messages to a list of users
+ *
+ * @param ids, a list of chat ids to send the messages
+ * @param messages, a list of messages to sent to people
+ * @param done, a not required callback function
+ * @returns {Boolean} True if success, False otherwise
+ */
 window.WAPI.sendMultipleMessages = function (ids, messages, done) {
     const Chats = window.WAPI.getChatsModel();
 
@@ -1239,16 +1171,22 @@ window.WAPI.sendMultipleMessages = function (ids, messages, done) {
     return true;
 };
 
-window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_unread_count, done) {
+/**
+ * Get the unread messages
+ *
+ * @param done, a not required callback function
+ * @returns {Array} True if success, False otherwise
+ */
+window.WAPI.getUnreadMessages = function (done) {
     const Chats = window.WAPI.getChatsModel();
     let chatsAndMessages = [];
-    
+
     Chats.forEach((chat) => {
         let chatObject = WAPI._serializeChatObj(chat);
-        
+
         if (!!chatObject) {
             chatObject.messages = [];
-        
+
             chat.msgs.models.reverse().forEach((msg) => {
                 if (typeof(msg.__x_isNewMsg) === 'boolean' && msg.__x_isNewMsg) {
 
@@ -1259,16 +1197,16 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
                     }
                 }
             });
-            
+
             if (chatObject.messages.length > 0) {
                 chatsAndMessages.push(chatObject);
             }
         }
     });
-    
+
     if (!!done) {
         done(chatsAndMessages);
     }
-    
+
     return chatsAndMessages;
 };

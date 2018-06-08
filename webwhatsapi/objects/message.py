@@ -2,6 +2,7 @@ import mimetypes
 import os
 from datetime import datetime
 from typing import Union
+import time
 
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact
@@ -57,6 +58,7 @@ class Message(WhatsappObject):
         self.type = js_obj["type"]
         self.sender = Contact(js_obj["sender"], driver) if 'sender' in js_obj and js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
+        self.timestmp = js_obj["timestamp"]
         self.chat_id = js_obj['chatId']
 
         if js_obj["content"]:
