@@ -2,7 +2,6 @@ import mimetypes
 import os
 from datetime import datetime
 from typing import Union
-import time
 
 from webwhatsapi.helper import safe_str
 from webwhatsapi.objects.contact import Contact

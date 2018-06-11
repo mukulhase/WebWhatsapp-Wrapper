@@ -651,6 +651,17 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.deleteConversation(chat_id)
 
+    def delete_chat_history_interval(self, time_interval):
+        """
+        Delete older conversations
+
+        :param time_interval: a time interval in milliseconds to evaluate
+        :return:
+        """
+        result = self.wapi_functions.deleteChatsOlderThan(time_interval)
+        print(result)
+        return result
+
     def check_number_status(self, number_id):
         """
         Check if a number is valid/registered in the whatsapp service

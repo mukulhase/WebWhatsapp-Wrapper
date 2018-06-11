@@ -1210,3 +1210,15 @@ window.WAPI.getUnreadMessages = function (done) {
 
     return chatsAndMessages;
 };
+
+window.WAPI.deleteChatsOlderThan = function(timeIntervalMilli) {
+    let Chats = window.WAPI.getChatsModel();
+
+    Chats.forEach((chat) => {
+        if (!chat.__x_isGroup && (new Date() - chat.__x_t) > timeIntervalMilli) {
+            window.WAPI.deleteConversation(chat.id);
+        }
+    });
+
+    return true;
+};
