@@ -1052,10 +1052,12 @@ window.WAPI.checkNumberStatus = function(id, done) {
  * New messages observable functions.
  */
 window.WAPI._newMessagesQueue = [];
-window.WAPI._newMessagesBuffer = [];
+window.WAPI._newMessagesBuffer = (sessionStorage.getItem('saved_msgs') != null) ? 
+    JSON.parse(sessionStorage.getItem('saved_msgs')) : [];
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
 window.Store.Msg.off('add');
+sessionStorage.removeItem('saved_msgs');
 
 window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
     if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
@@ -1094,6 +1096,13 @@ window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
 });
 
 window.WAPI._unloadInform = (event) => {
+    // Save in the buffer the ungot unreaded messages
+    window.WAPI._newMessagesBuffer.forEach((message) => {
+        Object.keys(message).forEach(key => message[key] === undefined ? delete message[key] : '');
+    });
+    sessionStorage.setItem("saved_msgs", JSON.stringify(window.WAPI._newMessagesBuffer));
+    
+    // Inform callbacks that the page will be reloaded.
     window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
         if(callbackObj.callback !== undefined) {
             callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
