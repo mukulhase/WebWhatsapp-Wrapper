@@ -13,7 +13,7 @@ if (!window.Store) {
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
-                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
+                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 1) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
             ];
@@ -1015,10 +1015,7 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let conversation = window.Store.Chat.get(chatId);
-    let lastReceivedKey = conversation.lastReceivedKey;
-    window.Store.WapDelete.setSubProtocol(10);
-    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
+    window.Store.WapDelete.sendConversationDelete(chatId).then((response) => {
         if (done !== undefined) {
             done(response.status);
         }
