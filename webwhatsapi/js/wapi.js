@@ -13,9 +13,10 @@ if (!window.Store) {
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
-                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 0) ? module : null },
+                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
-                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
+                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
+                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null }
             ];
 
             for (let idx in modules) {
@@ -155,7 +156,7 @@ window.WAPI.createGroup = function (name, contactsId) {
     if (!Array.isArray(contactsId)) {
         contactsId = [contactsId];
     }
-    Store.Wap.setSubProtocol(10);
+
     return window.Store.Wap.createGroup(name, contactsId);
 };
 
@@ -1015,7 +1016,12 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    window.Store.WapDelete.sendConversationDelete(chatId).then((response) => {
+    let conversation = window.Store.Chat.get(chatId);
+    let lastReceivedKey = conversation.lastReceivedKey;
+    let subProtocol = new window.Store.ProtoConstructor(10);
+    window.Store.WapDelete.BinaryProtocol = subProtocol;
+    window.Store.WapDelete.N = subProtocol.Node;
+    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
         if (done !== undefined) {
             done(response.status);
         }
