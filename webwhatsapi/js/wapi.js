@@ -1075,31 +1075,35 @@ window.WAPI.getBufferedNewMessages = function(done) {
 
 
 /**
- * Send all messages from a chat give it's name to a list of chat ids
+ * Send all messages from a group give it's name to a list of chat ids
  *
  * @param groupName, the name of the group where the messages are stored.
  * @param chatIds, a list of chat ids to send the messages
  * @returns {Boolean} True if success, False otherwise
  */
 window.WAPI.sendMediaMessage = function (groupName, chatIds) {
-    let chatDatabase = window.WAPI.getChatByName(groupName);
+    let groups = window.WAPI.getAllGroups();
 
-    if (!!chatDatabase) {
-        chatIds.forEach((chatId) => {
-            chatDatabase.msgs.models.forEach((msg) => {
-                setTimeout(() => {
-                    if (msg.__x_type.indexOf('notification') <= -1) {
-                        msg.__x_id.id = window.WAPI.getNewId();
-                        msg.__x_t = Math.ceil(new Date().getTime() / 1000);
-                        msg.__x_id.remote = chatId;
-                        msg.__x_to = chatId;
+    if (!!groups) {
+        groups.forEach((chatDatabase) => {
+            if (chatDatabase.formattedTitle === groupName) {
+                chatIds.forEach((chatId) => {
+                    chatDatabase.msgs.models.forEach((msg) => {
+                        setTimeout(() => {
+                            if (msg.__x_type.indexOf('notification') <= -1) {
+                                msg.__x_id.id = window.WAPI.getNewId();
+                                msg.__x_t = Math.ceil(new Date().getTime() / 1000);
+                                msg.__x_id.remote = chatId;
+                                msg.__x_to = chatId;
 
 
-                        msg.collection.send(msg);
-                        return true;
-                    }
-                }, 1500);
-            });
+                                msg.collection.send(msg);
+                                return true;
+                            }
+                        }, 1500);
+                    });
+                });
+            }
         });
     }
 
@@ -1184,7 +1188,7 @@ window.WAPI.getUnreadMessages = function (done) {
     Chats.forEach((chat) => {
         let chatObject = WAPI._serializeChatObj(chat);
 
-        if (!!chatObject) {
+        if (!!chatObject && !chatObject.isGroup) {
             chatObject.messages = [];
 
             chat.msgs.models.reverse().forEach((msg) => {
