@@ -2,7 +2,9 @@
 > 
 > - [ ] Please check if any other issue already adresses your concerns or if a recent PR is already fixing the mentioned issue
 > 
-> - [ ] Please make sure to format your code, and to mark your code as such, with the provided tools from github (upper right of this box)
+> - [ ] Please make sure to **format your code**, and to mark your code as such, with the provided tools from github (upper right of this box)
+> 
+> - [ ] Please state your **Operating System (inlcuding version)**, your **Python Version**, and your **installation way (pip, from repo)** and if you are running it inside a docker container
 > 
 > - [ ] Note that the pip installation might be behind, so try to fix your issue with a pull from the repo and update to the most recent version
 > 
