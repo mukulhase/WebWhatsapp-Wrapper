@@ -109,7 +109,7 @@ window.WAPI._serializeContactObj = (obj) => {
         isUser: obj.isUser,
         isVerified: obj.isVerified,
         isWAContact: obj.isWAContact,
-        profilePicThumbObj: obj.profilePicThumb ? WAPI._serializeRawObj(obj.profilePicThumb) : {},
+        profilePicThumbObj: obj.profilePicThumb ? WAPI._serializeProfilePicThumb(obj.profilePicThumb) : {},
         statusMute: obj.statusMute,
         msgs: null
     });
@@ -152,6 +152,20 @@ window.WAPI._serializeNumberStatusObj = (obj) => {
     });
 };
 
+window.WAPI._serializeProfilePicThumb = (obj) => {
+    if (obj == undefined) {
+        return null;
+    }
+
+    return Object.assign({}, {
+        eurl: obj.eurl,
+        id: obj.id,
+        img: obj.img,
+        imgFull: obj.imgFull,
+        raw: obj.raw,
+        tag: obj.tag
+    });
+}
 window.WAPI.createGroup = function (name, contactsId) {
     if (!Array.isArray(contactsId)) {
         contactsId = [contactsId];
@@ -974,6 +988,55 @@ window.WAPI.getCommonGroups = async function (id, done) {
     }
     return output;
 };
+
+
+window.WAPI.getProfilePicSmallFromId = function(id, done) {
+    window.Store.ProfilePicThumb.find(id).then(function(d) {
+        if(d.img !== undefined) {
+            window.WAPI.downloadFileWithCredentials(d.img, done);
+        } else {
+            done(false);
+        }
+    })
+};
+
+window.WAPI.getProfilePicFromId = function(id, done) {
+    window.Store.ProfilePicThumb.find(id).then(function(d) {
+        if(d.imgFull !== undefined) {
+            window.WAPI.downloadFileWithCredentials(d.imgFull, done);
+        } else {
+            done(false);
+        }
+    })
+};
+
+window.WAPI.downloadFileWithCredentials = function (url, done) {
+    let xhr = new XMLHttpRequest();
+
+
+    xhr.onload = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let reader = new FileReader();
+                reader.readAsDataURL(xhr.response);
+                reader.onload = function (e) {
+                    done(reader.result.substr(reader.result.indexOf(',') + 1))
+                };
+            } else {
+                console.error(xhr.statusText);
+            }
+        } else {
+            console.log(err);
+            done(false);
+        }
+    };
+
+    xhr.open("GET", url, true);
+    xhr.withCredentials = true;
+    xhr.responseType = 'blob';
+    xhr.send(null);
+};
+
 
 window.WAPI.downloadFile = function (url, done) {
     let xhr = new XMLHttpRequest();

@@ -570,8 +570,29 @@ class WhatsAPIDriver(object):
         for admin_id in admin_ids:
             yield self.get_contact_from_id(admin_id)
 
+    def get_profile_pic_from_id(self, id):
+        """
+        Get full profile pic from an id
+
+        :param id: ID
+        :type id: str
+        """
+        return b64decode(self.wapi_functions.getProfilePicFromId(id))
+
+    def get_profile_pic_small_from_id(self, id):
+        """
+        Get small profile pic from an id
+
+        :param id: ID
+        :type id: str
+        """
+        return b64decode(self.wapi_functions.getProfilePicSmallFromId(id))
+
     def download_file(self, url):
         return b64decode(self.wapi_functions.downloadFile(url))
+
+    def download_file_with_credentials(self, url):
+        return b64decode(self.wapi_functions.downloadFileWithCredentials(url))
 
     def download_media(self, media_msg, force_download=False):
         if not force_download:
