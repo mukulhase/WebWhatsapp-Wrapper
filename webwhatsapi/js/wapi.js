@@ -7,6 +7,7 @@
  * functions and creates the Store object.
  */
 if (!window.Store) {
+    window.Store = {};
     (function() {
         function getStore(modules) {
             let foundCount = 0;
@@ -15,7 +16,9 @@ if (!window.Store) {
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
-                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
+                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
+                { id: "Media", conditions: (module) => module.processRawMedia ? module : null},
+                { id: "MediaPrepare", conditions: (module) => module.prepRawMedia ? module : null}
             ];
 
             for (let idx in modules) {
@@ -57,7 +60,7 @@ if (!window.Store) {
             }
         }
 
-        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, 'parasite');
+        webpackJsonp([], {'parasite': (x, y, z) => {getStore(z); window.Store.MediaCollection = z('"dhcbbcecif"');}}, 'parasite');
     })();
 }
 
@@ -1081,7 +1084,7 @@ window.WAPI.getBufferedNewMessages = function(done) {
  * @param chatIds, a list of chat ids to send the messages
  * @returns {Boolean} True if success, False otherwise
  */
-window.WAPI.sendMediaMessage = function (groupName, chatIds) {
+window.WAPI.resendMediaMessage = function (groupName, chatIds) {
     let groups = window.WAPI.getAllGroups();
 
     if (!!groups) {
@@ -1225,4 +1228,28 @@ window.WAPI.deleteChatsOlderThan = function(timeIntervalMilli) {
     });
 
     return true;
+};
+
+
+
+window.WAPI.sendMediaMessage = function(b64, chatId) {
+    let bytesC = atob(b64);
+    let bytesN = new Array(bytesC.length);
+    for (let i=0; i<bytesC.length; i++) {
+        bytesN[i] = bytesC.charCodeAt(i);
+    }
+    let bytesA = new Uint8Array(bytesN);
+    let blob = new Blob([bytesA], {type: 'image/jpeg'});
+
+    let chatObj = WAPI.getChat(chatId);
+
+    if (!!chatObj) {
+        Store.MediaCollection.prototype.constructor();
+        Store.MediaCollection.prototype.processFiles([blob], chatObj, 1);
+
+        let mediaObj = Store.MediaCollection.prototype.models.pop();
+        mediaObj.sendToChat(chatObj, {});
+        return true;
+    }
+    return false;
 };

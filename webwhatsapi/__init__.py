@@ -510,8 +510,15 @@ class WhatsAPIDriver(object):
         for group in self.wapi_functions.getCommonGroups(contact_id):
             yield factory_chat(group, self)
 
-    def chat_send_media_message(self, info):
-        result = self.wapi_functions.sendMediaMessage(info['group_name'], info['chat_id_list'])
+    def chat_send_media(self, info):
+        result = self.wapi_functions.sendMediaMessage(info['b64'], info['chat_id'])
+
+        if not isinstance(result, bool):
+            return factory_message(result, self)
+        return result
+
+    def chat_resend_media_message(self, info):
+        result = self.wapi_functions.resendMediaMessage(info['group_name'], info['chat_id_list'])
 
         if not isinstance(result, bool):
             return factory_message(result, self)
