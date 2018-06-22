@@ -13,7 +13,7 @@ if (!window.Store) {
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
-                {id: "MediaCollection", conditions: (module) => (module.prototype && module.prototype.processFiles !== undefined) ? new module() : null},
+                {id: "MediaCollection", conditions: (module) => (module.prototype && module.prototype.processFiles !== undefined) ? module : null},
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
@@ -1153,8 +1153,9 @@ window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
     var chat = WAPI.getChat(chatid);
     if (chat !== undefined) {
         var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
-        Store.MediaCollection.processFiles([mediaBlob], chat, 1).then(() => {
-            var media = Store.MediaCollection.models[Store.MediaCollection.models.length - 1];
+        var mc = new Store.MediaCollection();
+        mc.processFiles([mediaBlob], chat, 1).then(() => {
+            var media = mc.models[0];
             media.sendToChat(chat, {caption: caption});
             done(true);
         });
