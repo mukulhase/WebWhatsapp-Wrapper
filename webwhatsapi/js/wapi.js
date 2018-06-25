@@ -7,18 +7,17 @@
  * functions and creates the Store object.
  */
 if (!window.Store) {
-    window.Store = {};
     (function() {
         function getStore(modules) {
             let foundCount = 0;
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
+                { id: "MediaCollection", conditions: (module) => (module.prototype && module.prototype.processFiles !== undefined) ? module : null},
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
-                { id: "Media", conditions: (module) => module.processRawMedia ? module : null},
-                { id: "MediaPrepare", conditions: (module) => module.prepRawMedia ? module : null}
+                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null }
             ];
 
             for (let idx in modules) {
@@ -60,10 +59,9 @@ if (!window.Store) {
             }
         }
 
-        webpackJsonp([], {'parasite': (x, y, z) => {getStore(z); window.Store.MediaCollection = z('"dhcbbcecif"');}}, 'parasite');
+        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, 'parasite');
     })();
 }
-
 window.WAPI = {
     lastRead: {}
 };
@@ -916,31 +914,6 @@ window.WAPI.getCommonGroups = async function (id, done) {
     return output;
 };
 
-window.WAPI.downloadFile = function (url, done) {
-    let xhr = new XMLHttpRequest();
-
-
-    xhr.onload = function () {
-        if (xhr.readyState == 4) {
-            if (xhr.status == 200) {
-                let reader = new FileReader();
-                reader.readAsDataURL(xhr.response);
-                reader.onload = function (e) {
-                    done(reader.result.substr(reader.result.indexOf(',') + 1))
-                };
-            } else {
-                console.error(xhr.statusText);
-            }
-        } else {
-            console.log(err);
-            done(false);
-        }
-    };
-
-    xhr.open("GET", url, true);
-    xhr.responseType = 'blob';
-    xhr.send(null);
-};
 
 window.WAPI.getBatteryLevel = function (done) {
     if (window.Store.Conn.plugged) {
@@ -1230,26 +1203,51 @@ window.WAPI.deleteChatsOlderThan = function(timeIntervalMilli) {
     return true;
 };
 
+window.WAPI.downloadFile = function (url, f) {
+    let xhr = new XMLHttpRequest();
 
+    xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            try {
+                let b64 = xhr.responseText;
+                let bytesC = atob(b64);
+                let bytesN = new Array(bytesC.length);
+                for (let i=0; i<bytesC.length; i++) {
+                    bytesN[i] = bytesC.charCodeAt(i);
+                }
+                let bytesA = new Uint8Array(bytesN);
+                f(new Blob([bytesA], {type: 'image/jpeg'}));
+            } catch (err) {
+                f(false);
+            }
+        }
+    };
+    xhr.open('GET', url, false);
+    xhr.send();
+};
 
-window.WAPI.sendMediaMessage = function(b64, chatId) {
-    let bytesC = atob(b64);
-    let bytesN = new Array(bytesC.length);
-    for (let i=0; i<bytesC.length; i++) {
-        bytesN[i] = bytesC.charCodeAt(i);
+let base64ToFile = (base64) => {
+    let arr = base64.split(','), mime = arr[0].match(/:(.*?);/, '$1')[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
     }
-    let bytesA = new Uint8Array(bytesN);
-    let blob = new Blob([bytesA], {type: 'image/jpeg'});
+    return new File([u8arr], 'file.' + mime.split('/')[1], {type: mime});
+};
 
-    let chatObj = WAPI.getChat(chatId);
-
-    if (!!chatObj) {
-        Store.MediaCollection.prototype.constructor();
-        Store.MediaCollection.prototype.processFiles([blob], chatObj, 1);
-
-        let mediaObj = Store.MediaCollection.prototype.models.pop();
-        mediaObj.sendToChat(chatObj, {});
-        return true;
+window.WAPI.sendMedia = function(base64, chatId, caption, done) {
+    let chat = WAPI.getChat(chatId);
+    if (!!chat) {
+        let mediaBlob = base64ToFile(base64);
+        let mc = new Store.MediaCollection();
+        mc.processFiles([mediaBlob], chat, 1).then(() => {
+            let media = mc.models[0];
+            media.sendToChat(chat, {caption: caption});
+            done(true);
+        });
+    } else {
+        done(false);
     }
-    return false;
+    return true;
 };

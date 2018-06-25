@@ -190,6 +190,7 @@ class WhatsAPIDriver(object):
 
             capabilities = DesiredCapabilities.FIREFOX.copy()
             capabilities['webStorageEnabled'] = True
+            capabilities['loggingPrefs'] = {'browser': 'ALL'}
 
             self.logger.info("Starting webdriver")
             self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
@@ -511,7 +512,7 @@ class WhatsAPIDriver(object):
             yield factory_chat(group, self)
 
     def chat_send_media(self, info):
-        result = self.wapi_functions.sendMediaMessage(info['b64'], info['chat_id'])
+        result = self.wapi_functions.sendMedia(info['base_64'], info['chat_id'], info['caption'])
 
         if not isinstance(result, bool):
             return factory_message(result, self)
