@@ -13,6 +13,7 @@ if (!window.Store) {
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
+                {id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null},
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
@@ -1147,3 +1148,28 @@ window.WAPI.getBufferedNewMessages = function(done) {
     return bufferedMessages;
 };
 /** End new messages observable functions **/
+
+window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
+    var chat = WAPI.getChat(chatid);
+    if (chat !== undefined) {
+        var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
+        var mc = new Store.MediaCollection();
+        mc.processFiles([mediaBlob], chat, 1).then(() => {
+            var media = mc.models[0];
+            media.sendToChat(chat, {caption: caption});
+            done(true);
+        });
+    } else {
+        done(false);
+    }
+    return true;
+};
+
+window.WAPI.base64ImageToFile = function (b64Data, filename) {
+    var arr = b64Data.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type: mime});
+};
