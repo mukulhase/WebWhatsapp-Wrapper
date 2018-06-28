@@ -332,26 +332,23 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     return true;
 };
 
-window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId, done) {
+window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId,done) {
     var chatSend = WAPI.getChat(chatId);
     if (chatSend === undefined) {
+        if(done!==undefined){
+            done(true);
+        }
         return false;
     }
-    var msgWithImg = chatSend.createMessageFromText(".");
-    msgWithImg.__x_hasLink = title;
-    msgWithImg.__x_body = description + '\n ' + url;
-    msgWithImg.__x_isLink = title;
-    msgWithImg.__x_description = description;
-    msgWithImg.__x_subtype = 'url';
-    msgWithImg.__x_title = title;
-    msgWithImg.__x_thumbnail = thumb;
-
-    chatSend.addAndSendMsg(msgWithImg);
-
+    var linkPreview = {canonicalUrl: url,
+        description: description,
+        matchedText: url,
+        title: title,
+        thumbnail: thumb};
+    chatSend.sendMessage(url, {linkPreview: linkPreview, mentionedJidList: [], quotedMsg: null, quotedMsgAdminGroupJid: null});
     if(done!==undefined){
         done(true);
     }
-
     return true;
 };
 
