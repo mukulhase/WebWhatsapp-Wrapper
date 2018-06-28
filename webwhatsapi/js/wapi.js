@@ -335,6 +335,9 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
 window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId,done) {
     var chatSend = WAPI.getChat(chatId);
     if (chatSend === undefined) {
+        if(done!==undefined){
+            done(true);
+        }
         return false;
     }
     var linkPreview = {canonicalUrl: url,
