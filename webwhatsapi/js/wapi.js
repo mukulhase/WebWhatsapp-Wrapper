@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * This script contains WAPI functions that need to be run in the context of the webpage
  */
@@ -1232,4 +1233,25 @@ window.WAPI.base64ImageToFile = function (b64Data, filename) {
         u8arr[n] = bstr.charCodeAt(n);
     }
     return new File([u8arr], filename, {type: mime});
+};
+
+/**
+ * Send contact card to a specific chat using the chat ids
+ * 
+ * @param {string} to '000000000000@c.us'
+ * @param {string|array} contact '111111111111@c.us' | ['222222222222@c.us', '333333333333@c.us, ... 'nnnnnnnnnnnn@c.us']
+ */
+window.WAPI.sendContact = function(to, contact) {
+    if (!Array.isArray(contact)) {
+        contact = [contact];
+    }
+    contact = contact.map((c) => {
+        return window.WAPI.getChat(c).__x_contact;
+    });
+
+    if (contact.length > 1) {
+        window.WAPI.getChat(to).sendContactList(contact);
+    } else if (contact.length === 1) {
+        window.WAPI.getChat(to).sendContact(contact[0]);
+    }
 };
