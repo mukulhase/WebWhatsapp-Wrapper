@@ -332,7 +332,7 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     return true;
 };
 
-window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId) {
+window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId,done) {
     var chatSend = WAPI.getChat(chatId);
     if (chatSend === undefined) {
         return false;
@@ -343,6 +343,9 @@ window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, cha
         title: title,
         thumbnail: thumb};
     chatSend.sendMessage(url, {linkPreview: linkPreview, mentionedJidList: [], quotedMsg: null, quotedMsgAdminGroupJid: null});
+    if(done!==undefined){
+        done(true);
+    }
     return true;
 };
 
