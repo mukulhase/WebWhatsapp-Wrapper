@@ -5,3 +5,4 @@ python-axolotl
 cryptography
 typing
 numpy
+python-magic
