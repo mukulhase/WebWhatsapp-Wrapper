@@ -13,11 +13,12 @@ if (!window.Store) {
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
-                { id: "MediaCollection", conditions: (module) => (module.prototype && module.prototype.processFiles !== undefined) ? module : null},
+                { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null},
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
-                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null }
+                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null },
+                { id: "CryptoLib", conditions: (module) => (module.decryptE2EMedia) ? module : null }
             ];
 
             for (let idx in modules) {
@@ -609,8 +610,6 @@ window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifica
             return WAPI._serializeMessageObj(messageObj);
         else
             return;
-        // System message
-        // (i.e. "Messages you send to this chat and calls are now secured with end-to-end encryption...")
     } else if (messageObj.id.fromMe === false || includeMe) {
         return WAPI._serializeMessageObj(messageObj);
     }
@@ -1189,6 +1188,29 @@ window.WAPI.getUnreadMessages = function (done) {
     }
 
     return chatsAndMessages;
+};
+
+window.WAPI.downloadEncFile = function (url, done) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    //done(xhr.response);
+                    resolve(xhr.response);
+                } else {
+                    console.error(xhr.statusText);
+                }
+            } else {
+                reject(false);
+                //done(false);
+            }
+        };
+
+        xhr.open("GET", url, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.send(null);
+    });
 };
 
 window.WAPI.deleteChatsOlderThan = function(timeIntervalMilli) {

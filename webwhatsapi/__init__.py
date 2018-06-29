@@ -667,7 +667,6 @@ class WhatsAPIDriver(object):
         :return:
         """
         result = self.wapi_functions.deleteChatsOlderThan(time_interval)
-        print(result)
         return result
 
     def check_number_status(self, number_id):
