@@ -1180,6 +1180,7 @@ window.WAPI.getUnreadMessages = function (done) {
                     let processed = WAPI.processMessageObj(msg);
                     if (!!processed) {
                         if (processed.isMedia || processed.isMMS) {
+                            console.log(processed);
                             let queue = window.ToProcessMedia.filter((chat) => chat.chat.id === chatObject.id).pop();
                             if (!!queue) {
                                 queue.message.push(processed);
@@ -1308,7 +1309,7 @@ let processMediaMessage = (chatObj, messages) => {
     messages.forEach((message) => {
         WAPI.downloadEncFile(message.clientUrl)
         .then((arrBuffer) => {
-            Store.CryptoLib.decryptE2EMedia(message.type.toUpperCase(), arrBuffer,
+            Store.CryptoLib.decryptE2EMedia(message.mimetype.split('/')[0].toUpperCase(), arrBuffer,
                 message.mediaKey, message.mimetype)
                 .then((decrypted) => {
                     let fr = new FileReader();
@@ -1329,6 +1330,7 @@ let processMediaMessage = (chatObj, messages) => {
 let watchProcessQueues = () => {
     if (window.ToProcessMedia.length > 0) {
         let toProcess = window.ToProcessMedia.pop();
+        console.log(toProcess);
         setTimeout(processMediaMessage, 0, toProcess.chat, toProcess.message);
     }
     setTimeout(watchProcessQueues, 500);
