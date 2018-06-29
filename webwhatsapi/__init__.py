@@ -597,7 +597,7 @@ class WhatsAPIDriver(object):
             yield self.get_contact_from_id(admin_id)
 
     def download_file(self, url):
-        return b64decode(self.wapi_functions.downloadFile(url))
+        return b64decode(self.wapi_functions.downloadFileAsync(url))
 
     def download_media(self, media_msg, force_download=False):
         if not force_download:

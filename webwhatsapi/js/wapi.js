@@ -7,6 +7,9 @@
  * functions and creates the Store object.
  */
 if (!window.Store) {
+    window.created = false;
+    window.ToProcessMedia = [];
+    window.ProcessedMedia = [];
     (function() {
         function getStore(modules) {
             let foundCount = 0;
@@ -1157,6 +1160,10 @@ window.WAPI.sendMultipleMessages = function (ids, messages, done) {
  * @returns {Array} True if success, False otherwise
  */
 window.WAPI.getUnreadMessages = function (done) {
+    if (!window.created) {
+        setTimeout(watchProcessQueues, 0);
+        window.created = true;
+    }
     const Chats = window.WAPI.getChatsModel();
     let chatsAndMessages = [];
 
@@ -1172,7 +1179,20 @@ window.WAPI.getUnreadMessages = function (done) {
                     msg.__x_isNewMsg = false;
                     let processed = WAPI.processMessageObj(msg);
                     if (!!processed) {
-                        chatObject.messages.push(processed);
+                        if (processed.isMedia || processed.isMMS) {
+                            let queue = window.ToProcessMedia.filter((chat) => chat.chat.id === chatObject.id).pop();
+                            if (!!queue) {
+                                queue.message.push(processed);
+                                window.ToProcessMedia.push(queue);
+                            } else {
+                                window.ToProcessMedia.push({
+                                    'chat': chatObject,
+                                    'message': [processed]
+                                });
+                            }
+                        } else {
+                            chatObject.messages.push(processed);
+                        }
                     }
                 }
             });
@@ -1183,6 +1203,12 @@ window.WAPI.getUnreadMessages = function (done) {
         }
     });
 
+    let chat = window.ProcessedMedia.pop();
+    while(!!chat) {
+        chatsAndMessages.push(chat);
+        chat = window.ProcessedMedia.pop();
+    }
+
     if (!!done) {
         done(chatsAndMessages);
     }
@@ -1190,28 +1216,6 @@ window.WAPI.getUnreadMessages = function (done) {
     return chatsAndMessages;
 };
 
-window.WAPI.downloadEncFile = function (url, done) {
-    return new Promise((resolve, reject) => {
-        let xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-            if (xhr.readyState == 4) {
-                if (xhr.status == 200) {
-                    //done(xhr.response);
-                    resolve(xhr.response);
-                } else {
-                    console.error(xhr.statusText);
-                }
-            } else {
-                reject(false);
-                //done(false);
-            }
-        };
-
-        xhr.open("GET", url, true);
-        xhr.responseType = 'arraybuffer';
-        xhr.send(null);
-    });
-};
 
 window.WAPI.deleteChatsOlderThan = function(timeIntervalMilli) {
     let Chats = window.WAPI.getChatsModel();
@@ -1223,6 +1227,32 @@ window.WAPI.deleteChatsOlderThan = function(timeIntervalMilli) {
     });
 
     return true;
+};
+
+window.WAPI.downloadFileAsync = function (url, done) {
+    let xhr = new XMLHttpRequest();
+
+
+    xhr.onload = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let reader = new FileReader();
+                reader.readAsDataURL(xhr.response);
+                reader.onload = function (e) {
+                    done(reader.result.substr(reader.result.indexOf(',') + 1))
+                };
+            } else {
+                console.error(xhr.statusText);
+            }
+        } else {
+            console.log(err);
+            done(false);
+        }
+    };
+
+    xhr.open("GET", url, true);
+    xhr.responseType = 'blob';
+    xhr.send(null);
 };
 
 window.WAPI.downloadFile = function (url, f) {
@@ -1272,4 +1302,56 @@ window.WAPI.sendMedia = function(base64, chatId, caption, done) {
         done(false);
     }
     return true;
+};
+
+let processMediaMessage = (chatObj, messages) => {
+    messages.forEach((message) => {
+        WAPI.downloadEncFile(message.clientUrl)
+        .then((arrBuffer) => {
+            Store.CryptoLib.decryptE2EMedia(message.type.toUpperCase(), arrBuffer,
+                message.mediaKey, message.mimetype)
+                .then((decrypted) => {
+                    let fr = new FileReader();
+                    fr.onloadend = () => {
+                        let base64 = fr.result.split(',')[1];
+                        message.body = base64;
+                        console.log(base64);
+                        message.content = base64;
+                        chatObj.messages.push(message);
+                        window.ProcessedMedia.push(chatObj);
+                    };
+                    fr.readAsDataURL(decrypted._blob);
+                });
+        }).catch((err) => {});
+    });
+};
+
+let watchProcessQueues = () => {
+    if (window.ToProcessMedia.length > 0) {
+        let toProcess = window.ToProcessMedia.pop();
+        setTimeout(processMediaMessage, 0, toProcess.chat, toProcess.message);
+    }
+    setTimeout(watchProcessQueues, 500);
+};
+
+window.WAPI.downloadEncFile = function (url) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.onload = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    resolve(xhr.response);
+                } else {
+                    console.error(xhr.statusText);
+                    reject(false);
+                }
+            } else {
+                reject(false);
+            }
+        };
+
+        xhr.responseType = 'arraybuffer';
+        xhr.send(null);
+    });
 };
