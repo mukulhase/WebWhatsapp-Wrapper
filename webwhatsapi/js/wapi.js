@@ -1255,3 +1255,62 @@ window.WAPI.sendContact = function(to, contact) {
         window.WAPI.getChat(to).sendContact(contact[0]);
     }
 };
+
+/**
+ * Create an chat ID based in a cloned one
+ * 
+ * @param {string} chatId '000000000000@c.us'
+ */
+window.WAPI.getNewMessageId = function(chatId) {
+    var newMsgId = Store.Msg.models[0].id.clone();
+
+    newMsgId.fromMe = true;
+    newMsgId.id = WAPI.getNewId().toUpperCase();
+    newMsgId.remote = chatId;
+    newMsgId._serialized = `${newMsgId.fromMe}_${newMsgId.remote}_${newMsgId.id}`
+
+    return newMsgId;
+};
+
+/**
+ * Send Customized VCard without the necessity of contact be a Whatsapp Contact
+ * 
+ * @param {string} chatId '000000000000@c.us'
+ * @param {object|array} vcard { displayName: 'Contact Name', vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Contact Name;;;\nEND:VCARD' } | [{ displayName: 'Contact Name 1', vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Contact Name 1;;;\nEND:VCARD' }, { displayName: 'Contact Name 2', vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Contact Name 2;;;\nEND:VCARD' }]
+ */
+window.WAPI.sendVCard = function(chatId, vcard) {
+    var chat = Store.Chat.get(chatId);
+    var tempMsg = Object.create(Store.Msg.models[0]);
+    var newId = window.WAPI.getNewMessageId(chatId);
+
+    var extend = {
+        ack: 0,
+        from: Store.Conn.me,
+        id: newId,
+        local: !0,
+        self: "out",
+        t: parseInt(new Date().getTime() / 1000),
+        to: chatId,
+        isNewMsg: !0,
+    };
+
+    if (Array.isArray(vcard)) {
+        Object.assign(extend, {
+            type: "multi_vcard",
+            vcardList: vcard
+        });
+
+        delete extend.body;
+    } else {
+        Object.assign(extend, {
+            type: "vcard",
+            body: vcard.vcard
+        });
+
+        delete extend.vcardList;
+    }
+
+    Object.assign(tempMsg, extend);
+
+    chat.addAndSendMsg(tempMsg);
+};
