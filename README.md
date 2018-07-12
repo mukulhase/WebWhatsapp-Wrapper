@@ -56,7 +56,7 @@ Now to the client container. The following command installs a local webwhatsapi 
     
 For Windows:
 
-    docker run --network selenium -it -e SELENIUM='http://firefox:4444/wd/hub' -v "$(pwd):/app".ToLower() webwhatsapi /bin/bash -c "pip install ./;pip list;python sample/remote.py"
+    docker run --network selenium -it -e SELENIUM='http://firefox:4444/wd/hub' -v "%cd%:/app".ToLower() webwhatsapi /bin/bash -c "pip install ./;pip list;python sample/remote.py"
 
 It is also certainly possible to fully build the docker image in advance and define an entrypoint/cmd inside the dockerfile to run a full client.
 
