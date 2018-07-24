@@ -1180,7 +1180,6 @@ window.WAPI.getUnreadMessages = function (done) {
                     let processed = WAPI.processMessageObj(msg);
                     if (!!processed) {
                         if (processed.clientUrl) {
-                            console.log(processed);
                             let queue = window.ToProcessMedia.filter((chat) => chat.chat.id === chatObject.id).pop();
                             if (!!queue) {
                                 queue.message.push(processed);
@@ -1305,11 +1304,18 @@ window.WAPI.sendMedia = function(base64, chatId, caption, done) {
     return true;
 };
 
+let mime = {
+    'application': 'document',
+    'image': 'image',
+    'video': 'video',
+    'audio': 'audio'
+};
+
 let processMediaMessage = (chatObj, messages) => {
     messages.forEach((message) => {
         WAPI.downloadEncFile(message.clientUrl)
         .then((arrBuffer) => {
-            Store.CryptoLib.decryptE2EMedia(message.mimetype.split('/')[0].toUpperCase(), arrBuffer,
+            Store.CryptoLib.decryptE2EMedia(mime[message.mimetype.split('/')[0]].toUpperCase(), arrBuffer,
                 message.mediaKey, message.mimetype)
                 .then((decrypted) => {
                     let fr = new FileReader();
@@ -1323,7 +1329,9 @@ let processMediaMessage = (chatObj, messages) => {
                     };
                     fr.readAsDataURL(decrypted._blob);
                 });
-        }).catch((err) => {});
+        }).catch((err) => {
+            console.log(err);
+        });
     });
 };
 
