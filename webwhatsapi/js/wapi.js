@@ -1179,7 +1179,7 @@ window.WAPI.getUnreadMessages = function (done) {
                     msg.__x_isNewMsg = false;
                     let processed = WAPI.processMessageObj(msg);
                     if (!!processed) {
-                        if (processed.isMedia || processed.isMMS) {
+                        if (processed.clientUrl) {
                             console.log(processed);
                             let queue = window.ToProcessMedia.filter((chat) => chat.chat.id === chatObject.id).pop();
                             if (!!queue) {
