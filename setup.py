@@ -102,7 +102,8 @@ setup(
         'selenium>=3.4.3',
         'six>=1.10.0',
         'python-axolotl',
-        'cryptography'
+        'cryptography',
+        'python-magic'
     ],
     extras_require={
     },
