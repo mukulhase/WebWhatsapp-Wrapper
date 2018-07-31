@@ -5,10 +5,9 @@ from datetime import datetime
 import os
 from typing import Union
 
-from webwhatsapi import Contact
-from webwhatsapi.helper import safe_str
-from webwhatsapi.objects.contact import Contact
-from webwhatsapi.objects.whatsapp_object import WhatsappObject
+from ..helper import safe_str
+from .contact import Contact
+from .whatsapp_object import WhatsappObject
 
 
 def getContacts(x, driver):
