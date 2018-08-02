@@ -124,6 +124,7 @@ window.WAPI._serializeMessageObj = (obj) => {
 
     return Object.assign(window.WAPI._serializeRawObj(obj), {
         id: obj.id._serialized,
+        cid: obj['cid'],
         sender: obj["senderObj"] ? WAPI._serializeContactObj(obj["senderObj"]) : null,
         timestamp: obj["t"],
         content: obj["body"],
