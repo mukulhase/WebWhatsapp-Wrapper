@@ -332,6 +332,7 @@ class WhatsAPIDriver(object):
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
             messages = [factory_message(message, self) for message in raw_message_group['messages']]
+            messages.sort(key=lambda message: message.cid)
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
