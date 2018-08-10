@@ -20,6 +20,8 @@ def getContacts(x, driver):
 
 def factory_message(js_obj, driver):
     """Factory function for creating appropriate object given selenium JS object"""
+    if js_obj is None:
+        return
 
     if js_obj["lat"] and js_obj["lng"]:
         return GeoMessage(js_obj, driver)
