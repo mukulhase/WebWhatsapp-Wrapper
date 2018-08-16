@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * This script contains WAPI functions that need to be run in the context of the webpage
  */
@@ -13,9 +14,11 @@ if (!window.Store) {
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
+                {id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null},
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
-                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null }
+                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
+                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null }
             ];
 
             for (let idx in modules) {
@@ -108,7 +111,7 @@ window.WAPI._serializeContactObj = (obj) => {
         isUser: obj.isUser,
         isVerified: obj.isVerified,
         isWAContact: obj.isWAContact,
-        profilePicThumbObj: obj.profilePicThumb ? WAPI._serializeRawObj(obj.profilePicThumb) : {},
+        profilePicThumbObj: obj.profilePicThumb ? WAPI._serializeProfilePicThumb(obj.profilePicThumb) : {},
         statusMute: obj.statusMute,
         msgs: null
     });
@@ -151,11 +154,25 @@ window.WAPI._serializeNumberStatusObj = (obj) => {
     });
 };
 
+window.WAPI._serializeProfilePicThumb = (obj) => {
+    if (obj == undefined) {
+        return null;
+    }
+
+    return Object.assign({}, {
+        eurl: obj.eurl,
+        id: obj.id,
+        img: obj.img,
+        imgFull: obj.imgFull,
+        raw: obj.raw,
+        tag: obj.tag
+    });
+}
 window.WAPI.createGroup = function (name, contactsId) {
     if (!Array.isArray(contactsId)) {
         contactsId = [contactsId];
     }
-    Store.Wap.setSubProtocol(10);
+
     return window.Store.Wap.createGroup(name, contactsId);
 };
 
@@ -316,21 +333,23 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     return true;
 };
 
-window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId) {
+window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId,done) {
     var chatSend = WAPI.getChat(chatId);
     if (chatSend === undefined) {
+        if(done!==undefined){
+            done(true);
+        }
         return false;
     }
-    var msgWithImg = chatSend.createMessageFromText(".");
-    msgWithImg.hasLink = title;
-    msgWithImg.body = description + '\n                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ' + url;
-    msgWithImg.isLink = title;
-    msgWithImg.description = description;
-    msgWithImg.subtype = 'url';
-    msgWithImg.title = title;
-    msgWithImg.thumbnail = thumb;
-    return chatSend.addAndSendMsg(msgWithImg);
-
+    var linkPreview = {canonicalUrl: url,
+        description: description,
+        matchedText: url,
+        title: title,
+        thumbnail: thumb};
+    chatSend.sendMessage(url, {linkPreview: linkPreview, mentionedJidList: [], quotedMsg: null, quotedMsgAdminGroupJid: null});
+    if(done!==undefined){
+        done(true);
+    }
     return true;
 };
 
@@ -974,6 +993,55 @@ window.WAPI.getCommonGroups = async function (id, done) {
     return output;
 };
 
+
+window.WAPI.getProfilePicSmallFromId = function(id, done) {
+    window.Store.ProfilePicThumb.find(id).then(function(d) {
+        if(d.img !== undefined) {
+            window.WAPI.downloadFileWithCredentials(d.img, done);
+        } else {
+            done(false);
+        }
+    })
+};
+
+window.WAPI.getProfilePicFromId = function(id, done) {
+    window.Store.ProfilePicThumb.find(id).then(function(d) {
+        if(d.imgFull !== undefined) {
+            window.WAPI.downloadFileWithCredentials(d.imgFull, done);
+        } else {
+            done(false);
+        }
+    })
+};
+
+window.WAPI.downloadFileWithCredentials = function (url, done) {
+    let xhr = new XMLHttpRequest();
+
+
+    xhr.onload = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let reader = new FileReader();
+                reader.readAsDataURL(xhr.response);
+                reader.onload = function (e) {
+                    done(reader.result.substr(reader.result.indexOf(',') + 1))
+                };
+            } else {
+                console.error(xhr.statusText);
+            }
+        } else {
+            console.log(err);
+            done(false);
+        }
+    };
+
+    xhr.open("GET", url, true);
+    xhr.withCredentials = true;
+    xhr.responseType = 'blob';
+    xhr.send(null);
+};
+
+
 window.WAPI.downloadFile = function (url, done) {
     let xhr = new XMLHttpRequest();
 
@@ -1017,7 +1085,9 @@ window.WAPI.getBatteryLevel = function (done) {
 window.WAPI.deleteConversation = function (chatId, done) {
     let conversation = window.Store.Chat.get(chatId);
     let lastReceivedKey = conversation.lastReceivedKey;
-    window.Store.WapDelete.setSubProtocol(10);
+    let subProtocol = new window.Store.ProtoConstructor(10);
+    window.Store.WapDelete.BinaryProtocol = subProtocol;
+    window.Store.WapDelete.N = subProtocol.Node;
     window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
         if (done !== undefined) {
             done(response.status);
@@ -1052,10 +1122,12 @@ window.WAPI.checkNumberStatus = function(id, done) {
  * New messages observable functions.
  */
 window.WAPI._newMessagesQueue = [];
-window.WAPI._newMessagesBuffer = [];
+window.WAPI._newMessagesBuffer = (sessionStorage.getItem('saved_msgs') != null) ? 
+    JSON.parse(sessionStorage.getItem('saved_msgs')) : [];
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
 window.Store.Msg.off('add');
+sessionStorage.removeItem('saved_msgs');
 
 window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
     if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
@@ -1094,6 +1166,13 @@ window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
 });
 
 window.WAPI._unloadInform = (event) => {
+    // Save in the buffer the ungot unreaded messages
+    window.WAPI._newMessagesBuffer.forEach((message) => {
+        Object.keys(message).forEach(key => message[key] === undefined ? delete message[key] : '');
+    });
+    sessionStorage.setItem("saved_msgs", JSON.stringify(window.WAPI._newMessagesBuffer));
+    
+    // Inform callbacks that the page will be reloaded.
     window.WAPI._newMessagesCallbacks.forEach(function(callbackObj) {
         if(callbackObj.callback !== undefined) {
             callbackObj.callback({status: -1, message: 'page will be reloaded, wait and register callback again.'});
@@ -1130,3 +1209,108 @@ window.WAPI.getBufferedNewMessages = function(done) {
     return bufferedMessages;
 };
 /** End new messages observable functions **/
+
+window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
+    var chat = WAPI.getChat(chatid);
+    if (chat !== undefined) {
+        var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
+        var mc = new Store.MediaCollection();
+        mc.processFiles([mediaBlob], chat, 1).then(() => {
+            var media = mc.models[0];
+            media.sendToChat(chat, {caption: caption});
+            done(true);
+        });
+    } else {
+        done(false);
+    }
+    return true;
+};
+
+window.WAPI.base64ImageToFile = function (b64Data, filename) {
+    var arr = b64Data.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type: mime});
+};
+
+/**
+ * Send contact card to a specific chat using the chat ids
+ * 
+ * @param {string} to '000000000000@c.us'
+ * @param {string|array} contact '111111111111@c.us' | ['222222222222@c.us', '333333333333@c.us, ... 'nnnnnnnnnnnn@c.us']
+ */
+window.WAPI.sendContact = function(to, contact) {
+    if (!Array.isArray(contact)) {
+        contact = [contact];
+    }
+    contact = contact.map((c) => {
+        return window.WAPI.getChat(c).__x_contact;
+    });
+
+    if (contact.length > 1) {
+        window.WAPI.getChat(to).sendContactList(contact);
+    } else if (contact.length === 1) {
+        window.WAPI.getChat(to).sendContact(contact[0]);
+    }
+};
+
+/**
+ * Create an chat ID based in a cloned one
+ * 
+ * @param {string} chatId '000000000000@c.us'
+ */
+window.WAPI.getNewMessageId = function(chatId) {
+    var newMsgId = Store.Msg.models[0].id.clone();
+
+    newMsgId.fromMe = true;
+    newMsgId.id = WAPI.getNewId().toUpperCase();
+    newMsgId.remote = chatId;
+    newMsgId._serialized = `${newMsgId.fromMe}_${newMsgId.remote}_${newMsgId.id}`
+
+    return newMsgId;
+};
+
+/**
+ * Send Customized VCard without the necessity of contact be a Whatsapp Contact
+ * 
+ * @param {string} chatId '000000000000@c.us'
+ * @param {object|array} vcard { displayName: 'Contact Name', vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Contact Name;;;\nEND:VCARD' } | [{ displayName: 'Contact Name 1', vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Contact Name 1;;;\nEND:VCARD' }, { displayName: 'Contact Name 2', vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Contact Name 2;;;\nEND:VCARD' }]
+ */
+window.WAPI.sendVCard = function(chatId, vcard) {
+    var chat = Store.Chat.get(chatId);
+    var tempMsg = Object.create(Store.Msg.models[0]);
+    var newId = window.WAPI.getNewMessageId(chatId);
+
+    var extend = {
+        ack: 0,
+        from: Store.Conn.me,
+        id: newId,
+        local: !0,
+        self: "out",
+        t: parseInt(new Date().getTime() / 1000),
+        to: chatId,
+        isNewMsg: !0,
+    };
+
+    if (Array.isArray(vcard)) {
+        Object.assign(extend, {
+            type: "multi_vcard",
+            vcardList: vcard
+        });
+
+        delete extend.body;
+    } else {
+        Object.assign(extend, {
+            type: "vcard",
+            body: vcard.vcard
+        });
+
+        delete extend.vcardList;
+    }
+
+    Object.assign(tempMsg, extend);
+
+    chat.addAndSendMsg(tempMsg);
+};

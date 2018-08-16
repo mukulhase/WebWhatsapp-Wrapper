@@ -15,7 +15,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
-from base64 import b64decode
+from base64 import b64decode, b64encode
+import magic
 from io import BytesIO
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -530,6 +531,35 @@ class WhatsAPIDriver(object):
         :type message: str
         """
         return self.wapi_functions.sendMessageToID(recipient, message)
+    
+    def convert_to_base64(self, path):
+        """
+        :param path: file path
+        :return: returns the converted string and formatted for the send media function send_media
+        """
+
+        mime = magic.Magic(mime=True)
+        content_type = mime.from_file(path)
+        archive = ''
+        with open(path, "rb") as image_file:
+            archive = b64encode(image_file.read())
+            archive = archive.decode('utf-8')
+        return 'data:' + content_type + ';base64,' + archive
+    
+    
+    def send_media(self, path, chatid, caption):
+        """
+            converts the file to base64 and sends it using the sendImage function of wapi.js
+        :param path: file path
+        :param chatid: chatId to be sent
+        :param caption:
+        :return:
+        """
+        imgBase64 = self.convert_to_base64(path)
+        filename = os.path.split(path)[-1]
+        return self.wapi_functions.sendImage(imgBase64, chatid, filename, caption)
+    
+    
 
     def chat_send_seen(self, chat_id):
         """
@@ -570,8 +600,29 @@ class WhatsAPIDriver(object):
         for admin_id in admin_ids:
             yield self.get_contact_from_id(admin_id)
 
+    def get_profile_pic_from_id(self, id):
+        """
+        Get full profile pic from an id
+
+        :param id: ID
+        :type id: str
+        """
+        return b64decode(self.wapi_functions.getProfilePicFromId(id))
+
+    def get_profile_pic_small_from_id(self, id):
+        """
+        Get small profile pic from an id
+
+        :param id: ID
+        :type id: str
+        """
+        return b64decode(self.wapi_functions.getProfilePicSmallFromId(id))
+
     def download_file(self, url):
         return b64decode(self.wapi_functions.downloadFile(url))
+
+    def download_file_with_credentials(self, url):
+        return b64decode(self.wapi_functions.downloadFileWithCredentials(url))
 
     def download_media(self, media_msg, force_download=False):
         if not force_download:
