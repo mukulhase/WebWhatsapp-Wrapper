@@ -276,7 +276,7 @@ class WhatsAPIDriver(object):
             self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
 
-        return qr
+        return qr.screenshot_as_base64
 
     def screenshot(self, filename):
         self.driver.get_screenshot_as_file(filename)
