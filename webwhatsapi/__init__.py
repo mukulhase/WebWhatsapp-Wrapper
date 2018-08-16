@@ -271,6 +271,13 @@ class WhatsAPIDriver(object):
         os.close(fd)
         return fn_png
 
+    def get_qr_base64(self):
+        if "Click to reload QR code" in self.driver.page_source:
+            self.reload_qr()
+        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+
+        return qr
+
     def screenshot(self, filename):
         self.driver.get_screenshot_as_file(filename)
 
