@@ -85,7 +85,7 @@ class WhatsAPIDriver(object):
         'UnreadChatBanner': '.message-list',
         'ReconnectLink': '.action',
         'WhatsappQrIcon': 'span.icon:nth-child(2)',
-        'QRReloader': '.qr-wrapper-container'
+        'QRReloader': '._2EZ_m > span > div'
     }
 
     _CLASSES = {
@@ -479,7 +479,7 @@ class WhatsAPIDriver(object):
         raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
 
     def reload_qr(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS['qrCode']).click()
+        self.driver.find_element_by_css_selector(self._SELECTORS['QRReloader']).click()
 
     def get_status(self):
         """
