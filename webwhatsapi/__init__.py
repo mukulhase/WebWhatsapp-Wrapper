@@ -241,11 +241,8 @@ class WhatsAPIDriver(object):
     def is_logged_in(self):
         """Returns if user is logged. Can be used if non-block needed for wait_for_login"""
 
-        # self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
-        # it becomes ridiculously slow if the element is not found.
-
-        # instead we use this (temporary) solution:
-        return 'class="app _3dqpi two"' in self.driver.page_source
+        # Checking in store conn if logged in
+        return self.wapi_functions.isLoggedIn()
 
     def wait_for_login(self, timeout=90):
         """Waits for the QR to go away"""
