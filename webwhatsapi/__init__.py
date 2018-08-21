@@ -303,7 +303,11 @@ class WhatsAPIDriver(object):
         :return: List of chats
         :rtype: list[Chat]
         """
-        return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
+        chats = self.wapi_functions.getAllChats()
+        if chats:
+            return [factory_chat(chat, self) for chat in chats]
+        else:
+            return []
 
     def get_all_chat_ids(self):
         """
