@@ -617,6 +617,16 @@ window.WAPI.getMe = function (done) {
     return rawMe.all;
 };
 
+window.WAPI.isLoggedIn = function (done) {
+    const isLogged = window.Store.Conn.__x_clientToken !== undefined;
+
+    if (done !== undefined) {
+        done(isLogged);
+    }
+
+    return isLogged;
+};
+
 window.WAPI.processMessageObj = function (messageObj, includeMe, includeNotifications) {
     if (messageObj.isNotification) {
         if (includeNotifications)
