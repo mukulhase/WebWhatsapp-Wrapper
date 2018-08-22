@@ -618,7 +618,8 @@ window.WAPI.getMe = function (done) {
 };
 
 window.WAPI.isLoggedIn = function (done) {
-    const isLogged = window.Store.Conn.__x_clientToken !== undefined;
+    // Contact always exists when logged in
+    const isLogged = window.Store.Contact && window.Store.Contact.checksum !== undefined;
 
     if (done !== undefined) {
         done(isLogged);
