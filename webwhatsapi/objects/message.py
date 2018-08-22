@@ -5,10 +5,9 @@ from datetime import datetime
 import os
 from typing import Union
 
-from webwhatsapi import Contact
-from webwhatsapi.helper import safe_str
-from webwhatsapi.objects.contact import Contact
-from webwhatsapi.objects.whatsapp_object import WhatsappObject
+from ..helper import safe_str
+from .contact import Contact
+from .whatsapp_object import WhatsappObject
 
 
 def getContacts(x, driver):
@@ -21,6 +20,8 @@ def getContacts(x, driver):
 
 def factory_message(js_obj, driver):
     """Factory function for creating appropriate object given selenium JS object"""
+    if js_obj is None:
+        return
 
     if js_obj["lat"] and js_obj["lng"]:
         return GeoMessage(js_obj, driver)
@@ -54,6 +55,7 @@ class Message(WhatsappObject):
         super(Message, self).__init__(js_obj, driver)
 
         self.id = js_obj["id"]
+        self.cid = js_obj["cid"]
         self.type = js_obj["type"]
         self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])

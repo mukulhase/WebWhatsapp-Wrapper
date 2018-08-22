@@ -311,7 +311,11 @@ class WhatsAPIDriver(object):
         :return: List of chats
         :rtype: list[Chat]
         """
-        return [factory_chat(chat, self) for chat in self.wapi_functions.getAllChats()]
+        chats = self.wapi_functions.getAllChats()
+        if chats:
+            return [factory_chat(chat, self) for chat in chats]
+        else:
+            return []
 
     def get_all_chat_ids(self):
         """
@@ -340,6 +344,7 @@ class WhatsAPIDriver(object):
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
             messages = [factory_message(message, self) for message in raw_message_group['messages']]
+            messages.sort(key=lambda message: message.cid)
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
