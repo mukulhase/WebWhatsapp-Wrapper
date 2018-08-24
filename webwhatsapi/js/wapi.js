@@ -291,6 +291,7 @@ window.WAPI.getAllGroups = function (done) {
  * @returns {T|*} Chat object
  */
 window.WAPI.getChat = function (id, done) {
+    id = typeof id == "string" ? id : id._serialized;
     const found = window.Store.Chat.get(id);
     if (done !== undefined) {
         done(found);
