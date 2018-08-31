@@ -18,7 +18,8 @@ if (!window.Store) {
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
-                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null }
+                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null },
+                { id: "UserConstructor", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null }
             ];
 
             for (let idx in modules) {
@@ -290,6 +291,7 @@ window.WAPI.getAllGroups = function (done) {
  * @returns {T|*} Chat object
  */
 window.WAPI.getChat = function (id, done) {
+    id = typeof id == "string" ? id : id._serialized;
     const found = window.Store.Chat.get(id);
     if (done !== undefined) {
         done(found);
@@ -761,9 +763,10 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     if (window.Store.Chat.length == 0)
         return false;
 
+    
     firstChat = Store.Chat.models[0];
     var originalID = firstChat.id;
-    firstChat.id = id;
+    firstChat.id = typeof originalID == "string" ? id : new window.Store.UserConstructor(id);
     if (done !== undefined) {
         firstChat.sendMessage(message).then(function () {
             firstChat.id = originalID;
@@ -795,7 +798,7 @@ window.WAPI.sendMessage = function (id, message, done) {
         let temp = {};
         temp.name = Chats[chat].formattedTitle;
         temp.id = Chats[chat].id;
-        if (temp.id === id) {
+        if (temp.id._serialized === id) {
             if (done !== undefined) {
                 Chats[chat].sendMessage(message).then(function () {
                     function sleep(ms) {
@@ -844,7 +847,7 @@ window.WAPI.sendMessage2 = function (id, message, done) {
         let temp = {};
         temp.name = Chats[chat].formattedTitle;
         temp.id = Chats[chat].id;
-        if (temp.id === id) {
+        if (temp.id._serialized === id) {
             try {
                 if (done !== undefined) {
                     Chats[chat].sendMessage(message).then(function () {
@@ -874,7 +877,7 @@ window.WAPI.sendSeen = function (id, done) {
         let temp = {};
         temp.name = Chats[chat].formattedTitle;
         temp.id = Chats[chat].id;
-        if (temp.id === id) {
+        if (temp.id._serialized === id) {
             if (done !== undefined) {
                 Chats[chat].sendSeen(false).then(function () {
                     done(true);
