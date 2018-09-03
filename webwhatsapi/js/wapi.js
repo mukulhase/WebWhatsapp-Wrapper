@@ -760,32 +760,51 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
 };
 
 window.WAPI.sendMessageToID = function (id, message, done) {
-    if (window.Store.Chat.length == 0)
-        return false;
-
-    
-    firstChat = Store.Chat.models[0];
-    var originalID = firstChat.id;
-    firstChat.id = typeof originalID == "string" ? id : new window.Store.UserConstructor(id);
-    if (done !== undefined) {
-        firstChat.sendMessage(message).then(function () {
-            firstChat.id = originalID;
-            done(true);
+    try {
+        var idUser = new window.Store.UserConstructor(id);
+        // create new chat
+        var result = Store.Chat.find(idUser).then((chat) => {
+            if (done !== undefined) {
+                chat.sendMessage(message).then(function () {
+                    done(true);
+                });
+                return true;
+            } else {
+                chat.sendMessage(message);
+                return true;
+            }
         });
-        return true;
-    } else {
-        firstChat.sendMessage(message);
-        firstChat.id = originalID;
+
+        return result;
+    } catch (e) {
+
+        if (window.Store.Chat.length == 0)
+            return false;
+
+
+        firstChat = Store.Chat.models[0];
+        var originalID = firstChat.id;
+        firstChat.id = typeof originalID == "string" ? id : new window.Store.UserConstructor(id);
+        if (done !== undefined) {
+            firstChat.sendMessage(message).then(function () {
+                firstChat.id = originalID;
+                done(true);
+            });
+            return true;
+        } else {
+            firstChat.sendMessage(message);
+            firstChat.id = originalID;
+            return true;
+        }
+
+        if (done !== undefined)
+            done();
+        else
+            return false;
+
         return true;
     }
-
-    if (done !== undefined)
-        done();
-    else
-        return false;
-
-    return true;
-}
+};
 
 window.WAPI.sendMessage = function (id, message, done) {
     const Chats = window.Store.Chat.models;
