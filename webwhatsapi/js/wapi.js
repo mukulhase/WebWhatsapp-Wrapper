@@ -708,7 +708,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
 }
 
 window.WAPI.sendMessage = function (id, message, done) {
-    var chat = window.WAPI.getChat(Id);
+    var chat = window.WAPI.getChat(id);
     if (chat !== undefined) {
         if (done !== undefined) {
             chat.sendMessage(message).then(function () {
@@ -750,7 +750,7 @@ window.WAPI.sendMessage = function (id, message, done) {
 };
 
 window.WAPI.sendMessage2 = function (id, message, done) {
-    var chat = window.WAPI.getChat(Id);
+    var chat = window.WAPI.getChat(id);
     if (chat !== undefined) {
         try {
             if (done !== undefined) {
@@ -772,7 +772,7 @@ window.WAPI.sendMessage2 = function (id, message, done) {
 
 
 window.WAPI.sendSeen = function (id, done) {
-    var chat = window.WAPI.getChat(Id);
+    var chat = window.WAPI.getChat(id);
     if (chat !== undefined) {
         if (done !== undefined) {
             chat.sendSeen(false).then(function () {
