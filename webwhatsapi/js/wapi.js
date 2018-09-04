@@ -763,7 +763,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     try {
         var idUser = new window.Store.UserConstructor(id);
         // create new chat
-        var result = Store.Chat.find(idUser).then((chat) => {
+        return Store.Chat.find(idUser).then((chat) => {
             if (done !== undefined) {
                 chat.sendMessage(message).then(function () {
                     done(true);
@@ -774,17 +774,13 @@ window.WAPI.sendMessageToID = function (id, message, done) {
                 return true;
             }
         });
-
-        return result;
     } catch (e) {
-
-        if (window.Store.Chat.length == 0)
+        if (window.Store.Chat.length === 0)
             return false;
-
 
         firstChat = Store.Chat.models[0];
         var originalID = firstChat.id;
-        firstChat.id = typeof originalID == "string" ? id : new window.Store.UserConstructor(id);
+        firstChat.id = typeof originalID === "string" ? id : new window.Store.UserConstructor(id);
         if (done !== undefined) {
             firstChat.sendMessage(message).then(function () {
                 firstChat.id = originalID;
@@ -796,13 +792,6 @@ window.WAPI.sendMessageToID = function (id, message, done) {
             firstChat.id = originalID;
             return true;
         }
-
-        if (done !== undefined)
-            done();
-        else
-            return false;
-
-        return true;
     }
 };
 
