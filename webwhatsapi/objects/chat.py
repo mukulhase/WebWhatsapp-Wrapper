@@ -24,6 +24,10 @@ class Chat(WhatsappObjectWithId):
         super(Chat, self).__init__(js_obj, driver)
 
     @driver_needed
+    def send_media(self, image_path, caption=None):
+        return self.driver.send_media(image_path, self.id, caption)
+
+    @driver_needed
     def send_message(self, message):
         return self.driver.chat_send_message(self.id, message)
 
