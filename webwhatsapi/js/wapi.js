@@ -1104,18 +1104,23 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let conversation = window.Store.Chat.get(chatId);
-    let lastReceivedKey = conversation.lastReceivedKey;
-    let subProtocol = new window.Store.ProtoConstructor(10);
-    window.Store.WapDelete.BinaryProtocol = subProtocol;
-    window.Store.WapDelete.N = subProtocol.Node;
-    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
-        if (done !== undefined) {
-            done(response.status);
+    let userId = new window.Store.UserConstructor(chatId);
+    let conversation = window.Store.Chat.get(userId);
+
+    if(!conversation) {
+        if(done !== undefined) {
+            done(false);
         }
-    }).catch((error) => {
+        return false;
+    }
+
+    conversation.sendDelete().then(() => {
         if (done !== undefined) {
-            done({error: error});
+            done(true);
+        }
+    }).catch(() => {
+        if (done !== undefined) {
+            done(false);
         }
     });
 
