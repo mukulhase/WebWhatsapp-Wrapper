@@ -1130,12 +1130,13 @@ window.WAPI.deleteConversation = function (chatId, done) {
 window.WAPI.checkNumberStatus = function(id, done) {
     window.Store.WapQuery.queryExist(id).then((result) => {
         if(done !== undefined) {
+            if(result.jid === undefined) throw 404;
             done(window.WAPI._serializeNumberStatusObj(result));
         }
-    }).catch(() => {
+    }).catch((e) => {
         if(done !== undefined) {
             done(window.WAPI._serializeNumberStatusObj({
-                status: 500,
+                status: e,
                 jid: id
             }));
         }
