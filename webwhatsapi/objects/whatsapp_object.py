@@ -71,10 +71,10 @@ class WhatsappObjectWithId(WhatsappObject):
         """
         super(WhatsappObjectWithId, self).__init__(js_obj, driver)
         if 'id' in js_obj:
-            if type(js_obj["id"]) is str:
-                self.id = js_obj["id"]
-            else:
+            try:
                 self.id = js_obj["id"]["_serialized"]
+            except:
+                self.id = js_obj["id"]
         if 'name' in js_obj:
             self.name = js_obj["name"]
 

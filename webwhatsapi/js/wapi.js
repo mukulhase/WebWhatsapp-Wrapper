@@ -684,25 +684,39 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
 };
 
 window.WAPI.sendMessageToID = function (id, message, done) {
-    if (window.Store.Chat.length == 0)
-        return false;
-
-    
-    firstChat = Store.Chat.models[0];
-    var originalID = firstChat.id;
-    firstChat.id = typeof originalID == "string" ? id : new window.Store.UserConstructor(id);
-    if (done !== undefined) {
-        firstChat.sendMessage(message).then(function () {
-            firstChat.id = originalID;
-            done(true);
+    try {
+        var idUser = new window.Store.UserConstructor(id);
+        // create new chat
+        return Store.Chat.find(idUser).then((chat) => {
+            if (done !== undefined) {
+                chat.sendMessage(message).then(function () {
+                    done(true);
+                });
+                return true;
+            } else {
+                chat.sendMessage(message);
+                return true;
+            }
         });
-        return true;
-    } else {
-        firstChat.sendMessage(message);
-        firstChat.id = originalID;
-        return true;
-    }
+    } catch (e) {
+        if (window.Store.Chat.length === 0)
+            return false;
 
+        firstChat = Store.Chat.models[0];
+        var originalID = firstChat.id;
+        firstChat.id = typeof originalID === "string" ? id : new window.Store.UserConstructor(id);
+        if (done !== undefined) {
+            firstChat.sendMessage(message).then(function () {
+                firstChat.id = originalID;
+                done(true);
+            });
+            return true;
+        } else {
+            firstChat.sendMessage(message);
+            firstChat.id = originalID;
+            return true;
+        }
+    }
     if (done !== undefined) done(false);
     return false;
 }
@@ -987,18 +1001,23 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let conversation = window.WAPI.getChat(chatId);
-    let lastReceivedKey = conversation.lastReceivedKey;
-    let subProtocol = new window.Store.ProtoConstructor(10);
-    window.Store.WapDelete.BinaryProtocol = subProtocol;
-    window.Store.WapDelete.N = subProtocol.Node;
-    window.Store.WapDelete.sendConversationDelete(chatId, lastReceivedKey).then((response) => {
-        if (done !== undefined) {
-            done(response.status);
+    let userId = new window.Store.UserConstructor(chatId);
+    let conversation = window.Store.Chat.get(userId);
+
+    if(!conversation) {
+        if(done !== undefined) {
+            done(false);
         }
-    }).catch((error) => {
+        return false;
+    }
+
+    conversation.sendDelete().then(() => {
         if (done !== undefined) {
-            done({error: error});
+            done(true);
+        }
+    }).catch(() => {
+        if (done !== undefined) {
+            done(false);
         }
     });
 
@@ -1008,12 +1027,13 @@ window.WAPI.deleteConversation = function (chatId, done) {
 window.WAPI.checkNumberStatus = function(id, done) {
     window.Store.WapQuery.queryExist(id).then((result) => {
         if(done !== undefined) {
+            if(result.jid === undefined) throw 404;
             done(window.WAPI._serializeNumberStatusObj(result));
         }
-    }).catch(() => {
+    }).catch((e) => {
         if(done !== undefined) {
             done(window.WAPI._serializeNumberStatusObj({
-                status: 500,
+                status: e,
                 jid: id
             }));
         }
