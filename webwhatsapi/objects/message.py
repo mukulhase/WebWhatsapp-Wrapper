@@ -88,8 +88,8 @@ class MediaMessage(Message):
 
         self.size = self._js_obj["size"]
         self.mime = self._js_obj["mimetype"]
-        if "caption" in self._js_obj and self._js_obj["caption"]:
-            self.caption = self._js_obj["caption"]
+        if "caption" in self._js_obj:
+            self.caption = self._js_obj["caption"] or ""
 
         self.media_key = self._js_obj.get('mediaKey')
         self.client_url = self._js_obj.get('clientUrl')
