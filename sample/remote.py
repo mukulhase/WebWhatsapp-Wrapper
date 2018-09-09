@@ -9,9 +9,15 @@ except KeyError:
    print "Please set the environment variable SELENIUM to Selenium URL"
    sys.exit(1)
 
-driver = WhatsAPIDriver(client='remote', command_executor=os.environ["SELENIUM"])
+##Save session on "/firefox_cache/localStorage.json".
+##Create the directory "/firefox_cache", it's on .gitignore
+##The "app" directory is internal to docker, it corresponds to the root of the project.
+##The profile parameter requires a directory not a file.
+driver = WhatsAPIDriver(profile='/app/firefox_cache', client='remote', command_executor=os.environ["SELENIUM"])
 print("Waiting for QR")
 driver.wait_for_login()
+print("Saving session")
+driver.save_firefox_profile(remove_old=False)
 print("Bot started")
 
 while True:
