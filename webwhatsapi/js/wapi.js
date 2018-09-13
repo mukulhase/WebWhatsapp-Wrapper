@@ -1239,3 +1239,58 @@ window.WAPI.sendVCard = function(chatId, vcard) {
 
     chat.addAndSendMsg(tempMsg);
 };
+/**
+ * Block contact 
+ * @param {string} id '000000000000@c.us'
+ * @param {*} done - function - Callback function to be called when a new message arrives.
+ */
+window.WAPI.contactBlock = function(id, done){
+    const contact = window.Store.Contact.get(id);
+    if (contact !== undefined){
+        contact.setBlock(!0);
+        done(true);
+        return true;
+    }
+    done(false);
+    return false;
+}
+/**
+ * unBlock contact 
+ * @param {string} id '000000000000@c.us'
+ * @param {*} done - function - Callback function to be called when a new message arrives.
+ */
+window.WAPI.contactUnblock = function(id, done){
+    const contact = window.Store.Contact.get(id);
+    if (contact !== undefined){
+        contact.setBlock(!1);
+        done(true);
+        return true;
+    }
+    done(false);
+    return false;
+}
+
+/**
+ * 
+ * @param {*} idGroup '0000000000-00000000@g.us'
+ * @param {*} idParticipant '000000000000@c.us'
+ * @param {*} done - function - Callback function to be called when a new message arrives.
+ */
+window.WAPI.removeParticipantGroup = function(idGroup, idParticipant, done){
+    const metaDataGroup = window.Store.GroupMetadata.get(idGroup);
+    if (metaDataGroup === undefined){
+        done(false); return false;
+    }
+    
+    const participant = metaDataGroup.participants.get(idParticipant);
+    if (participant === undefined){
+        done(false); return false;
+    }
+    
+    metaDataGroup.participants.removeParticipants([participant], function(){
+        const check = metaDataGroup.participants.get(idParticipant);
+        if (check === undefined){ done(true); return true; }
+        done(false); return false; 
+    })
+    
+}
