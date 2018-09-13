@@ -2,6 +2,7 @@
 
 ## (Based on web.whatsapp.com)
 [![PyPI version](https://badge.fury.io/py/webwhatsapi.svg)](https://badge.fury.io/py/webwhatsapi)
+[![Firefox version](https://img.shields.io/badge/Firefox-58.0.2-green.svg)]()
 [![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
 
 ## What is it?
