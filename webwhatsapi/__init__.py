@@ -716,3 +716,12 @@ class WhatsAPIDriver(object):
     def create_chat_by_number(self, number):
         url = self._URL + "/send?phone=" + number
         self.driver.get(url)
+
+    def contact_block(self, id):
+        return self.wapi_functions.contactBlock(id)
+
+    def contact_unblock(self, id):
+        return self.wapi_functions.contactUnblock(id)
+
+    def remove_participant_group(self, idGroup, idParticipant):
+        return self.wapi_functions.removeParticipantGroup(idGroup,idParticipant)
