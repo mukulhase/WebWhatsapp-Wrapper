@@ -12,6 +12,10 @@ selenium = ">=3.4.3"
 python-axolotl = "*"
 cryptography = "*"
 aiohttp = "*"
+six = "*"
+typing = "*"
+numpy = "*"
+python-magic = "*"
 
 
 [dev-packages]
