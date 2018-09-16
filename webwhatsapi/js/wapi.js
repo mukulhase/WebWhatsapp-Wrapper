@@ -918,7 +918,9 @@ window.WAPI.getProfilePicSmallFromId = function(id, done) {
         } else {
             done(false);
         }
-    })
+    }, function(e) {
+		done(false);
+	})
 };
 
 window.WAPI.getProfilePicFromId = function(id, done) {
@@ -928,7 +930,9 @@ window.WAPI.getProfilePicFromId = function(id, done) {
         } else {
             done(false);
         }
-    })
+    }, function(e) {
+		done(false);
+	})
 };
 
 window.WAPI.downloadFileWithCredentials = function (url, done) {
