@@ -23,7 +23,7 @@ def factory_message(js_obj, driver):
     if js_obj is None:
         return
 
-    if js_obj["lat"] and js_obj["lng"]:
+    if "lat" in js_obj and "lng" in js_obj:
         return GeoMessage(js_obj, driver)
 
     if js_obj["isMedia"]:
@@ -55,7 +55,6 @@ class Message(WhatsappObject):
         super(Message, self).__init__(js_obj, driver)
 
         self.id = js_obj["id"]
-        self.cid = js_obj["cid"]
         self.type = js_obj["type"]
         self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
