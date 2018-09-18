@@ -1138,8 +1138,9 @@ window.WAPI.getBufferedNewMessages = function(done) {
 /** End new messages observable functions **/
 
 window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
-    var chat = WAPI.getChat(chatid);
-    if (chat !== undefined) {
+	var idUser = new window.Store.UserConstructor(chatid);
+	// create new chat
+	return Store.Chat.find(idUser).then((chat) => {
         var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
         var mc = new Store.MediaCollection();
         mc.processFiles([mediaBlob], chat, 1).then(() => {
@@ -1147,11 +1148,7 @@ window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
             media.sendToChat(chat, {caption: caption});
             if (done !== undefined) done(true);
         });
-    } else {
-        if (done !== undefined) done(false);
-        return false;
-    }
-    return true;
+    });
 };
 
 window.WAPI.base64ImageToFile = function (b64Data, filename) {
