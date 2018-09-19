@@ -609,7 +609,7 @@ class WhatsAPIDriver(object):
         participant_ids = self.group_get_participants_ids(group_id)
 
         for participant_id in participant_ids:
-            yield self.get_contact_from_id(participant_id)
+            yield self.get_contact_from_id(participant_id['_serialized'])
 
     def group_get_admin_ids(self, group_id):
         return self.wapi_functions.getGroupAdmins(group_id)
