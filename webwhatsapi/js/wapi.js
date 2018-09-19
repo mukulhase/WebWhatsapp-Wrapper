@@ -169,6 +169,7 @@ window.WAPI._serializeProfilePicThumb = (obj) => {
         tag: obj.tag
     });
 }
+
 window.WAPI.createGroup = function (name, contactsId) {
     if (!Array.isArray(contactsId)) {
         contactsId = [contactsId];
@@ -176,6 +177,12 @@ window.WAPI.createGroup = function (name, contactsId) {
 
     return window.Store.Wap.createGroup(name, contactsId);
 };
+
+window.WAPI.leaveGroup = function(groupId) {
+    groupId = typeof id == "string" ? groupId : groupId._serialized;
+    const group = window.Store.Chat.get(id);
+    group.sendExit()
+}
 
 window.WAPI.getAllContacts = function (done) {
     const contacts = window.Store.Contact.map((contact) => WAPI._serializeContactObj(contact));
