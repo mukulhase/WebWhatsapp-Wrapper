@@ -179,10 +179,11 @@ window.WAPI.createGroup = function (name, contactsId) {
 };
 
 window.WAPI.leaveGroup = function(groupId) {
-    groupId = typeof id == "string" ? groupId : groupId._serialized;
-    const group = window.Store.Chat.get(id);
-    group.sendExit()
-}
+    groupId = typeof groupId == "string" ? groupId : groupId._serialized;
+    var group = window.Store.Chat.get(groupId);
+    return group.sendExit()
+};
+
 
 window.WAPI.getAllContacts = function (done) {
     const contacts = window.Store.Contact.map((contact) => WAPI._serializeContactObj(contact));
