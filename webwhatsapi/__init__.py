@@ -751,3 +751,10 @@ class WhatsAPIDriver(object):
 
     def remove_participant_group(self, idGroup, idParticipant):
         return self.wapi_functions.removeParticipantGroup(idGroup,idParticipant)
+
+    def promove_participant_admin_group(self, idGroup, idParticipant):
+        return self.wapi_functions.promoteParticipantAdminGroup(idGroup,idParticipant)
+
+
+    def demote_participant_admin_group(self, idGroup, idParticipant):
+        return self.wapi_functions.demoteParticipantAdminGroup(idGroup,idParticipant)
