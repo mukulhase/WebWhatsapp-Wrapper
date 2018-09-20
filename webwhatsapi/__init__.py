@@ -433,6 +433,22 @@ class WhatsAPIDriver(object):
 
         return result
 
+    def get_last_message(self, fromMe=False):
+        """
+        Fetches the last (sent/received) message
+
+        :param fromMe: set True to get the last sent message or
+        false for either the last received or sent message
+        :type fromMe: bool
+        :return: Message or False when there are no chats
+        :rtype: Message
+        """
+        result = self.wapi_functions.lastMessage(fromMe)
+
+        if not isinstance(result, bool):
+            result = factory_message(result, self)
+        return result
+
     def get_contact_from_id(self, contact_id):
         """
         Fetches a contact given its ID
