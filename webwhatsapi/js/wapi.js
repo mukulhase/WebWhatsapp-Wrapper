@@ -319,7 +319,7 @@ window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, cha
         title: title,
         thumbnail: thumb};
     chatSend.sendMessage(url, {linkPreview: linkPreview, mentionedJidList: [], quotedMsg: null, quotedMsgAdminGroupJid: null});
-    if(done!==undefined) done(true);
+    if(done!==undefined) done(WAPI.lastMessage(true).id);
     return true;
 };
 
@@ -689,7 +689,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
         return Store.Chat.find(idUser).then((chat) => {
             if (done !== undefined) {
                 chat.sendMessage(message).then(function () {
-                    done(true);
+                    done(WAPI.lastMessage(true).id);
                 });
                 return true;
             } else {
@@ -707,7 +707,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
         if (done !== undefined) {
             firstChat.sendMessage(message).then(function () {
                 firstChat.id = originalID;
-                done(true);
+                done(WAPI.lastMessage(true).id);
             });
             return true;
         } else {
@@ -768,7 +768,7 @@ window.WAPI.sendMessage2 = function (id, message, done) {
         try {
             if (done !== undefined) {
                 chat.sendMessage(message).then(function () {
-                    done(true);
+                    done(WAPI.lastMessage(true).id);
                 });
             } else {
                 chat.sendMessage(message);
@@ -1141,7 +1141,7 @@ window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
         mc.processFiles([mediaBlob], chat, 1).then(() => {
             var media = mc.models[0];
             media.sendToChat(chat, {caption: caption});
-            if (done !== undefined) done(true);
+            if (done !== undefined) done(WAPI.lastMessage(true).id);
         });
     } else {
         if (done !== undefined) done(false);
@@ -1292,4 +1292,28 @@ window.WAPI.removeParticipantGroup = function(idGroup, idParticipant, done){
         done(false); return false; 
     })
     
+}
+
+/**
+ * Get the last message ID
+ * @param {bool} fromMe - when 'true' it will get the latest message sent by you
+ */
+window.WAPI.lastMessage = function (fromMe=false, done) {
+	if (fromMe) {
+		var validMessages = Store.Msg.models
+							.filter(msg => msg.type == "chat" && msg.isSentByMe);
+	} else {
+		var validMessages = Store.Msg.models
+							.filter(msg => msg.type == "chat");
+	}
+    // validMessages excludes notifications
+	if (typeof validMessages !== 'undefined' && validMessages.length > 0) {
+		var lastMsg = validMessages[validMessages.length - 1];
+		var message = WAPI._serializeMessageObj(lastMsg);
+		if (done !== undefined) done(message);
+		return message;
+	} else {
+		if (done !== undefined) done(false);
+		return false;
+	}	
 }
