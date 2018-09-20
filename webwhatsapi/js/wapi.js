@@ -1267,7 +1267,7 @@ window.WAPI.contactUnblock = function(id, done){
 }
 
 /**
- * 
+ * Remove participant of Group
  * @param {*} idGroup '0000000000-00000000@g.us'
  * @param {*} idParticipant '000000000000@c.us'
  * @param {*} done - function - Callback function to be called when a new message arrives.
@@ -1283,10 +1283,68 @@ window.WAPI.removeParticipantGroup = function(idGroup, idParticipant, done){
         done(false); return false;
     }
     
-    metaDataGroup.participants.removeParticipants([participant], function(){
+    metaDataGroup.participants.removeParticipants([participant]).then((ret)=>{
         const check = metaDataGroup.participants.get(idParticipant);
         if (check === undefined){ done(true); return true; }
         done(false); return false; 
+    })
+    
+}
+
+
+/**
+ * Promote Participant to Admin in Group
+ * @param {*} idGroup '0000000000-00000000@g.us'
+ * @param {*} idParticipant '000000000000@c.us'
+ * @param {*} done - function - Callback function to be called when a new message arrives.
+ */
+window.WAPI.promoteParticipantAdminGroup = function(idGroup, idParticipant, done){
+    const metaDataGroup = window.Store.GroupMetadata.get(idGroup);
+    if (metaDataGroup === undefined){
+        done(false); return false;
+    }
+    
+    const participant = metaDataGroup.participants.get(idParticipant);
+    if (participant === undefined){
+        done(false); return false;
+    }
+    
+    metaDataGroup.participants.promoteParticipants([participant]).then(()=>{
+        const checkParticipant = metaDataGroup.participants.get(idParticipant);
+        if (checkParticipant !== undefined){ 
+            if (checkParticipant.__x_isAdmin){
+                done(true); return true;
+            }
+        }
+        done(false); return false; 
+    })
+    
+}
+
+
+/**
+ * Demote Admin of Group
+ * @param {*} idGroup '0000000000-00000000@g.us'
+ * @param {*} idParticipant '000000000000@c.us'
+ * @param {*} done - function - Callback function to be called when a new message arrives.
+ */
+window.WAPI.demoteParticipantAdminGroup = function(idGroup, idParticipant, done){
+    const metaDataGroup = window.Store.GroupMetadata.get(idGroup);
+    if (metaDataGroup === undefined){
+        done(false); return false;
+    }
+    
+    const participant = metaDataGroup.participants.get(idParticipant);
+    if (participant === undefined){
+        done(false); return false;
+    }
+    
+    metaDataGroup.participants.demoteParticipants([participant]).then(()=>{
+        const checkParticipant = metaDataGroup.participants.get(idParticipant);
+        if (checkParticipant !== undefined && checkParticipant.__x_isAdmin){ 
+            done(false); return false;
+        }
+        done(true); return true; 
     })
     
 }
