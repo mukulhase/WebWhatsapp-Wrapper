@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+python-dateutil = ">=2.6.0"
+selenium = ">=3.4.3"
+python-axolotl = "*"
+cryptography = "*"
+aiohttp = "*"
+six = "*"
+typing = "*"
+numpy = "*"
+python-magic = "*"
+flask = "*"
+Jinja2 = "*"
+requests = "*"
+uWSGI = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
