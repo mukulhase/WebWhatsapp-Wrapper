@@ -623,20 +623,32 @@ class WhatsAPIDriver(object):
     def get_profile_pic_from_id(self, id):
         """
         Get full profile pic from an id
+        The ID must be on your contact book to
+        successfully get their profile picture.
 
         :param id: ID
         :type id: str
         """
-        return b64decode(self.wapi_functions.getProfilePicFromId(id))
+        profile_pic = self.wapi_functions.getProfilePicFromId(id)
+        if profile_pic:
+            return b64decode(profile_pic)
+        else:
+            return False
 
     def get_profile_pic_small_from_id(self, id):
         """
         Get small profile pic from an id
+        The ID must be on your contact book to
+        successfully get their profile picture.
 
         :param id: ID
         :type id: str
         """
-        return b64decode(self.wapi_functions.getProfilePicSmallFromId(id))
+        profile_pic_small = self.wapi_functions.getProfilePicSmallFromId(id)
+        if profile_pic:
+            return b64decode(profile_pic_small)
+        else:
+            return False
 
     def download_file(self, url):
         return b64decode(self.wapi_functions.downloadFile(url))
