@@ -1303,6 +1303,7 @@ window.WAPI.removeParticipantGroup = function(idGroup, idParticipant, done){
     
 }
 
+
 /**
  * Promote Participant to Admin in Group
  * @param {*} idGroup '0000000000-00000000@g.us'
@@ -1359,4 +1360,3 @@ window.WAPI.demoteParticipantAdminGroup = function(idGroup, idParticipant, done)
     })
     
 }
-
