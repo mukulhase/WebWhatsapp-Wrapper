@@ -1,3 +1,5 @@
+
+> - Advertising of monetized Frameworks is strictly forbidden and will be reported 
 > - [ ] The language must be English, if you are not fluent in English consider using: https://www.deepl.com/translator if it supports your native language
 > 
 > - [ ] Please check if any other issue already adresses your concerns or if a recent PR is already fixing the mentioned issue

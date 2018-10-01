@@ -196,13 +196,17 @@ class WhatsAPIDriver(object):
             self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
 
         elif self.client == "chrome":
-            self._profile = webdriver.chrome.options.Options()
+            self._profile = webdriver.ChromeOptions()
             if self._profile_path is not None:
                 self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
-                profile.add_argument('--proxy-server=%s' % proxy)
-            for option in chrome_options:
-                self._profile.add_argument(option)
+                self._profile.add_argument('--proxy-server=%s' % proxy)
+            if headless:
+                self._profile.add_argument('headless')
+            if chrome_options is not None:
+                for option in chrome_options:
+                    self._profile.add_argument(option)
+            self.logger.info("Starting webdriver")
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == 'remote':
@@ -230,8 +234,14 @@ class WhatsAPIDriver(object):
 
     def connect(self):
         self.driver.get(self._URL)
-
-        local_storage_file = os.path.join(self._profile.path, self._LOCAL_STORAGE_FILE)
+        
+        profilePath = ""
+        if self.client == "chrome":
+            profilePath = ""
+        else:
+            profilePath = self._profile.path
+        
+        local_storage_file = os.path.join(profilePath, self._LOCAL_STORAGE_FILE)
         if os.path.exists(local_storage_file):
             with open(local_storage_file) as f:
                 self.set_local_storage(loads(f.read()))
@@ -341,7 +351,7 @@ class WhatsAPIDriver(object):
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
             messages = [factory_message(message, self) for message in raw_message_group['messages']]
-            messages.sort(key=lambda message: message.cid)
+            messages.sort(key=lambda message: message.timestamp)
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
@@ -599,7 +609,7 @@ class WhatsAPIDriver(object):
         participant_ids = self.group_get_participants_ids(group_id)
 
         for participant_id in participant_ids:
-            yield self.get_contact_from_id(participant_id)
+            yield self.get_contact_from_id(participant_id['_serialized'])
 
     def group_get_admin_ids(self, group_id):
         return self.wapi_functions.getGroupAdmins(group_id)
@@ -613,20 +623,32 @@ class WhatsAPIDriver(object):
     def get_profile_pic_from_id(self, id):
         """
         Get full profile pic from an id
+        The ID must be on your contact book to
+        successfully get their profile picture.
 
         :param id: ID
         :type id: str
         """
-        return b64decode(self.wapi_functions.getProfilePicFromId(id))
+        profile_pic = self.wapi_functions.getProfilePicFromId(id)
+        if profile_pic:
+            return b64decode(profile_pic)
+        else:
+            return False
 
     def get_profile_pic_small_from_id(self, id):
         """
         Get small profile pic from an id
+        The ID must be on your contact book to
+        successfully get their profile picture.
 
         :param id: ID
         :type id: str
         """
-        return b64decode(self.wapi_functions.getProfilePicSmallFromId(id))
+        profile_pic_small = self.wapi_functions.getProfilePicSmallFromId(id)
+        if profile_pic:
+            return b64decode(profile_pic_small)
+        else:
+            return False
 
     def download_file(self, url):
         return b64decode(self.wapi_functions.downloadFile(url))
@@ -716,3 +738,19 @@ class WhatsAPIDriver(object):
     def create_chat_by_number(self, number):
         url = self._URL + "/send?phone=" + number
         self.driver.get(url)
+
+    def contact_block(self, id):
+        return self.wapi_functions.contactBlock(id)
+
+    def contact_unblock(self, id):
+        return self.wapi_functions.contactUnblock(id)
+
+    def remove_participant_group(self, idGroup, idParticipant):
+        return self.wapi_functions.removeParticipantGroup(idGroup,idParticipant)
+
+    def promove_participant_admin_group(self, idGroup, idParticipant):
+        return self.wapi_functions.promoteParticipantAdminGroup(idGroup,idParticipant)
+
+
+    def demote_participant_admin_group(self, idGroup, idParticipant):
+        return self.wapi_functions.demoteParticipantAdminGroup(idGroup,idParticipant)

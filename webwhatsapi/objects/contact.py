@@ -25,6 +25,9 @@ class Contact(WhatsappObjectWithId):
             self.formatted_name = js_obj["formattedName"]
         if 'profilePicThumbObj' in js_obj:
             self.profile_pic = js_obj["profilePicThumbObj"].get('eurl', None)
+        if 'verifiedName' in js_obj:
+            self.verified_name = js_obj["verifiedName"]
+            self.is_business = js_obj["isBusiness"]
 
     @driver_needed
     def get_common_groups(self):
@@ -44,7 +47,10 @@ class Contact(WhatsappObjectWithId):
         """
         name = (self.short_name or self.push_name or self.formatted_name)
         if (isinstance(name, string_types)):
-            safe_name = safe_str(name)
+            if self.is_business:
+                safe_name = self.verified_name
+            else:
+                safe_name = safe_str(name)
         else:
             safe_name = "Unknown"
         return safe_name

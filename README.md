@@ -2,6 +2,7 @@
 
 ## (Based on web.whatsapp.com)
 [![PyPI version](https://badge.fury.io/py/webwhatsapi.svg)](https://badge.fury.io/py/webwhatsapi)
+[![Firefox version](https://img.shields.io/badge/Firefox-58.0.2-green.svg)]()
 [![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
 
 ## What is it?
@@ -110,7 +111,7 @@ Possible arguments for constructor:
     driver.send_message_to_id(id, message)
 
 ## Code Documentation
-http://mukulhase.github.io/WebWhatsapp-Wrapper/index.html
+https://webwhatsapi.readthedocs.io/en/latest/
 
 ## Limitation
 Phone needs to manually scan the QR Code from Whatsapp Web. Phone has to be on and connected to the internet.
