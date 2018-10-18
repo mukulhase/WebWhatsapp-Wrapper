@@ -1218,7 +1218,6 @@ window.WAPI.sendVCard = function(chatId, vcard) {
 
     var extend = {
         ack: 0,
-        from: Store.Conn.me,
         id: newId,
         local: !0,
         self: "out",
@@ -1237,6 +1236,7 @@ window.WAPI.sendVCard = function(chatId, vcard) {
     } else {
         Object.assign(extend, {
             type: "vcard",
+            subtype: vcard.displayName,
             body: vcard.vcard
         });
 
