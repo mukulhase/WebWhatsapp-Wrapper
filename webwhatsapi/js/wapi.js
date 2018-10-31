@@ -701,14 +701,15 @@ window.WAPI.ReplyMessageWithQuote = function(idMessage, message, done) {
         if (done !== undefined) done(false);
         return false;
     }
-    messageObject = messageObject.valueOf();
+    if (messageObject && 'function' == typeof messageObject.valueOf)
+        messageObject = messageObject.valueOf();
 
     const chat = Store.Chat.get(messageObject.chat.id);
     if (chat !== undefined) {
+        let params = {
+            quotedMsg: messageObject
+        };
         if (done !== undefined) {
-            let params = {
-                quotedMsg: messageObject
-            };
             chat.sendMessage(message, params).then(function() {
                 function sleep(ms) {
                     return new Promise(resolve => setTimeout(resolve, ms));
@@ -752,7 +753,7 @@ window.WAPI.ReplyMessageWithQuote = function(idMessage, message, done) {
             });
             return true;
         } else {
-            chat.sendMessage(message, null, messageObject);
+            chat.sendMessage(message, params);
             return true;
         }
     } else {
@@ -769,15 +770,15 @@ window.WAPI.ReplyMessageWithQuote = function(idMessage, message, done) {
  */
 window.WAPI.ForwardMessage = function(idDestination, idMessage, done) {
     var messageObject = Store.Msg.get(idMessage),
-        destChat = Store.Chat.get(idDestination);
+        chatDest = Store.Chat.get(idDestination);
 
-    if (messageObject === undefined || destChat === undefined) {
+    if (messageObject === undefined || chatDest === undefined) {
         if (done !== undefined) done(false);
         return false;
     }
 
     if (done !== undefined) {
-        destChat.forwardMessages([messageObject]).then(function() {
+        chatDest.forwardMessages([messageObject]).then(function() {
             function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
@@ -785,7 +786,7 @@ window.WAPI.ForwardMessage = function(idDestination, idMessage, done) {
             var trials = 0;
 
             function check() {
-                let msg = destChat.getLastReceivedMsg(),
+                let msg = chatDest.getLastReceivedMsg(),
                     isSameText = function(a, b) {
 
                         return escape((a + '').trim()) == escape((b + '').trim())
@@ -819,7 +820,7 @@ window.WAPI.ForwardMessage = function(idDestination, idMessage, done) {
         });
         return true;
     } else {
-        destChat.sendMessage(message, null, messageObject);
+        chatDest.forwardMessages([messageObject]);
         return true;
     }
 };
