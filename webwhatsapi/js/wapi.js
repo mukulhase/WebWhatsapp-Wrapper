@@ -761,6 +761,69 @@ window.WAPI.ReplyMessageWithQuote = function(idMessage, message, done) {
     }
 };
 
+/*
+ * Forward given idMessage to idDestination of chat
+ * @param
+ *  idDestination String of chat.id._serialized (****@g|c.us)
+ *  idMessage String of msg.id._serialized
+ */
+window.WAPI.ForwardMessage = function(idDestination, idMessage, done) {
+    var messageObject = Store.Msg.get(idMessage),
+        destChat = Store.Chat.get(idDestination);
+
+    if (messageObject === undefined || destChat === undefined) {
+        if (done !== undefined) done(false);
+        return false;
+    }
+
+    if (done !== undefined) {
+        destChat.forwardMessages([messageObject]).then(function() {
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            var trials = 0;
+
+            function check() {
+                let msg = destChat.getLastReceivedMsg(),
+                    isSameText = function(a, b) {
+
+                        return escape((a + '').trim()) == escape((b + '').trim())
+                    };
+                if (!(!msg.senderObj.isMe || !isSameText(msg.body, messageObject.body))) {
+
+                    done(WAPI._serializeMessageObj(msg));
+                    return true;
+                }
+
+                // Failover, loop through from latest msg
+                for (let i = chat.msgs.models.length - 1; i >= 0; i--) {
+                    msg = chat.msgs.models[i];
+
+                    if (!(!msg.senderObj.isMe || !isSameText(msg.body, messageObject.body))) {
+
+                        done(WAPI._serializeMessageObj(msg));
+                        return true;
+                    }
+                }
+
+                trials += 1;
+                console.log(trials);
+                if (trials > 30) {
+                    done(true);
+                    return;
+                }
+                sleep(500).then(check);
+            }
+            check();
+        });
+        return true;
+    } else {
+        destChat.sendMessage(message, null, messageObject);
+        return true;
+    }
+};
+
 window.WAPI.sendMessageToID = function (id, message, done) {
     try {
         var idUser = new window.Store.UserConstructor(id);
