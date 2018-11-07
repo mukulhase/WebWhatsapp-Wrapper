@@ -23,7 +23,7 @@ def factory_message(js_obj, driver):
     if js_obj is None:
         return
 
-    if "lat" in js_obj and "lng" in js_obj:
+    if "lat" in js_obj and "lng" in js_obj and js_obj["lat"] and js_obj["lng"]:
         return GeoMessage(js_obj, driver)
 
     if js_obj["isMedia"]:
