@@ -690,20 +690,28 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
     }
 };
 
-window.WAPI.sendMessageToID = function (id, message, done) {
+window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
     try {
         var idUser = new window.Store.UserConstructor(id);
         // create new chat
         return Store.Chat.find(idUser).then((chat) => {
-            if (done !== undefined) {
-                chat.sendMessage(message).then(function () {
-                    done(true);
-                });
-                return true;
-            } else {
-                chat.sendMessage(message);
-                return true;
-            }
+            let typingEvent = setInterval(() => {
+                chat.markComposing();
+            }, 0);
+
+            setTimeout(() => {
+                chat.markPaused();
+                clearInterval(typingEvent);
+                if (done !== undefined) {
+                    chat.sendMessage(message).then(function () {
+                        done(true);
+                    });
+                    return true;
+                } else {
+                    chat.sendMessage(message);
+                    return true;
+                }
+            }, typingTime);
         });
     } catch (e) {
         if (window.Store.Chat.length === 0)
@@ -1218,6 +1226,7 @@ window.WAPI.sendVCard = function(chatId, vcard) {
 
     var extend = {
         ack: 0,
+        from: Store.Conn.me,
         id: newId,
         local: !0,
         self: "out",
@@ -1236,7 +1245,6 @@ window.WAPI.sendVCard = function(chatId, vcard) {
     } else {
         Object.assign(extend, {
             type: "vcard",
-            subtype: vcard.displayName,
             body: vcard.vcard
         });
 
