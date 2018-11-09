@@ -38,9 +38,9 @@ Using Docker may also help in developing the library itself.
 ### 2. Run Selenium grid/standalone container
 
 This is based on the official Selenium image (https://github.com/SeleniumHQ/docker-selenium).
-The following Docker command runs a Selenium standalone Firefox browser in debug (VNC) mode. You can use VNC on port 5900 to view the browser. It uses the network "selenium" and the container is named "firefox" for later reference.
+The following Docker command runs a Selenium standalone Firefox browser in debug (VNC) mode. You can use VNC on port 5900 to view the browser (password is "secret"). It uses the network "selenium" and the container is named "firefox" for later reference.
 
-    docker run -d -p 4444:4444 -p 5900:5900 --name firefox --network selenium -v /dev/shm:/dev/shm selenium/standalone-firefox-debug
+    docker run -d -p 4444:4444 -p 5900:5900 --name firefox --network selenium -v /dev/shm:/dev/shm selenium/standalone-firefox-debug:3.10.0-argon
 
 ### 3. Build python/webwhatsapi docker base image
 
