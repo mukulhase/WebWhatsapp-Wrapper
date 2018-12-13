@@ -697,20 +697,17 @@ window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
         return Store.Chat.find(idUser).then((chat) => {
             let typingEvent = setInterval(() => {
                 chat.markComposing();
-            }, 0);
+            }, 100);
 
             setTimeout(() => {
-                chat.markPaused();
                 clearInterval(typingEvent);
+                chat.markPaused();
+                chat.sendMessage(message);
+
                 if (done !== undefined) {
-                    chat.sendMessage(message).then(function () {
-                        done(true);
-                    });
-                    return true;
-                } else {
-                    chat.sendMessage(message);
-                    return true;
+                    done(true);
                 }
+                return true;
             }, typingTime);
         });
     } catch (e) {
