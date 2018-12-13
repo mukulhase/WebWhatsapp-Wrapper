@@ -1027,16 +1027,11 @@ window.WAPI.deleteConversation = function (chatId, done) {
         return false;
     }
 
-    conversation.sendDelete().then(() => {
-        if (done !== undefined) {
-            done(true);
-        }
-    }).catch(() => {
-        if (done !== undefined) {
-            done(false);
-        }
-    });
-
+    conversation.sendDelete();
+    if (done !== undefined) {
+        done(true);
+    }
+    
     return true;
 };
 
