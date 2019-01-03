@@ -16,6 +16,14 @@ class Contact(WhatsappObjectWithId):
         :param driver:
         :type driver: WhatsAPIDriver
         """
+		
+		self.short_name = None
+        self.push_name = None
+        self.formatted_name = None
+        self.profile_pic = None
+        self.verified_name = None
+        self.is_business = False
+		
         super(Contact, self).__init__(js_obj, driver)
         if 'shortName' in js_obj:
             self.short_name = js_obj["shortName"]
