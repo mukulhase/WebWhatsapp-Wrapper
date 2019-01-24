@@ -62,6 +62,10 @@ if (!window.Store) {
         }
 
         webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, 'parasite');
+	window.Store.WapQuery = {};
+        webpackJsonp([], { "dgfhfgbdeb": (x, y, z) => window.Store.WapQuery = z('"dgfhfgbdeb"') }, "dgfhfgbdeb");
+        window.Store.WapQuery = window.Store.WapQuery.default;
+	    
     })();
 }
 
