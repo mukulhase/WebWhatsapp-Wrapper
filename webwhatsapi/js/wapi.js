@@ -80,7 +80,7 @@ if (!window.Store) {
                 [['parasite']]
             ]);
         }
-            
+
     })();
 }
 
@@ -1098,9 +1098,9 @@ window.WAPI.deleteMessage = function (chatId, messageArray, revoke=false, done) 
         messageArray = [messageArray];
     }
     let messagesToDelete = messageArray.map(msgId => window.Store.Msg.get(msgId));
-    
+
     if (revoke) {
-        conversation.sendRevokeMsgs(messagesToDelete, conversation);    
+        conversation.sendRevokeMsgs(messagesToDelete, conversation);
     } else {
         conversation.sendDeleteMsgs(messagesToDelete, conversation);
     }
@@ -1334,7 +1334,7 @@ window.WAPI.sendVCard = function (chatId, vcard) {
     chat.addAndSendMsg(tempMsg);
 };
 /**
- * Block contact 
+ * Block contact
  * @param {string} id '000000000000@c.us'
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */
@@ -1349,7 +1349,7 @@ window.WAPI.contactBlock = function (id, done) {
     return false;
 }
 /**
- * unBlock contact 
+ * unBlock contact
  * @param {string} id '000000000000@c.us'
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */
