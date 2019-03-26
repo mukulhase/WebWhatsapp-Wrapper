@@ -695,6 +695,8 @@ window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
         var idUser = new window.Store.UserConstructor(id);
         // create new chat
         return Store.Chat.find(idUser).then((chat) => {
+            chat.sendSeen();
+            chat.markComposing();
             let typingEvent = setInterval(() => {
                 chat.markComposing();
             }, 100);
@@ -703,12 +705,11 @@ window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
                 clearInterval(typingEvent);
                 chat.markPaused();
                 chat.sendMessage(message);
-
-                if (done !== undefined) {
-                    done(true);
-                }
-                return true;
             }, typingTime);
+
+            if (done !== undefined) {
+                done(true);
+            }
         });
     } catch (e) {
         if (window.Store.Chat.length === 0)
