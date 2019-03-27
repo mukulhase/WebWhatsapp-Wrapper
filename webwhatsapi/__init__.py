@@ -715,6 +715,17 @@ class WhatsAPIDriver(object):
         :return:
         """
         return self.wapi_functions.deleteConversation(chat_id)
+    
+    def delete_message(self, chat_id, message_array, revoke=False):
+        """
+        Delete a chat
+
+        :param chat_id: id of chat
+        :param message_array: one or more message(s) id
+        :param revoke: Set to true so the message will be deleted for everyone, not only you
+        :return:
+        """
+        return self.wapi_functions.deleteMessage(chat_id, message_array, revoke=False)
 
     def check_number_status(self, number_id):
         """

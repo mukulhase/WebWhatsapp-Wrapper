@@ -1035,6 +1035,35 @@ window.WAPI.deleteConversation = function (chatId, done) {
     return true;
 };
 
+window.WAPI.deleteMessage = function (chatId, messageArray, revoke=false, done) {
+    let userId = new window.Store.UserConstructor(chatId);
+    let conversation = window.Store.Chat.get(userId);
+
+    if(!conversation) {
+        if(done !== undefined) {
+            done(false);
+        }
+        return false;
+    }
+	
+	if (!Array.isArray(messageArray)) {
+        messageArray = [messageArray];
+    }
+
+	if(revoke){
+		conversation.sendRevokeMsgs(messageArray, conversation);	
+	}else{
+		conversation.sendDeleteMsgs(messageArray, conversation);	
+	}
+    
+
+    if (done !== undefined) {
+        done(true);
+    }
+
+    return true;
+};
+
 window.WAPI.checkNumberStatus = function(id, done) {
     window.Store.WapQuery.queryExist(id).then((result) => {
         if(done !== undefined) {
