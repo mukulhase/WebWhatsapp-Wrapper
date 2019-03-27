@@ -2,7 +2,7 @@ version: "3"
 
 services:
   firefox:
-    image: selenium/standalone-firefox-debug
+    image: selenium/standalone-firefox-debug:3.14.0-dubnium
     ports:
       - "4444:4444"
       - "5900:5900"
