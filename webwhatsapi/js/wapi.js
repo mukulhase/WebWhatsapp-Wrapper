@@ -695,7 +695,6 @@ window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
         var idUser = new window.Store.UserConstructor(id);
         // create new chat
         return Store.Chat.find(idUser).then((chat) => {
-            chat.sendSeen();
             chat.markComposing();
             let typingEvent = setInterval(() => {
                 chat.markComposing();
