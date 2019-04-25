@@ -744,6 +744,7 @@ class WhatsAPIDriver(object):
         self.wapi_functions.new_messages_observable.unsubscribe(observer)
 
     def quit(self):
+        self.wapi_functions.quit()
         self.driver.quit()
 
     def create_chat_by_number(self, number):

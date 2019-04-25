@@ -73,6 +73,9 @@ class WapiJsWrapper(object):
         else:
             return []
 
+    def quit(self):
+        self.new_messages_observable.stop()
+
 
 class JsArg(object):
     """
@@ -146,9 +149,11 @@ class NewMessagesObservable(Thread):
         self.wapi_driver = wapi_driver
         self.webdriver = webdriver
         self.observers = []
+        self.running = False
 
     def run(self):
-        while True:
+        self.running = True
+        while self.running:
             try:
                 new_js_messages = self.wapi_js_wrapper.getBufferedNewMessages()
                 if isinstance(new_js_messages, (collections.Sequence, np.ndarray)) and len(new_js_messages) > 0:
@@ -161,6 +166,9 @@ class NewMessagesObservable(Thread):
                 pass
 
             time.sleep(2)
+
+    def stop(self):
+        self.running = False
 
     def subscribe(self, observer):
         inform_method = getattr(observer, "on_message_received", None)
