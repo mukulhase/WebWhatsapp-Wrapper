@@ -1,13 +1,22 @@
 import mimetypes
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from datetime import datetime
 
-import os
+import os, sys, time, json
 from typing import Union
 
 from ..helper import safe_str
 from .contact import Contact
 from .whatsapp_object import WhatsappObject
+
+from io import BytesIO
+from axolotl.kdf.hkdfv3 import HKDFv3
+from axolotl.util.byteutil import ByteUtil
+import binascii
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+
+import requests
 
 
 def getContacts(x, driver):
@@ -76,17 +85,20 @@ class Message(WhatsappObject):
 
 
 class MediaMessage(Message):
-    crypt_keys = {'document': '576861747341707020446f63756d656e74204b657973',
-                  'image'   : '576861747341707020496d616765204b657973',
-                  'video'   : '576861747341707020566964656f204b657973',
-                  'ptt'     : '576861747341707020417564696f204b657973',
-                  'audio'   : '576861747341707020417564696f204b657973'}
-
     def __init__(self, js_obj, driver=None):
         super(MediaMessage, self).__init__(js_obj, driver)
 
+        self.crypt_keys = {'document': '576861747341707020446f63756d656e74204b657973',
+                           'image'   : '576861747341707020496d616765204b657973',
+                           'video'   : '576861747341707020566964656f204b657973',
+                           'ptt'     : '576861747341707020417564696f204b657973',
+                           'audio'   : '576861747341707020417564696f204b657973'}
+
         self.size = self._js_obj["size"]
         self.mime = self._js_obj["mimetype"]
+        self.type = self._js_obj["type"]
+        self.content = ''
+
         if "caption" in self._js_obj:
             self.caption = self._js_obj["caption"] or ""
 
@@ -96,10 +108,39 @@ class MediaMessage(Message):
         extension = mimetypes.guess_extension(self.mime)
         self.filename = ''.join([str(id(self)), extension or ''])
 
+    def download_file(self, url):
+        return requests.get(url).content
+
+    def download_media(self, force_download=False):
+        if not force_download:
+            try:
+                if self.content:
+                    return BytesIO(b64decode(self.content))
+            except AttributeError:
+                pass
+
+        file_data = self.download_file(self.client_url)
+
+        if not file_data:
+            raise Exception('Impossible to download file')
+
+        media_key = b64decode(self.media_key)
+        derivative = HKDFv3().deriveSecrets(media_key, binascii.unhexlify(self.crypt_keys[self.type]),112)
+
+        parts = ByteUtil.split(derivative, 16, 32)
+        iv = parts[0]
+        cipher_key = parts[1]
+        e_file = file_data[:-10]
+
+        cr_obj = Cipher(algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cr_obj.decryptor()
+        return BytesIO( decryptor.update(e_file) + decryptor.finalize())
+
     def save_media(self, path, force_download=False):
         # gets full media
         filename = os.path.join(path, self.filename)
-        ioobj = self.driver.download_media(self, force_download)
+        #ioobj = self.driver.download_media(self, force_download)
+        ioobj = self.download_media(force_download)
         with open(filename, "wb") as f:
             f.write(ioobj.getvalue())
         return filename
