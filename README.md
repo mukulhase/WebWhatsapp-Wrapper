@@ -42,6 +42,8 @@ The following Docker command runs a Selenium standalone Firefox browser in debug
 
     docker run -d -p 4444:4444 -p 5900:5900 --name firefox --network selenium -v /dev/shm:/dev/shm selenium/standalone-firefox-debug:3.14.0-curium
 
+You may use a vnc client if desired on 5900 port and password `secret`
+
 ### 3. Build python/webwhatsapi docker base image
 
 The following command uses the dockerfile to build a new image based on Python 2.7 with all required packages from requirements.txt. 
