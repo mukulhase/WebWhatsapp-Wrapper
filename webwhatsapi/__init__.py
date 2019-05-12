@@ -150,7 +150,8 @@ class WhatsAPIDriver(object):
         self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None):
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None, 
+                 executable_path=None):
         """Initialises the webdriver"""
 
         self.logger = logger or self.logger
@@ -193,7 +194,17 @@ class WhatsAPIDriver(object):
             capabilities['webStorageEnabled'] = True
 
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
+            if executable_path is not None:
+                executable_path = os.path.abspath(executable_path)                                
+
+                self.logger.info("Starting webdriver")
+                self.driver = webdriver.Firefox(capabilities=capabilities, options=options, executable_path=executable_path,
+                                                    **extra_params)
+            else: 
+                self.logger.info("Starting webdriver")
+                self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
+                                                    **extra_params)
+
 
         elif self.client == "chrome":
             self._profile = webdriver.ChromeOptions()
