@@ -552,7 +552,7 @@ class WhatsAPIDriver(object):
             return factory_message(result, self)
         return result
 
-    def send_message_to_id(self, recipient, message):
+    def send_message_to_id(self, recipient, message, typing_time=0):
         """
         Send a message to a chat given its ID
 
@@ -560,8 +560,10 @@ class WhatsAPIDriver(object):
         :type recipient: str
         :param message: Plain-text message to be sent.
         :type message: str
+        :param typing_time: Time to show typing in milliseconds
+        :type typing_time: number
         """
-        return self.wapi_functions.sendMessageToID(recipient, message)
+        return self.wapi_functions.sendMessageToID(recipient, message, typing_time)
     
     def convert_to_base64(self, path):
         """

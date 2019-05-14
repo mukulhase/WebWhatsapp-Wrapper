@@ -17,7 +17,7 @@ if (!window.Store) {
                 { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null },
                 { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
-                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
+                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : ((module.default && module.default.queryExist) ? module.default : null)},
                 { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null },
                 { id: "UserConstructor", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null }
             ];
@@ -690,19 +690,24 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
     }
 };
 
-window.WAPI.sendMessageToID = function (id, message, done) {
+window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
     try {
         var idUser = new window.Store.UserConstructor(id);
         // create new chat
         return Store.Chat.find(idUser).then((chat) => {
-            if (done !== undefined) {
-                chat.sendMessage(message).then(function () {
-                    done(true);
-                });
-                return true;
-            } else {
+            chat.markComposing();
+            let typingEvent = setInterval(() => {
+                chat.markComposing();
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(typingEvent);
+                chat.markPaused();
                 chat.sendMessage(message);
-                return true;
+            }, typingTime);
+
+            if (done !== undefined) {
+                done(true);
             }
         });
     } catch (e) {
@@ -1022,16 +1027,11 @@ window.WAPI.deleteConversation = function (chatId, done) {
         return false;
     }
 
-    conversation.sendDelete().then(() => {
-        if (done !== undefined) {
-            done(true);
-        }
-    }).catch(() => {
-        if (done !== undefined) {
-            done(false);
-        }
-    });
-
+    conversation.sendDelete();
+    if (done !== undefined) {
+        done(true);
+    }
+    
     return true;
 };
 
@@ -1247,6 +1247,7 @@ window.WAPI.sendVCard = function(chatId, vcard) {
 
     var extend = {
         ack: 0,
+        from: Store.Conn.me,
         id: newId,
         local: !0,
         self: "out",
@@ -1265,7 +1266,6 @@ window.WAPI.sendVCard = function(chatId, vcard) {
     } else {
         Object.assign(extend, {
             type: "vcard",
-            subtype: vcard.displayName,
             body: vcard.vcard
         });
 
