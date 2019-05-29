@@ -8,20 +8,68 @@
  * functions and creates the Store object.
  */
 if (!window.Store) {
-    (function() {
+    (function () {
         function getStore(modules) {
             let foundCount = 0;
             let neededObjects = [
-                { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
-                { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
-                { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null },
-                { id: "WapDelete", conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null },
-                { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
-                { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : null },
-                { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null },
-                { id: "UserConstructor", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null }
+                {
+					id: "Store",
+					conditions: (module) => (module.Chat && module.Msg) ? module : null
+				},
+                {
+                    id: "MediaCollection",
+                    conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null
+                },
+                {
+                    id: "ChatClass",
+                    conditions: (module) => (module.default && module.default.prototype && module.default.prototype.Collection !== undefined && module.default.prototype.Collection === "Chat") ? module : null
+                },
+                {
+					id: "MediaProcess",
+					conditions: (module) => (module.BLOB) ? module : null
+				},
+                {
+					id: "Wap",
+					conditions: (module) => (module.createGroup) ? module : null
+				},
+                {
+                    id: "ServiceWorker",
+                    conditions: (module) => (module.default && module.default.killServiceWorker) ? module : null
+                },
+                {
+					id: "State",
+					conditions: (module) => (module.STATE && module.STREAM) ? module : null
+				},
+                {
+                    id: "WapDelete",
+                    conditions: (module) => (module.sendConversationDelete && module.sendConversationDelete.length == 2) ? module : null
+                },
+                {
+                    id: "Conn",
+                    conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null
+                },
+                {
+                    id: "WapQuery",
+                    conditions: (module) => (module.queryExist) ? module : ((module.default && module.default.queryExist) ? module.default : null)
+                },
+                {id: "CryptoLib", conditions: (module) => (module.decryptE2EMedia) ? module : null},
+                {
+                    id: "OpenChat",
+                    conditions: (module) => (module.default && module.default.prototype && module.default.prototype.openChat) ? module.default : null
+                },
+                {
+                    id: "UserConstructor",
+                    conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null
+                },
+                {
+                    id: "SendTextMsgToChat",
+                    conditions: (module) => (module.sendTextMsgToChat) ? module.sendTextMsgToChat : null
+                },
+                {
+					id: "SendSeen",
+					conditions: (module) => (module.sendSeen) ? module.sendSeen : null
+				}
             ];
-
             for (let idx in modules) {
                 if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
                     let first = Object.values(modules[idx])[0];
@@ -31,17 +79,16 @@ if (!window.Store) {
                             if (!module) {
                                 continue;
                             }
-
                             neededObjects.forEach((needObj) => {
-                                if(!needObj.conditions || needObj.foundedModule) return;
+                                if (!needObj.conditions || needObj.foundedModule)
+                                    return;
                                 let neededModule = needObj.conditions(module);
-                                if(neededModule !== null) {
+                                if (neededModule !== null) {
                                     foundCount++;
                                     needObj.foundedModule = neededModule;
                                 }
                             });
-
-                            if(foundCount == neededObjects.length) {
+                            if (foundCount == neededObjects.length) {
                                 break;
                             }
                         }
@@ -50,18 +97,20 @@ if (!window.Store) {
                         window.Store = neededStore.foundedModule ? neededStore.foundedModule : {};
                         neededObjects.splice(neededObjects.indexOf(neededStore), 1);
                         neededObjects.forEach((needObj) => {
-                            if(needObj.foundedModule) {
+                            if (needObj.foundedModule) {
                                 window.Store[needObj.id] = needObj.foundedModule;
                             }
                         });
-
+                        window.Store.ChatClass.default.prototype.sendMessage = function (e) {
+                            return window.Store.SendTextMsgToChat(this, ...arguments);
+                        }
                         return window.Store;
                     }
                 }
             }
         }
 
-        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, 'parasite');
+        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, ['parasite']);
     })();
 }
 
@@ -390,10 +439,10 @@ window.WAPI.getUnreadMessagesInChat = function (id, includeMe, includeNotificati
         let messageObj = messages[i];
 
         // found a read message: stop looking for others
-        if (typeof (messageObj.isNewMsg) !== "boolean" || messageObj.isNewMsg === false) {
+        if (typeof (messageObj.__x_isUnreadType) !== "boolean" || messageObj.__x_isUnreadType === false) {
             continue;
         } else {
-            messageObj.isNewMsg = false;
+            messageObj.__x_isUnreadType = false;
             // process it
             let message = WAPI.processMessageObj(messageObj,
                     includeMe,
@@ -692,26 +741,30 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
 
 window.WAPI.sendMessageToID = function (id, message, done) {
     try {
-        var idUser = new window.Store.UserConstructor(id);
-        // create new chat
-        return Store.Chat.find(idUser).then((chat) => {
-            if (done !== undefined) {
-                chat.sendMessage(message).then(function () {
+        var idUser = new window.Store.UserConstructor(id, {intentionallyUsePrivateConstructor: true});
+
+        window.getContact = ( id ) => {
+            return Store.WapQuery.queryExist(id)
+        }
+        window.getContact(id).then(contact => {
+            if(contact.status === 404){
+                done(true);
+            }else {
+                Store.Chat.find(contact.jid).then(chat => {
+                    chat.sendMessage(message);
+                    return true;
+                    }).catch(reject => {
                     done(true);
-                });
-                return true;
-            } else {
-                chat.sendMessage(message);
-                return true;
+                }); 
             }
-        });
+          });
     } catch (e) {
         if (window.Store.Chat.length === 0)
             return false;
 
         firstChat = Store.Chat.models[0];
         var originalID = firstChat.id;
-        firstChat.id = typeof originalID === "string" ? id : new window.Store.UserConstructor(id);
+        firstChat.id = typeof originalID === "string" ? id : new window.Store.UserConstructor(id, {intentionallyUsePrivateConstructor: true});
         if (done !== undefined) {
             firstChat.sendMessage(message).then(function () {
                 firstChat.id = originalID;
@@ -727,6 +780,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     if (done !== undefined) done(false);
     return false;
 }
+
 
 window.WAPI.sendMessage = function (id, message, done) {
     var chat = window.WAPI.getChat(id);
@@ -770,38 +824,16 @@ window.WAPI.sendMessage = function (id, message, done) {
     }
 };
 
-window.WAPI.sendMessage2 = function (id, message, done) {
-    var chat = window.WAPI.getChat(id);
-    if (chat !== undefined) {
-        try {
-            if (done !== undefined) {
-                chat.sendMessage(message).then(function () {
-                    done(true);
-                });
-            } else {
-                chat.sendMessage(message);
-            }
-            return true;
-        } catch (error) {
-            if (done !== undefined) done(false)
-            return false;
-        }
-    }
-    if (done !== undefined) done(false)
-    return false;
-};
-
-
 window.WAPI.sendSeen = function (id, done) {
-    var chat = window.WAPI.getChat(id);
+    var chat = window.Store.Chat.get(id);
     if (chat !== undefined) {
         if (done !== undefined) {
-            chat.sendSeen(false).then(function () {
+            window.Store.SendSeen(chat).then(function () {
                 done(true);
             });
             return true;
         } else {
-            chat.sendSeen(false);
+            window.Store.SendSeen(chat);
             return true;
         }
     }
@@ -835,13 +867,13 @@ window.WAPI.getUnreadMessages = function (includeMe, includeNotifications, use_u
         let messageGroup = WAPI._serializeChatObj(messageGroupObj);
         messageGroup.messages = [];
 
-        const messages = messageGroupObj.msgs.models;
+        const messages = messageGroupObj.msgs._models;
         for (let i = messages.length - 1; i >= 0; i--) {
             let messageObj = messages[i];
-            if (typeof (messageObj.isNewMsg) != "boolean" || messageObj.isNewMsg === false) {
+            if (typeof (messageObj.__x_isUnreadType) != "boolean" || messageObj.__x_isUnreadType === false) {
                 continue;
             } else {
-                messageObj.isNewMsg = false;
+                messageObj.__x_isUnreadType = false;
                 let message = WAPI.processMessageObj(messageObj, includeMe, includeNotifications);
                 if (message) {
                     messageGroup.messages.push(message);
@@ -927,8 +959,8 @@ window.WAPI.getProfilePicSmallFromId = function(id, done) {
             done(false);
         }
     }, function(e) {
-		done(false);
-	})
+        done(false);
+    })
 };
 
 window.WAPI.getProfilePicFromId = function(id, done) {
@@ -939,8 +971,8 @@ window.WAPI.getProfilePicFromId = function(id, done) {
             done(false);
         }
     }, function(e) {
-		done(false);
-	})
+        done(false);
+    })
 };
 
 window.WAPI.downloadFileWithCredentials = function (url, done) {
@@ -1012,7 +1044,7 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let userId = new window.Store.UserConstructor(chatId);
+    let userId = new window.Store.UserConstructor(chatId, {intentionallyUsePrivateConstructor: true});
     let conversation = window.Store.Chat.get(userId);
 
     if(!conversation) {
@@ -1036,7 +1068,7 @@ window.WAPI.deleteConversation = function (chatId, done) {
 };
 
 window.WAPI.deleteMessage = function (chatId, messageArray, revoke=false, done) {
-    let userId = new window.Store.UserConstructor(chatId);
+    let userId = new window.Store.UserConstructor(chatId, {intentionallyUsePrivateConstructor: true});
     let conversation = window.Store.Chat.get(userId);
 
     if(!conversation) {
@@ -1045,16 +1077,16 @@ window.WAPI.deleteMessage = function (chatId, messageArray, revoke=false, done) 
         }
         return false;
     }
-	
-	if (!Array.isArray(messageArray)) {
+    
+    if (!Array.isArray(messageArray)) {
         messageArray = [messageArray];
     }
 
-	if(revoke){
-		conversation.sendRevokeMsgs(messageArray, conversation);	
-	}else{
-		conversation.sendDeleteMsgs(messageArray, conversation);	
-	}
+    if(revoke){
+        conversation.sendRevokeMsgs(messageArray, conversation);    
+    }else{
+        conversation.sendDeleteMsgs(messageArray, conversation);    
+    }
     
 
     if (done !== undefined) {
@@ -1094,7 +1126,7 @@ window.Store.Msg.off('add');
 sessionStorage.removeItem('saved_msgs');
 
 window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
-    if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
+    if (newMessage && newMessage.__x_isUnreadType && !newMessage.isSentByMe) {
         let message = window.WAPI.processMessageObj(newMessage, false, false);
         if (message) {
             window.WAPI._newMessagesQueue.push(message);
@@ -1175,9 +1207,10 @@ window.WAPI.getBufferedNewMessages = function(done) {
 /** End new messages observable functions **/
 
 window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
-	var idUser = new window.Store.UserConstructor(chatid);
-	// create new chat
-	return Store.Chat.find(idUser).then((chat) => {
+    //var idUser = new window.Store.UserConstructor(chatid);
+    var idUser = new window.Store.UserConstructor(chatid, {intentionallyUsePrivateConstructor: true});
+    // create new chat
+    return Store.Chat.find(idUser).then((chat) => {
         var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
         var mc = new Store.MediaCollection();
         mc.processFiles([mediaBlob], chat, 1).then(() => {
@@ -1186,7 +1219,7 @@ window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
             if (done !== undefined) done(true);
         });
     });
-};
+}
 
 window.WAPI.base64ImageToFile = function (b64Data, filename) {
     var arr = b64Data.split(','), mime = arr[0].match(/:(.*?);/)[1],
@@ -1252,7 +1285,7 @@ window.WAPI.sendVCard = function(chatId, vcard) {
         self: "out",
         t: parseInt(new Date().getTime() / 1000),
         to: chatId,
-        isNewMsg: !0,
+        __x_isUnreadType: !0,
     };
 
     if (Array.isArray(vcard)) {
@@ -1387,5 +1420,4 @@ window.WAPI.demoteParticipantAdminGroup = function(idGroup, idParticipant, done)
         }
         done(true); return true; 
     })
-    
 }
