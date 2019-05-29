@@ -1350,7 +1350,7 @@ window.WAPI.promoteParticipantAdminGroup = function(idGroup, idParticipant, done
         done(false); return false;
     }
     
-    metaDataGroup.participants.promoteParticipants([participant]).then(()=>{
+    window.Wap.promoteParticipants(metaDataGroup.id, [participant.id]).then(()=>{
         const checkParticipant = metaDataGroup.participants.get(idParticipant);
         if (checkParticipant !== undefined){ 
             if (checkParticipant.__x_isAdmin){
