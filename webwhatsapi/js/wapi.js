@@ -19,7 +19,15 @@ if (!window.Store) {
                 { id: "Conn", conditions: (module) => (module.default && module.default.ref && module.default.refTTL) ? module.default : null },
                 { id: "WapQuery", conditions: (module) => (module.queryExist) ? module : ((module.default && module.default.queryExist) ? module.default : null)},
                 { id: "ProtoConstructor", conditions: (module) => (module.prototype && module.prototype.constructor.toString().indexOf('binaryProtocol deprecated version') >= 0) ? module : null },
-                { id: "UserConstructor", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null }
+                { id: "UserConstructor", conditions: (module) => (module.default && module.default.createWid) ? module.default : ((module.createWid) ? module : null) },
+
+                // Class Injection to make chat compliant (After 27/05/2019)
+                { id: "ChatClass", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.Collection !== undefined && module.default.prototype.Collection === "Chat") ? module : null },
+                { id: "FuncSendMsgToChat", conditions: (module) => (module.sendTextMsgToChat) ? module.sendTextMsgToChat : null },
+                { id: "FuncSendSeen", conditions:  (module) => (module.sendSeen) ? module.sendSeen : null },
+                { id: "FuncMarkComposing", conditions:  (module) => (module.markComposing) ? module.markComposing : null },
+                { id: "FuncMarkPaused", conditions:  (module) => (module.markPaused) ? module.markPaused : null },
+                { id: "FuncSendDelete", conditions:  (module) => (module.sendDelete) ? module.sendDelete : null },
             ];
 
             for (let idx in modules) {
@@ -55,13 +63,30 @@ if (!window.Store) {
                             }
                         });
 
+                        // Fix chat missing methods
+                        window.Store.ChatClass.default.prototype.sendMessage = function (e) {
+                            return window.Store.FuncSendMsgToChat(this, ...arguments);
+                        };
+                        window.Store.ChatClass.default.prototype.sendSeen = function (e) {
+                            return window.Store.FuncSendSeen(this, ...arguments);
+                        };
+                        window.Store.ChatClass.default.prototype.markComposing = function () {
+                            return window.Store.FuncMarkComposing(this, ...arguments);
+                        };
+                        window.Store.ChatClass.default.prototype.markPaused = function () {
+                            return window.Store.FuncMarkPaused(this, ...arguments);
+                        };
+                        window.Store.ChatClass.default.prototype.sendDelete = function () {
+                            return window.Store.FuncSendDelete(this, ...arguments);
+                        };
+
                         return window.Store;
                     }
                 }
             }
         }
 
-        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, 'parasite');
+        webpackJsonp([], {'parasite': (x, y, z) => getStore(z)}, ['parasite']);
     })();
 }
 
@@ -168,7 +193,7 @@ window.WAPI._serializeProfilePicThumb = (obj) => {
         raw: obj.raw,
         tag: obj.tag
     });
-}
+};
 
 window.WAPI.createGroup = function (name, contactsId) {
     if (!Array.isArray(contactsId)) {
@@ -183,7 +208,6 @@ window.WAPI.leaveGroup = function(groupId) {
     var group = window.Store.Chat.get(groupId);
     return group.sendExit()
 };
-
 
 window.WAPI.getAllContacts = function (done) {
     const contacts = window.Store.Contact.map((contact) => WAPI._serializeContactObj(contact));
@@ -692,8 +716,7 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
 
 window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
     try {
-        var idUser = new window.Store.UserConstructor(id);
-        // create new chat
+        var idUser = window.Store.UserConstructor.createWid(id);
         return Store.Chat.find(idUser).then((chat) => {
             chat.markComposing();
             let typingEvent = setInterval(() => {
@@ -710,28 +733,10 @@ window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
                 done(true);
             }
         });
-    } catch (e) {
-        if (window.Store.Chat.length === 0)
-            return false;
-
-        firstChat = Store.Chat.models[0];
-        var originalID = firstChat.id;
-        firstChat.id = typeof originalID === "string" ? id : new window.Store.UserConstructor(id);
-        if (done !== undefined) {
-            firstChat.sendMessage(message).then(function () {
-                firstChat.id = originalID;
-                done(true);
-            });
-            return true;
-        } else {
-            firstChat.sendMessage(message);
-            firstChat.id = originalID;
-            return true;
-        }
-    }
+    } catch (e) {}
     if (done !== undefined) done(false);
     return false;
-}
+};
 
 window.WAPI.sendMessage = function (id, message, done) {
     var chat = window.WAPI.getChat(id);
@@ -1017,7 +1022,7 @@ window.WAPI.getBatteryLevel = function (done) {
 };
 
 window.WAPI.deleteConversation = function (chatId, done) {
-    let userId = new window.Store.UserConstructor(chatId);
+    let userId = window.Store.UserConstructor.createWid(chatId);
     let conversation = window.Store.Chat.get(userId);
 
     if(!conversation) {
@@ -1061,7 +1066,9 @@ window.WAPI._newMessagesBuffer = (sessionStorage.getItem('saved_msgs') != null) 
     JSON.parse(sessionStorage.getItem('saved_msgs')) : [];
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
-window.Store.Msg.off('add');
+if(window.WAPI._newMessagesListener) {
+    window.Store.Msg.off('add', window.WAPI._newMessagesListener);
+}
 sessionStorage.removeItem('saved_msgs');
 
 window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
@@ -1146,7 +1153,7 @@ window.WAPI.getBufferedNewMessages = function(done) {
 /** End new messages observable functions **/
 
 window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
-	var idUser = new window.Store.UserConstructor(chatid);
+	var idUser = window.Store.UserConstructor.createWid(chatid);
 	// create new chat
 	return Store.Chat.find(idUser).then((chat) => {
         var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
