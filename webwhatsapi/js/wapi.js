@@ -27,7 +27,8 @@ if (!window.Store) {
                 { id: "OpenChat", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.openChat) ? module.default : null },
                 { id: "UserConstructor", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null },
                 { id: "SendTextMsgToChat", conditions: (module) => (module.sendTextMsgToChat) ? module.sendTextMsgToChat : null },
-                { id: "SendSeen", conditions: (module) => (module.sendSeen) ? module.sendSeen : null }
+                { id: "SendSeen", conditions: (module) => (module.sendSeen) ? module.sendSeen : null },
+                { id: "SendDelete", conditions: (module) => (module.sendDelete) ? module.sendDelete : null }
             ];
             for (let idx in modules) {
                 if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
@@ -1042,7 +1043,7 @@ window.WAPI.deleteConversation = function (chatId, done) {
         return false;
     }
 
-    conversation.sendDelete().then(() => {
+    window.Store.SendDelete(conversation, false).then(() => {
         if (done !== undefined) {
             done(true);
         }
