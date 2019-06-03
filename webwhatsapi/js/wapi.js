@@ -1345,22 +1345,13 @@ window.WAPI.contactUnblock = function (id, done) {
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */
 window.WAPI.removeParticipantGroup = function (idGroup, idParticipant, done) {
-    const metaDataGroup = window.Store.GroupMetadata.get(idGroup);
-    if (metaDataGroup === undefined) {
-        done(false); return false;
-    }
-    
-    const participant = metaDataGroup.participants.get(idParticipant);
-    if (participant === undefined) {
-        done(false); return false;
-    }
-    
-    metaDataGroup.participants.removeParticipants([participant]).then(ret => {
-        const check = metaDataGroup.participants.get(idParticipant);
-        if (check === undefined) { done(true); return true; }
-        done(false); return false; 
-    });
-    
+    window.Store.WapQuery.removeParticipants(idGroup, [idParticipant]).then(() => {
+        const metaDataGroup = window.Store.GroupMetadata.get(id)
+        checkParticipant = metaDataGroup.participants._index[idParticipant];
+        if (checkParticipant === undefined) {
+            done(true); return true;
+        }
+    })
 }
 
 /**
@@ -1370,26 +1361,14 @@ window.WAPI.removeParticipantGroup = function (idGroup, idParticipant, done) {
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */
 window.WAPI.promoteParticipantAdminGroup = function (idGroup, idParticipant, done) {
-    const metaDataGroup = window.Store.GroupMetadata.get(idGroup);
-    if (metaDataGroup === undefined) {
-        done(false); return false;
-    }
-    
-    const participant = metaDataGroup.participants.get(idParticipant);
-    if (participant === undefined) {
-        done(false); return false;
-    }
-    
-    window.Wap.promoteParticipants(metaDataGroup.id, [participant.id]).then(() => {
-        const checkParticipant = metaDataGroup.participants.get(idParticipant);
-        if (checkParticipant !== undefined) { 
-            if (checkParticipant.__x_isAdmin) {
-                done(true); return true;
-            }
+    window.Store.WapQuery.promoteParticipants(idGroup, [idParticipant]).then(() => {
+        const metaDataGroup = window.Store.GroupMetadata.get(id)
+        checkParticipant = metaDataGroup.participants._index[idParticipant];
+        if (checkParticipant !== undefined && checkParticipant.isAdmin) {
+            done(true); return true;
         }
-        done(false); return false; 
-    });
-    
+        done(false); return false;
+    })
 }
 
 /**
@@ -1399,21 +1378,15 @@ window.WAPI.promoteParticipantAdminGroup = function (idGroup, idParticipant, don
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */
 window.WAPI.demoteParticipantAdminGroup = function (idGroup, idParticipant, done) {
-    const metaDataGroup = window.Store.GroupMetadata.get(idGroup);
-    if (metaDataGroup === undefined) {
-        done(false); return false;
-    }
-    
-    const participant = metaDataGroup.participants.get(idParticipant);
-    if (participant === undefined) {
-        done(false); return false;
-    }
-    
-    metaDataGroup.participants.demoteParticipants([participant]).then(() => {
-        const checkParticipant = metaDataGroup.participants.get(idParticipant);
-        if (checkParticipant !== undefined && checkParticipant.__x_isAdmin) { 
+    window.Store.WapQuery.demoteParticipants(idGroup, [idParticipant]).then(() => {
+        const metaDataGroup = window.Store.GroupMetadata.get(id)
+        if (metaDataGroup === undefined) {
             done(false); return false;
         }
-        done(true); return true; 
+        checkParticipant = metaDataGroup.participants._index[idParticipant];
+        if (checkParticipant !== undefined && checkParticipant.isAdmin) {
+            done(false); return false;
+        }
+        done(true); return true;
     })
 }
