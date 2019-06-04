@@ -1045,7 +1045,7 @@ window.WAPI.deleteConversation = function (chatId, done) {
         return false;
     }
 
-    window.Store.SendDelete(conversation, false).then(() => {
+    window.Store.sendDelete(conversation, false).then(() => {
         if (done !== undefined) {
             done(true);
         }
