@@ -266,6 +266,10 @@ class WhatsAPIDriver(object):
         # return 'class="app _3dqpi two"' in self.driver.page_source
         return self.wapi_functions.isLoggedIn()
 
+    def is_connected(self):
+        """Returns if user's phone is connected to the internet."""
+        return self.wapi_functions.isConnected()
+
     def wait_for_login(self, timeout=90):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, timeout).until(
