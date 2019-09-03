@@ -365,7 +365,11 @@ class WhatsAPIDriver(object):
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
+<<<<<<< HEAD
             messages = [factory_message(message, self) for message in raw_message_group['messages']]
+=======
+            messages = list(filter(None.__ne__,[factory_message(message, self) for message in raw_message_group['messages']]))
+>>>>>>> 7186e80... Fix for None objects in the unread message
             messages.sort(key=lambda message: message.timestamp)
             unread_messages.append(MessageGroup(chat, messages))
 
