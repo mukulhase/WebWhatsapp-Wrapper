@@ -489,7 +489,7 @@ window.WAPI.areAllMessagesLoaded = function (id, done) {
 window.WAPI.loadEarlierMessagesTillDate = function (id, lastMessage, done) {
     const found = WAPI.getChat(id);
     x = function () {
-        if (found.msgs.models[0].t > lastMessage) {
+        if (found.msgs.models[0].t > lastMessage && !found.msgs.msgLoadState.noEarlierMsgs) {
             found.loadEarlierMsgs().then(x);
         } else {
             done();
@@ -826,12 +826,12 @@ window.WAPI.sendSeen = function (id, done) {
     var chat = window.WAPI.getChat(id);
     if (chat !== undefined) {
         if (done !== undefined) {
-            Store.SendSeen(Store.Chat.models[0], false).then(function () {
+            Store.SendSeen(chat, false).then(function () {
                 done(true);
             });
             return true;
         } else {
-            Store.SendSeen(Store.Chat.models[0], false);
+            Store.SendSeen(chat, false);
             return true;
         }
     }
