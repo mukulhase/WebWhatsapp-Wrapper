@@ -63,18 +63,18 @@ class WapiJsWrapper(object):
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
             script_path = os.getcwd()
-        with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
-            self.driver.execute_script(script.read())
 
-        result = self.driver.execute_script("return window.WAPI")
+        result = self.driver.execute_script("if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")
         if result:
-            self.available_functions = result.keys()
-            return self.available_functions
-        else:
-            return []
+            with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
+                self.driver.execute_script(script.read())
 
-    def quit(self):
-        self.new_messages_observable.stop()
+            result = self.driver.execute_script("return window.WAPI")
+            if result:
+                self.available_functions = result.keys()
+                return self.available_functions
+            else:
+                return []
 
 
 class JsArg(object):
@@ -149,11 +149,9 @@ class NewMessagesObservable(Thread):
         self.wapi_driver = wapi_driver
         self.webdriver = webdriver
         self.observers = []
-        self.running = False
 
     def run(self):
-        self.running = True
-        while self.running:
+        while True:
             try:
                 new_js_messages = self.wapi_js_wrapper.getBufferedNewMessages()
                 if isinstance(new_js_messages, (collections.Sequence, np.ndarray)) and len(new_js_messages) > 0:
@@ -166,9 +164,6 @@ class NewMessagesObservable(Thread):
                 pass
 
             time.sleep(2)
-
-    def stop(self):
-        self.running = False
 
     def subscribe(self, observer):
         inform_method = getattr(observer, "on_message_received", None)
