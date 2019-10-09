@@ -63,15 +63,18 @@ class WapiJsWrapper(object):
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
             script_path = os.getcwd()
-        with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
-            self.driver.execute_script(script.read())
 
-        result = self.driver.execute_script("return window.WAPI")
+        result = self.driver.execute_script("if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")
         if result:
-            self.available_functions = result.keys()
-            return self.available_functions
-        else:
-            return []
+            with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
+                self.driver.execute_script(script.read())
+
+            result = self.driver.execute_script("return window.WAPI")
+            if result:
+                self.available_functions = result.keys()
+                return self.available_functions
+            else:
+                return []
 
     def quit(self):
         self.new_messages_observable.stop()
