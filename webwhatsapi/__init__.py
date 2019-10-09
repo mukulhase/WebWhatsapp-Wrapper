@@ -41,6 +41,7 @@ class WhatsAPIDriverStatus(object):
     NotConnected = 'NotConnected'
     NotLoggedIn = 'NotLoggedIn'
     LoggedIn = 'LoggedIn'
+    Disconnected = 'Disconnected'
 
 
 class WhatsAPIException(Exception):
@@ -150,10 +151,8 @@ class WhatsAPIDriver(object):
         self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None, 
-                 executable_path=None):
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None):
         """Initialises the webdriver"""
-
         self.logger = logger or self.logger
         extra_params = extra_params or {}
 
@@ -174,12 +173,11 @@ class WhatsAPIDriver(object):
                 self._profile = webdriver.FirefoxProfile()
             if not loadstyles:
                 # Disable CSS
-                self._profile.set_preference('permissions.default.stylesheet', 2)
+                #self._profile.set_preference('permissions.default.stylesheet', 2)
                 # Disable images
                 self._profile.set_preference('permissions.default.image', 2)
                 # Disable Flash
-                self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                             'false')
+                self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')
             if proxy is not None:
                 self.set_proxy(proxy)
 
@@ -194,17 +192,8 @@ class WhatsAPIDriver(object):
             capabilities['webStorageEnabled'] = True
 
             self.logger.info("Starting webdriver")
-            if executable_path is not None:
-                executable_path = os.path.abspath(executable_path)                                
-
-                self.logger.info("Starting webdriver")
-                self.driver = webdriver.Firefox(capabilities=capabilities, options=options, executable_path=executable_path,
-                                                    **extra_params)
-            else: 
-                self.logger.info("Starting webdriver")
-                self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
-                                                    **extra_params)
-
+            #self._profile.set_preference("general.useragent.override", "Mozilla/5.0 (WindowsNT; Leadborg) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36")
+            self.driver = webdriver.Firefox(capabilities=capabilities, options=options, **extra_params)
 
         elif self.client == "chrome":
             self._profile = webdriver.ChromeOptions()
@@ -264,7 +253,7 @@ class WhatsAPIDriver(object):
 
         # instead we use this (temporary) solution:
         # return 'class="app _3dqpi two"' in self.driver.page_source
-        return self.wapi_functions.isLoggedIn()
+        return self.driver.execute_script("if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")
 
     def is_connected(self):
         """Returns if user's phone is connected to the internet."""
@@ -730,17 +719,6 @@ class WhatsAPIDriver(object):
         :return:
         """
         return self.wapi_functions.deleteConversation(chat_id)
-    
-    def delete_message(self, chat_id, message_array, revoke=False):
-        """
-        Delete a chat
-
-        :param chat_id: id of chat
-        :param message_array: one or more message(s) id
-        :param revoke: Set to true so the message will be deleted for everyone, not only you
-        :return:
-        """
-        return self.wapi_functions.deleteMessage(chat_id, message_array, revoke=False)
 
     def check_number_status(self, number_id):
         """
@@ -759,7 +737,6 @@ class WhatsAPIDriver(object):
         self.wapi_functions.new_messages_observable.unsubscribe(observer)
 
     def quit(self):
-        self.wapi_functions.quit()
         self.driver.quit()
 
     def create_chat_by_number(self, number):
