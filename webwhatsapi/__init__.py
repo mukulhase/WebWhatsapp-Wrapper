@@ -660,7 +660,7 @@ class WhatsAPIDriver(object):
         :type id: str
         """
         profile_pic_small = self.wapi_functions.getProfilePicSmallFromId(id)
-        if profile_pic:
+        if profile_pic_small:
             return b64decode(profile_pic_small)
         else:
             return False
