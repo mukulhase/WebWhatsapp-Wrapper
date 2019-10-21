@@ -365,7 +365,7 @@ class WhatsAPIDriver(object):
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
-            messages = list(filter(None.__ne__,[factory_message(message, self) for message in raw_message_group['messages']]))
+            messages = [x for x in [factory_message(message, self) for message in raw_message_group['messages']] if x is not None]
             messages.sort(key=lambda message: message.timestamp)
             unread_messages.append(MessageGroup(chat, messages))
 
