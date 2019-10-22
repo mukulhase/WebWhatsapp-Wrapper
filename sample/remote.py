@@ -37,7 +37,15 @@ while True:
             print 'sender', message.sender
             print 'sender.id', message.sender.id
             print 'sender.safe_name', message.sender.get_safe_name()
-            if message.type == 'chat':
+            if message.mime == 'image/webp':
+                print '-- Sticker'
+                print('filename', message.filename)
+                print('size', message.size)
+                print('mime', message.mime)
+                print('caption', message.caption)
+                print('client_url', message.client_url)
+                message.save_media('./',force_download=True)
+            elif message.type == 'chat':
                 print '-- Chat'
                 print 'safe_content', message.safe_content
                 print 'content', message.content
