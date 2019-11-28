@@ -73,7 +73,7 @@ class WhatsappObjectWithId(WhatsappObject):
         if 'id' in js_obj:
             try:
                 self.id = js_obj["id"]["_serialized"]
-            except:
+            except Exception:
                 self.id = js_obj["id"]
         if 'name' in js_obj:
             self.name = js_obj["name"]

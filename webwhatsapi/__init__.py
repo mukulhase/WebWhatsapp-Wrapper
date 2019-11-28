@@ -26,7 +26,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from .objects.chat import Chat, UserChat, factory_chat
+from .objects.chat import UserChat, factory_chat
 from .objects.contact import Contact
 from .objects.message import MessageGroup, factory_message
 from .objects.number_status import NumberStatus
@@ -105,8 +105,9 @@ class WhatsAPIDriver(object):
         return self.driver.execute_script('return window.localStorage;')
 
     def set_local_storage(self, data):
-        self.driver.execute_script(''.join(["window.localStorage.setItem('{}', '{}');".format(k, v.replace("\n","\\n") if isinstance(v, str) else v)
-                                            for k, v in data.items()]))
+        self.driver.execute_script(''.join(
+            ["window.localStorage.setItem('{}', '{}');".format(k, v.replace("\n", "\\n") if isinstance(v, str) else v)
+             for k, v in data.items()]))
 
     def save_firefox_profile(self, remove_old=False):
         """Function to save the firefox profile to the permanant one"""
@@ -150,7 +151,7 @@ class WhatsAPIDriver(object):
         self.driver.close()
 
     def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None, 
+                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None,
                  executable_path=None):
         """Initialises the webdriver"""
 
@@ -195,16 +196,16 @@ class WhatsAPIDriver(object):
 
             self.logger.info("Starting webdriver")
             if executable_path is not None:
-                executable_path = os.path.abspath(executable_path)                                
+                executable_path = os.path.abspath(executable_path)
 
-                self.logger.info("Starting webdriver")
-                self.driver = webdriver.Firefox(capabilities=capabilities, options=options, executable_path=executable_path,
-                                                    **extra_params)
-            else: 
                 self.logger.info("Starting webdriver")
                 self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
-                                                    **extra_params)
-
+                                                executable_path=executable_path,
+                                                **extra_params)
+            else:
+                self.logger.info("Starting webdriver")
+                self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
+                                                **extra_params)
 
         elif self.client == "chrome":
             self._profile = webdriver.ChromeOptions()
@@ -245,13 +246,13 @@ class WhatsAPIDriver(object):
 
     def connect(self):
         self.driver.get(self._URL)
-        
+
         profilePath = ""
         if self.client == "chrome":
             profilePath = ""
         else:
             profilePath = self._profile.path
-        
+
         local_storage_file = os.path.join(profilePath, self._LOCAL_STORAGE_FILE)
         if os.path.exists(local_storage_file):
             with open(local_storage_file) as f:
@@ -264,7 +265,8 @@ class WhatsAPIDriver(object):
 
         # instead we use this (temporary) solution:
         # return 'class="app _3dqpi two"' in self.driver.page_source
-        return self.driver.execute_script("if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")
+        return self.driver.execute_script(
+            "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")
 
     def is_connected(self):
         """Returns if user's phone is connected to the internet."""
@@ -365,7 +367,8 @@ class WhatsAPIDriver(object):
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
-            messages = list(filter(None.__ne__,[factory_message(message, self) for message in raw_message_group['messages']]))
+            messages = list(
+                filter(None.__ne__, [factory_message(message, self) for message in raw_message_group['messages']]))
             messages.sort(key=lambda message: message.timestamp)
             unread_messages.append(MessageGroup(chat, messages))
 
@@ -415,9 +418,8 @@ class WhatsAPIDriver(object):
         """
         message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me, include_notifications)
 
-        messages = []
         for message in message_objs:
-            yield(factory_message(message, self))
+            yield (factory_message(message, self))
 
     def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
         """
@@ -479,7 +481,7 @@ class WhatsAPIDriver(object):
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
-    def get_chat_from_phone_number(self, number, createIfNotFound = False):
+    def get_chat_from_phone_number(self, number, createIfNotFound=False):
         """
         Gets chat by phone number
         Number format should be as it appears in Whatsapp ID
@@ -566,7 +568,7 @@ class WhatsAPIDriver(object):
         :type message: str
         """
         return self.wapi_functions.sendMessageToID(recipient, message)
-    
+
     def convert_to_base64(self, path):
         """
         :param path: file path
@@ -580,8 +582,7 @@ class WhatsAPIDriver(object):
             archive = b64encode(image_file.read())
             archive = archive.decode('utf-8')
         return 'data:' + content_type + ';base64,' + archive
-    
-    
+
     def send_media(self, path, chatid, caption):
         """
             converts the file to base64 and sends it using the sendImage function of wapi.js
@@ -593,8 +594,6 @@ class WhatsAPIDriver(object):
         imgBase64 = self.convert_to_base64(path)
         filename = os.path.split(path)[-1]
         return self.wapi_functions.sendImage(imgBase64, chatid, filename, caption)
-    
-    
 
     def chat_send_seen(self, chat_id):
         """
@@ -730,7 +729,7 @@ class WhatsAPIDriver(object):
         :return:
         """
         return self.wapi_functions.deleteConversation(chat_id)
-    
+
     def delete_message(self, chat_id, message_array, revoke=False):
         """
         Delete a chat
@@ -773,11 +772,10 @@ class WhatsAPIDriver(object):
         return self.wapi_functions.contactUnblock(id)
 
     def remove_participant_group(self, idGroup, idParticipant):
-        return self.wapi_functions.removeParticipantGroup(idGroup,idParticipant)
+        return self.wapi_functions.removeParticipantGroup(idGroup, idParticipant)
 
     def promove_participant_admin_group(self, idGroup, idParticipant):
-        return self.wapi_functions.promoteParticipantAdminGroup(idGroup,idParticipant)
-
+        return self.wapi_functions.promoteParticipantAdminGroup(idGroup, idParticipant)
 
     def demote_participant_admin_group(self, idGroup, idParticipant):
-        return self.wapi_functions.demoteParticipantAdminGroup(idGroup,idParticipant)
+        return self.wapi_functions.demoteParticipantAdminGroup(idGroup, idParticipant)
