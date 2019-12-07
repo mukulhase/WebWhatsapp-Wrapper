@@ -6,18 +6,18 @@ WebWhatsAPI module
 
 import binascii
 import logging
-from json import dumps, loads
-
 import os
 import shutil
 import tempfile
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
+from base64 import b64decode, b64encode
+from io import BytesIO
+from json import dumps, loads
+
+import magic
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
-from base64 import b64decode, b64encode
-import magic
-from io import BytesIO
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -481,6 +481,21 @@ class WhatsAPIDriver(object):
 
         raise ChatNotFoundError("Chat {0} not found".format(chat_id))
 
+    def get_chat_from_name(self, chat_name):
+        """
+        Fetches a chat given its name
+
+        :param chat_name: Chat name
+        :type chat_name: str
+        :return: Chat or Error
+        :rtype: Chat
+        """
+        chat = self.wapi_functions.getChatByName(chat_name)
+        if chat:
+            return factory_chat(chat, self)
+
+        raise ChatNotFoundError("Chat {0} not found".format(chat_name))
+
     def get_chat_from_phone_number(self, number, createIfNotFound=False):
         """
         Gets chat by phone number
@@ -569,7 +584,7 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.sendMessageToID(recipient, message)
 
-    def convert_to_base64(self, path):
+    def convert_to_base64(self, path, is_thumbnail=False):
         """
         :param path: file path
         :return: returns the converted string and formatted for the send media function send_media
@@ -581,6 +596,8 @@ class WhatsAPIDriver(object):
         with open(path, "rb") as image_file:
             archive = b64encode(image_file.read())
             archive = archive.decode('utf-8')
+        if is_thumbnail:
+            return archive
         return 'data:' + content_type + ';base64,' + archive
 
     def send_media(self, path, chatid, caption):
@@ -594,6 +611,20 @@ class WhatsAPIDriver(object):
         imgBase64 = self.convert_to_base64(path)
         filename = os.path.split(path)[-1]
         return self.wapi_functions.sendImage(imgBase64, chatid, filename, caption)
+
+    def send_message_with_thumbnail(self, path, chatid, url, title, description, text):
+        """
+            converts the file to base64 and sends it using the sendImage function of wapi.js
+        :param path: image file path
+        :param chatid: chatId to be sent
+        :param url: of thumbnail
+        :param title: of thumbnail
+        :param description: of thumbnail
+        :param text: under thumbnail
+        :return:
+        """
+        imgBase64 = self.convert_to_base64(path, is_thumbnail=True)
+        return self.wapi_functions.sendMessageWithThumb(imgBase64, url, title, description, text, chatid)
 
     def chat_send_seen(self, chat_id):
         """

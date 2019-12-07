@@ -290,7 +290,7 @@ window.WAPI.getChat = function (id, done) {
 }
 
 window.WAPI.getChatByName = function (name, done) {
-    const found = window.Store.Chat.find((chat) => chat.name === name);
+    const found = window.WAPI.getAllChats().find(val => val.name.includes(name))
     if (done !== undefined) done(found);
     return found;
 };
@@ -326,7 +326,7 @@ window.WAPI.sendImageFromDatabasePicBot = function (picId, chatId, caption) {
     return true;
 };
 
-window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, chatId, done) {
+window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, text, chatId, done) {
     var chatSend = WAPI.getChat(chatId);
     if (chatSend === undefined) {
         if (done !== undefined) done(false);
@@ -337,9 +337,13 @@ window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, cha
         description : description,
         matchedText : url,
         title       : title,
-        thumbnail   : thumb
+        thumbnail   : thumb,
+        compose: true
     };
-    chatSend.sendMessage(url, { linkPreview: linkPreview, mentionedJidList: [], quotedMsg: null, quotedMsgAdminGroupJid: null });
+    chatSend.sendMessage(url, { linkPreview: linkPreview,
+                                mentionedJidList: [],
+                                quotedMsg: null,
+                                quotedMsgAdminGroupJid: null });
     if (done !== undefined) done(true);
     return true;
 };
