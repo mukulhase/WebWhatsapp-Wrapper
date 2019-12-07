@@ -615,6 +615,7 @@ class WhatsAPIDriver(object):
     def send_message_with_thumbnail(self, path, chatid, url, title, description, text):
         """
             converts the file to base64 and sends it using the sendImage function of wapi.js
+        PS: The first link in text must be equals to url or thumbnail will not appear.
         :param path: image file path
         :param chatid: chatId to be sent
         :param url: of thumbnail
@@ -624,6 +625,8 @@ class WhatsAPIDriver(object):
         :return:
         """
         imgBase64 = self.convert_to_base64(path, is_thumbnail=True)
+        if url not in text:
+            return False
         return self.wapi_functions.sendMessageWithThumb(imgBase64, url, title, description, text, chatid)
 
     def chat_send_seen(self, chat_id):

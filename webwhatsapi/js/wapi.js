@@ -340,7 +340,7 @@ window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, tex
         thumbnail   : thumb,
         compose: true
     };
-    chatSend.sendMessage(url, { linkPreview: linkPreview,
+    chatSend.sendMessage(text, { linkPreview: linkPreview,
                                 mentionedJidList: [],
                                 quotedMsg: null,
                                 quotedMsgAdminGroupJid: null });
