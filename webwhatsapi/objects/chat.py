@@ -27,6 +27,10 @@ class Chat(WhatsappObjectWithId):
         return self.driver.send_media(image_path, self.id, caption)
 
     @driver_needed
+    def send_message_with_thumb(self, image_path, url, title, description, text):
+        return self.driver.send_message_with_thumbnail(image_path, self.id, url, title, description, text)
+
+    @driver_needed
     def send_message(self, message):
         return self.driver.chat_send_message(self.id, message)
 
