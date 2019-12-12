@@ -58,7 +58,7 @@ class WapiJsWrapper(object):
             return self.available_functions
 
         """Sleep wait until WhatsApp loads and creates webpack objects"""
-        time.sleep(5)
+        time.sleep(60)
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
