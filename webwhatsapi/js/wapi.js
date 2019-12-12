@@ -22,7 +22,6 @@ if (!window.Store) {
                 { id: "UserConstructor", conditions: (module) => (module.default && module.default.createWid) ? module.default : ((module.createWid) ? module : null) },
 
                 // Class Injection to make chat compliant (After 27/05/2019)
-                { id: "ChatClass", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.Collection !== undefined && module.default.prototype.Collection === "Chat") ? module : null },
                 { id: "FuncSendMsgToChat", conditions: (module) => (module.sendTextMsgToChat) ? module.sendTextMsgToChat : null },
                 { id: "FuncSendSeen", conditions:  (module) => (module.sendSeen) ? module.sendSeen : null },
                 { id: "FuncMarkComposing", conditions:  (module) => (module.markComposing) ? module.markComposing : null },
@@ -64,19 +63,19 @@ if (!window.Store) {
                         });
 
                         // Fix chat missing methods
-                        window.Store.ChatClass.default.prototype.sendMessage = function (e) {
+                        window.Store.sendMessage = function (e) {
                             return window.Store.FuncSendMsgToChat(this, ...arguments);
                         };
-                        window.Store.ChatClass.default.prototype.sendSeen = function (e) {
+                        window.Store.sendSeen = function (e) {
                             return window.Store.FuncSendSeen(this, ...arguments);
                         };
-                        window.Store.ChatClass.default.prototype.markComposing = function () {
+                        window.Store.markComposing = function () {
                             return window.Store.FuncMarkComposing(this, ...arguments);
                         };
-                        window.Store.ChatClass.default.prototype.markPaused = function () {
+                        window.Store.markPaused = function () {
                             return window.Store.FuncMarkPaused(this, ...arguments);
                         };
-                        window.Store.ChatClass.default.prototype.sendDelete = function () {
+                        window.Store.sendDelete = function () {
                             return window.Store.FuncSendDelete(this, ...arguments);
                         };
 
@@ -718,8 +717,14 @@ window.WAPI.sendMessageToID = function (id, message, typingTime, done) {
     try {
         var idUser = window.Store.UserConstructor.createWid(id);
         return Store.Chat.find(idUser).then((chat) => {
+            chat.sendMessage = (chat.sendMessage) ? chat.sendMessage : function () { return window.Store.sendMessage.apply(this, arguments); };
+            chat.sendSeen = (chat.sendSeen) ? chat.sendSeen : function () { return window.Store.sendSeen.apply(this, arguments); };
+            chat.markComposing = (chat.markComposing) ? chat.markComposing : function () { return window.Store.markComposing.apply(this, arguments); };
+            chat.markPaused = (chat.markPaused) ? chat.markPaused : function () { return window.Store.markPaused.apply(this, arguments); };
+            chat.sendDelete = (chat.sendDelete) ? chat.sendDelete : function () { return window.Store.sendDelete.apply(this, arguments); };
             chat.markComposing();
-            let typingEvent = setInterval(() => {
+            
+	    let typingEvent = setInterval(() => {
                 chat.markComposing();
             }, 100);
 
@@ -1023,19 +1028,20 @@ window.WAPI.getBatteryLevel = function (done) {
 
 window.WAPI.deleteConversation = function (chatId, done) {
     let userId = window.Store.UserConstructor.createWid(chatId);
-    let conversation = window.Store.Chat.get(userId);
-
-    if(!conversation) {
-        if(done !== undefined) {
-            done(false);
+    window.Store.Chat.find(userId).then((conversation) => {
+	conversation.sendDelete = (conversation.sendDelete) ? conversation.sendDelete : function () { return window.Store.sendDelete.apply(this, arguments); };
+        if(!conversation) {
+            if(done !== undefined) {
+                done(false);
+            }
+            return false;
         }
-        return false;
-    }
 
-    conversation.sendDelete();
-    if (done !== undefined) {
-        done(true);
-    }
+        conversation.sendDelete();
+        if (done !== undefined) {
+            done(true);
+        }
+    }).catch(() => { if (done !== undefined) done(true) });
     
     return true;
 };
