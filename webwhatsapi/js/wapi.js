@@ -1162,14 +1162,14 @@ window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
 	var idUser = window.Store.UserConstructor.createWid(chatid);
 	// create new chat
 	return Store.Chat.find(idUser).then((chat) => {
-        var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
-        var mc = new Store.MediaCollection();
-        mc.processFiles([mediaBlob], chat, 1).then(() => {
-            var media = mc.models[0];
-            media.sendToChat(chat, {caption: caption});
-            if (done !== undefined) done(true);
-        });
-    });
+            var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
+            var mc = new Store.MediaCollection();
+            mc.processFiles([mediaBlob], chat, 1).then(() => {
+                var media = mc.models[0];
+                media.sendToChat(chat, {caption: caption});
+                if (done !== undefined) done(true);
+            }).catch(() => {if (done !== undefined) done(true);});
+        }).catch(() => {if (done !== undefined) done(true);});
 };
 
 window.WAPI.base64ImageToFile = function (b64Data, filename) {
