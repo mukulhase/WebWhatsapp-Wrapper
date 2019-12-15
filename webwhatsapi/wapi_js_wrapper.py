@@ -33,6 +33,10 @@ class WapiJsWrapper(object):
         self.new_messages_observable = NewMessagesObservable(self, wapi_driver, driver)
         self.new_messages_observable.start()
 
+        # Starts ack messages observable thread.
+        self.ack_messages_observable = AcknowledgeMessagesObservable(self, wapi_driver, driver)
+        self.ack_messages_observable.start()
+
     def __getattr__(self, item):
         """
         Finds functions in window.WAPI
@@ -79,6 +83,7 @@ class WapiJsWrapper(object):
 
     def quit(self):
         self.new_messages_observable.stop()
+        self.ack_messages_observable.stop()
 
 
 class JsArg(object):
@@ -188,3 +193,47 @@ class NewMessagesObservable(Thread):
     def _inform_all(self, new_messages):
         for observer in self.observers:
             observer.on_message_received(new_messages)
+
+
+class AcknowledgeMessagesObservable(Thread):
+    def __init__(self, wapi_js_wrapper, wapi_driver, webdriver):
+        Thread.__init__(self)
+        self.daemon = True
+        self.wapi_js_wrapper = wapi_js_wrapper
+        self.wapi_driver = wapi_driver
+        self.webdriver = webdriver
+        self.observers = []
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            try:
+                ack_js_messages = self.wapi_js_wrapper.getBufferedAckMessages()
+                if isinstance(ack_js_messages, (collections.Sequence, np.ndarray)) and len(ack_js_messages) > 0:
+                    ack_messages = []
+                    for ack_js_message in ack_js_messages:
+                        ack_messages.append(ack_js_message)
+
+                    self._inform_all(ack_messages)
+            except Exception as e:
+                pass
+
+            time.sleep(2)
+
+    def stop(self):
+        self.running = False
+
+    def subscribe(self, observer):
+        inform_method = getattr(observer, "on_message_ack_change", None)
+        if not callable(inform_method):
+            raise Exception('You need to inform an observable that implements \'on_message_ack_change(ack_messages)\'.')
+
+        self.observers.append(observer)
+
+    def unsubscribe(self, observer):
+        self.observers.remove(observer)
+
+    def _inform_all(self, ack_messages):
+        for observer in self.observers:
+            observer.on_message_ack_change(ack_messages)
