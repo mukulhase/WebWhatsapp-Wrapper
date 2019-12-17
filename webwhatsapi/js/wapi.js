@@ -281,10 +281,11 @@ window.WAPI.getAllGroups = function (done) {
  * @param done Optional callback function for async execution
  * @returns {T|*} Chat object
  */
-window.WAPI.getChat = function (id, done) {
+window.WAPI.getChat = function (id, done) {    
     id = typeof id == "string" ? id : id._serialized;
     const found = window.Store.Chat.get(id);
-    found.sendMessage = (found.sendMessage) ? found.sendMessage : function () { return window.Store.sendMessage.apply(this, arguments); };
+    if (found)
+        found.sendMessage = (found.sendMessage) ? found.sendMessage : function () { return window.Store.sendMessage.apply(this, arguments); };
     if (done !== undefined) done(found);
     return found;
 }
