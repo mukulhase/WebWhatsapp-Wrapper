@@ -71,6 +71,8 @@ if (!window.Store) {
     })();
 }
 
+window.Store.beta = webpackJsonp([], null, ["cgddafdgie"]);
+
 window.WAPI = {
     lastRead: {}
 };
@@ -1318,7 +1320,7 @@ window.WAPI.sendVCard = function (chatId, vcard) {
 
     Object.assign(tempMsg, extend);
 
-    chat.addAndSendMsg(tempMsg);
+    Store.beta.addAndSendMsgToChat(chat, tempMsg)
 };
 /**
  * Block contact 
