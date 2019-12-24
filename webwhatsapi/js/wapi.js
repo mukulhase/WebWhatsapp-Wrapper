@@ -725,20 +725,26 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     try {
         window.getContact = (id) => {
             return Store.WapQuery.queryExist(id);
-        }
+        };
         window.getContact(id).then(contact => {
             if (contact.status === 404) {
-                done(true);
+                if (done !== undefined)
+                    done(true);
+                return true;
             } else {
                 Store.Chat.find(contact.jid).then(chat => {
                     chat.sendMessage(message);
+                    if (done !== undefined)
+                        done(true);
                     return true;
                 }).catch(reject => {
                     if (WAPI.sendMessage(id, message)) {
-                        done(true);
+                        if (done !== undefined)
+                            done(true);
                         return true;
                     } else {
-                        done(false);
+                        if (done !== undefined)
+                            done(false);
                         return false;
                     }
                 });
@@ -765,7 +771,7 @@ window.WAPI.sendMessageToID = function (id, message, done) {
     }
     if (done !== undefined) done(false);
     return false;
-}
+};
 
 window.WAPI.sendMessage = function (id, message, done) {
     var chat = WAPI.getChat(id);
