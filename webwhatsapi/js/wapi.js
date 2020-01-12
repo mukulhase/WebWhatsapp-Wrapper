@@ -679,7 +679,10 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
     const chat = WAPI.getChat(messageObject.chat.id)
     if (chat !== undefined) {
         if (done !== undefined) {
-            chat.sendMessage(message, null, messageObject).then(function () {
+            chat.sendMessage(message, { linkPreview : null,
+                                       mentionedJidList : null,
+                                       quotedMsg : messageObject,
+                                       quotedMsgAdminGroupJid : null }, messageObject).then(function () {
                 function sleep(ms) {
                     return new Promise(resolve => setTimeout(resolve, ms));
                 }
@@ -708,7 +711,10 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
             });
             return true;
         } else {
-            chat.sendMessage(message, null, messageObject);
+            chat.sendMessage(message, { linkPreview : null,
+                                       mentionedJidList : null,
+                                       quotedMsg : messageObject,
+                                       quotedMsgAdminGroupJid : null }, messageObject);
             return true;
         }
     } else {
