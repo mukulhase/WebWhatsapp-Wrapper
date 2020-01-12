@@ -674,7 +674,7 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
         if (done !== undefined) done(false);
         return false;
     }
-    messageObject = messageObject.value();
+    messageObject = messageObject.valueOf();
 
     const chat = WAPI.getChat(messageObject.chat.id)
     if (chat !== undefined) {
