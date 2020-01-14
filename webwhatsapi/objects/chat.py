@@ -1,6 +1,7 @@
+import time
+
 from .whatsapp_object import WhatsappObjectWithId, driver_needed
 from ..helper import safe_str
-import time
 
 
 def factory_chat(js_obj, driver=None):
