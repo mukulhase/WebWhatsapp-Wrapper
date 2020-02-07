@@ -582,8 +582,8 @@ window.WAPI.getGroupAdmins = async function (id, done) {
 window.WAPI.getMe = function (done) {
     const rawMe = window.Store.Contact.get(window.Store.Conn.me);
 
-    if (done !== undefined) done(rawMe.all);
-    return rawMe.all;
+    if (done !== undefined) done(rawMe);
+    return rawMe;
 };
 
 window.WAPI.isLoggedIn = function (done) {
@@ -674,12 +674,11 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
         if (done !== undefined) done(false);
         return false;
     }
-    messageObject = messageObject.value();
-
+    
     const chat = WAPI.getChat(messageObject.chat.id)
     if (chat !== undefined) {
         if (done !== undefined) {
-            chat.sendMessage(message, null, messageObject).then(function () {
+            chat.sendMessage(message, {quotedMsg: messageObject}, messageObject).then(function () {
                 function sleep(ms) {
                     return new Promise(resolve => setTimeout(resolve, ms));
                 }
@@ -708,7 +707,7 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
             });
             return true;
         } else {
-            chat.sendMessage(message, null, messageObject);
+            chat.sendMessage(message, {quotedMsg: messageObject}, messageObject);
             return true;
         }
     } else {
@@ -1218,7 +1217,7 @@ var idUser = new window.Store.UserConstructor(chatid, { intentionallyUsePrivateC
 // create new chat
 return Store.Chat.find(idUser).then((chat) => {
     var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
-    var mc = new Store.MediaCollection();
+    var mc = new Store.MediaCollection(chat);
     mc.processFiles([mediaBlob], chat, 1).then(() => {
         var media = mc.models[0];
         media.sendToChat(chat, { caption: caption });
