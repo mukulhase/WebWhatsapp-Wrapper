@@ -348,6 +348,22 @@ window.WAPI.sendMessageWithThumb = function (thumb, url, title, description, tex
     return true;
 };
 
+window.WAPI.sendMention = function (chat_id, message, mentionedJidList, done){
+    var chat = WAPI.getChat(chat_id);
+    var listUser = [];
+    if (chat === undefined){
+        if (done !== undefined) done(false);
+        return false;
+    }
+    for (let idx in mentionedJidList){
+        let idUser = new window.Store.UserConstructor(mentionedJidList[idx], { intentionallyUsePrivateConstructor: true });
+        listUser.push(idUser);
+    }
+    chat.sendMessage(message, {mentionedJidList: listUser});
+    if (done !== undefined) done(true);
+    return true;
+};
+
 window.WAPI.getNewId = function () {
     var text     = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
