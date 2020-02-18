@@ -12,7 +12,7 @@ if (!window.Store) {
             let foundCount = 0;
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
-                { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null },
+                { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processAttachments) ? module.default : null },
                 { id: "MediaProcess", conditions: (module) => (module.BLOB) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
                 { id: "ServiceWorker", conditions: (module) => (module.default && module.default.killServiceWorker) ? module : null },
@@ -1218,8 +1218,8 @@ var idUser = new window.Store.UserConstructor(chatid, { intentionallyUsePrivateC
 // create new chat
 return Store.Chat.find(idUser).then((chat) => {
     var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
-    var mc = new Store.MediaCollection();
-    mc.processFiles([mediaBlob], chat, 1).then(() => {
+    var mc = new Store.MediaCollection(chat);
+    mc.processAttachments([{file: mediaBlob}, 1], chat, 1).then(() => {
         var media = mc.models[0];
         media.sendToChat(chat, { caption: caption });
         if (done !== undefined) done(true);
