@@ -830,6 +830,8 @@ window.WAPI.sendSeen = function (id, done) {
     var chat = window.WAPI.getChat(id);
     if (chat !== undefined) {
         if (done !== undefined) {
+            if (chat.getLastMsgKeyForAction === undefined)
+                chat.getLastMsgKeyForAction = function () { };
             Store.SendSeen(chat, false).then(function () {
                 done(true);
             });
