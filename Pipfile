@@ -20,6 +20,7 @@ pep8 = "*"
 flake8 = "*"
 coverage = "*"
 autopep8 = "*"
+ipdb = "*"
 
 [requires]
 python_version = "3.7"

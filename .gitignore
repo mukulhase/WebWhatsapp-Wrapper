@@ -16,3 +16,4 @@ docs/_build
 *.sublime-*
 .vscode
 .env
+__pycache__
