@@ -1,5 +1,6 @@
 import mimetypes
 import os
+from base64 import b64encode
 from datetime import datetime
 from typing import Union
 
@@ -101,6 +102,12 @@ class MediaMessage(Message):
         with open(filename, "wb") as f:
             f.write(ioobj.getvalue())
         return filename
+    
+    def save_media_base64(self, force_download=False):
+        # gets full media
+        ioobj = self.driver.download_media(self, force_download)
+        return b64encode(ioobj.getvalue()).decode()
+
 
     def __repr__(self):
         return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
