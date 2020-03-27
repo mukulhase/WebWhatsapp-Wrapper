@@ -69,7 +69,7 @@ class WhatsAPIDriver(object):
 
     _SELECTORS = {
         'firstrun': "#wrapper",
-        'qrCode': "img[alt=\"Scan me!\"]",
+        'qrCode': "canvas[aria-label=\"Scan me!\"]",
         'qrCodePlain': "div[data-ref]",
         'mainPage': ".app.two",
         'chatList': ".infinite-list-viewport",
@@ -284,7 +284,13 @@ class WhatsAPIDriver(object):
         )
 
     def get_qr_plain(self):
-        return self.driver.find_element_by_css_selector(self._SELECTORS['qrCodePlain']).get_attribute("data-ref")
+        if "Click to reload QR code" in self.driver.page_source:
+            self.reload_qr()
+        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+
+        qr_base64 = self.driver.execute_script("return arguments[0].toDataURL('image/png').substring(22);", qr)
+
+        return "data:image/png;base64," + qr_base64
 
     def get_qr(self, filename=None):
         """Get pairing QR code from client"""
@@ -306,7 +312,9 @@ class WhatsAPIDriver(object):
             self.reload_qr()
         qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
 
-        return qr.screenshot_as_base64
+        qr_base64 = self.driver.execute_script("return arguments[0].toDataURL('image/png').substring(22);", qr)
+
+        return qr_base64
 
     def screenshot(self, filename):
         self.driver.get_screenshot_as_file(filename)
