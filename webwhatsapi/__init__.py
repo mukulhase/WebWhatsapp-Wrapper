@@ -9,6 +9,8 @@ import logging
 import os
 import shutil
 import tempfile
+import requests
+import mimetypes 
 from base64 import b64decode, b64encode
 from io import BytesIO
 from json import dumps, loads
@@ -111,6 +113,10 @@ class WhatsAPIDriver(object):
 
     def save_firefox_profile(self, remove_old=False):
         """Function to save the firefox profile to the permanant one"""
+
+        if self._profile_path is None:
+            raise Exception('Profile parameter is blank. Add a path')
+
         self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
 
         if remove_old:
@@ -624,6 +630,58 @@ class WhatsAPIDriver(object):
         imgBase64 = self.convert_to_base64(path)
         filename = os.path.split(path)[-1]
         return self.wapi_functions.sendImage(imgBase64, chatid, filename, caption)
+
+    def send_media_base64(self, base64_string, content_type, chatid, caption, file_name=None):
+        """
+            send file in base 64 using the sendImage function of wapi.js
+        :param base64: base64 string
+        :param content_type: file mime, sample (image/png) https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+        :param chatid: chatId to be sent
+        :param caption:
+        :param file_name: name of file
+        :return:
+        """
+        extension = mimetypes.guess_extension(content_type)
+
+        if file_name is None:
+            file = 'file' + extension
+        else:
+            file = file_name + extension
+        
+        imgBase64 = 'data:' + content_type + ';base64,' + base64_string
+        
+        return self.wapi_functions.sendImage(imgBase64, chatid, file, caption)
+
+    def send_media_url(self, url, chatid, caption, file_name=None):
+        """
+            download file and send using wapi.js sendImage function
+        :param url: url file
+        :param chatid: chatId to be sent
+        :param caption:
+        :param file_name: name of file
+        :return:
+        """
+        
+        res = requests.get(url)
+
+        if res.status_code == 200:
+            content_type = res.headers['Content-Type']
+            base64_string = b64encode(res.content).decode('utf-8')
+
+            imgBase64 = "data:" + content_type + ";" + "base64," + base64_string
+
+            extension = mimetypes.guess_extension(content_type)
+
+            if file_name is None:
+                file = 'file' + extension
+            else:
+                file = file_name + extension
+
+            return self.wapi_functions.sendImage(imgBase64, chatid, file, caption)
+
+        else:
+            raise Exception('Impossible to access url. Erro : ' + str(res.status_code))
+            
 
     def send_message_with_thumbnail(self, path, chatid, url, title, description, text):
         """
