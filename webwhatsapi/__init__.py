@@ -220,7 +220,10 @@ class WhatsAPIDriver(object):
             if proxy is not None:
                 self._profile.add_argument('--proxy-server=%s' % proxy)
             if headless:
-                self._profile.add_argument('headless')
+                self._profile.add_argument('--headless')
+                self._profile.add_argument("--window-size=1920x1080")
+                self._profile.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36')
+
             if chrome_options is not None:
                 for option in chrome_options:
                     self._profile.add_argument(option)
