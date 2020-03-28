@@ -27,6 +27,14 @@ class Chat(WhatsappObjectWithId):
         return self.driver.send_media(image_path, self.id, caption)
 
     @driver_needed
+    def send_media_url(self, url, caption=None, file_name=None):
+        return self.driver.send_media_url(url, self.id, caption, file_name)
+
+    @driver_needed
+    def send_media_base64(self, base64_string, content_type, caption=None, file_name=None):
+        return self.driver.send_media_base64(base64_string, content_type, self.id, caption, file_name)
+
+    @driver_needed
     def send_message_with_thumb(self, image_path, url, title, description, text):
         return self.driver.send_message_with_thumbnail(image_path, self.id, url, title, description, text)
 

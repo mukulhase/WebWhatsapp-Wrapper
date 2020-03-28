@@ -776,7 +776,7 @@ class WhatsAPIDriver(object):
         """
         profile_pic = self.wapi_functions.getProfilePicFromId(id)
         if profile_pic:
-            return profile_pic
+            return str(profile_pic)
         else:
             return False
 
