@@ -14,6 +14,7 @@ import mimetypes
 from base64 import b64decode, b64encode
 from io import BytesIO
 from json import dumps, loads
+from pyvirtualdisplay import Display
 
 import magic
 from axolotl.kdf.hkdfv3 import HKDFv3
@@ -215,15 +216,20 @@ class WhatsAPIDriver(object):
 
         elif self.client == "chrome":
             self._profile = webdriver.ChromeOptions()
+           
+
             if self._profile_path is not None:
-                self._profile.add_argument("user-data-dir=%s" % self._profile_path)
+                self._profile.add_argument("--user-data-dir=%s" % self._profile_path)
+                
             if proxy is not None:
                 self._profile.add_argument('--proxy-server=%s' % proxy)
+            
             if headless:
-                self._profile.add_argument('--headless')
-                self._profile.add_argument("--window-size=1920x1080")
-                self._profile.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36')
-
+                self.display = Display(visible=0, size=(1920, 1080)).start()
+                #self._profile.add_argument('--headless')
+                self._profile.add_argument('--disable-gpu')
+                self._profile.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36')                
+                
             if chrome_options is not None:
                 for option in chrome_options:
                     self._profile.add_argument(option)
@@ -231,6 +237,7 @@ class WhatsAPIDriver(object):
             if executable_path is not None:
                 self.logger.info("Starting webdriver")
                 self.driver = webdriver.Chrome(executable_path=executable_path, chrome_options=self._profile, **extra_params)
+            
             else:
                 self.logger.info("Starting webdriver")
                 self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
@@ -249,6 +256,7 @@ class WhatsAPIDriver(object):
 
         else:
             self.logger.error("Invalid client: %s" % client)
+
         self.username = username
         self.wapi_functions = WapiJsWrapper(self.driver, self)
 
@@ -756,6 +764,22 @@ class WhatsAPIDriver(object):
             return b64decode(profile_pic)
         else:
             return False
+    
+    def get_profile_pic_from_id_base64(self, id):
+        """
+        Get full profile pic from an id
+        The ID must be on your contact book to
+        successfully get their profile picture.
+
+        :param id: ID
+        :type id: str
+        """
+        profile_pic = self.wapi_functions.getProfilePicFromId(id)
+        if profile_pic:
+            return profile_pic
+        else:
+            return False
+
 
     def get_profile_pic_small_from_id(self, id):
         """
