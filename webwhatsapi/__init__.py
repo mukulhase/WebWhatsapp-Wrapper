@@ -583,6 +583,9 @@ class WhatsAPIDriver(object):
         :type message: str
         """
         return self.wapi_functions.sendMessageToID(recipient, message)
+    
+    def send_mention(self, chat_id, message, mentionId=[]):
+        return self.wapi_functions.sendMention(chat_id, message, mentionId)
 
     def convert_to_base64(self, path, is_thumbnail=False):
         """
