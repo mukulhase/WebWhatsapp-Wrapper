@@ -32,7 +32,7 @@ from .objects.message import MessageGroup, factory_message
 from .objects.number_status import NumberStatus
 from .wapi_js_wrapper import WapiJsWrapper
 
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 
 class WhatsAPIDriverStatus(object):
@@ -790,6 +790,12 @@ class WhatsAPIDriver(object):
 
     def unsubscribe_new_messages(self, observer):
         self.wapi_functions.new_messages_observable.unsubscribe(observer)
+
+    def subscribe_ack_messages(self, observer):
+        self.wapi_functions.ack_messages_observable.subscribe(observer)
+
+    def unsubscribe_ack_messages(self, observer):
+        self.wapi_functions.ack_messages_observable.unsubscribe(observer)
 
     def quit(self):
         self.wapi_functions.quit()

@@ -1136,11 +1136,17 @@ window.WAPI.checkNumberStatus = function (id, done) {
  */
 window.WAPI._newMessagesQueue     = [];
 window.WAPI._newMessagesBuffer    = (sessionStorage.getItem('saved_msgs') != null) ? JSON.parse(sessionStorage.getItem('saved_msgs')) : [];
+window.WAPI._acknowledgeMessagesBuffer = (sessionStorage.getItem('saved_ack_msgs') != null) ? JSON.parse(sessionStorage.getItem('saved_ack_msgs')) : [];
 window.WAPI._newMessagesDebouncer = null;
 window.WAPI._newMessagesCallbacks = [];
 
 window.Store.Msg.off('add');
 sessionStorage.removeItem('saved_msgs');
+
+window.WAPI._ackMessagesListener = window.Store.Msg.on("change:ack", (newMessage) => {
+    let message = window.WAPI._serializeMessageObj(newMessage);
+    window.WAPI._acknowledgeMessagesBuffer.push(message);
+});
 
 window.WAPI._newMessagesListener = window.Store.Msg.on('add', (newMessage) => {
     if (newMessage && newMessage.isNewMsg && !newMessage.isSentByMe) {
@@ -1187,6 +1193,11 @@ window.WAPI._unloadInform = (event) => {
     });
     sessionStorage.setItem("saved_msgs", JSON.stringify(window.WAPI._newMessagesBuffer));
 
+    window.WAPI._acknowledgeMessagesBuffer.forEach((message) => {
+        Object.keys(message).forEach(key => message[key] === undefined ? delete message[key] : '');
+    });
+    sessionStorage.setItem("saved_ack_msgs", JSON.stringify(window.WAPI._acknowledgeMessagesBuffer));
+
     // Inform callbacks that the page will be reloaded.
     window.WAPI._newMessagesCallbacks.forEach(function (callbackObj) {
         if (callbackObj.callback !== undefined) {
@@ -1224,6 +1235,35 @@ window.WAPI.getBufferedNewMessages = function (done) {
     return bufferedMessages;
 };
 /** End new messages observable functions **/
+
+/**
+ * Reads buffered ack messages.
+ * @param done - function - Callback function to be called contained the buffered ack messages.
+ * @returns {Array}
+ */
+window.WAPI.getBufferedAckMessages = function (done) {
+    function containsObject(obj, list, identifier, secondIdentifier) {
+        var i;
+        for (i = 0; i < list.length; i++) {
+            if (list[i].identifier === obj.identifier && list[i].secondIdentifier === obj.secondIdentifier) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    let bufferedAckMessages = [];
+    for (let i = 0; i < window.WAPI._acknowledgeMessagesBuffer.length; i++) {
+        if (!containsObject(window.WAPI._acknowledgeMessagesBuffer[i], bufferedAckMessages, 'id', 'ack'))
+            bufferedAckMessages.push(window.WAPI._acknowledgeMessagesBuffer[i])
+    }
+    window.WAPI._acknowledgeMessagesBuffer = [];
+    if (done !== undefined) {
+        done(bufferedAckMessages);
+    }
+    return bufferedAckMessages;
+};
+/** End ack messages observable functions **/
 
 window.WAPI.sendImage = function (imgBase64, chatid, filename, caption, done) {
 //var idUser = new window.Store.UserConstructor(chatid);
