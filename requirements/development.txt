@@ -1,0 +1,5 @@
+commitizen>=1.22.0
+pep8
+flake8
+coverage
+autopep8

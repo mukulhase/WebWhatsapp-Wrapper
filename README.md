@@ -17,6 +17,7 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 #### From Source
 - Clone the repository
 - Use `pip install -r requirements.txt` to install the required packages
+- or `pipenv install && pipenv install --dev`
 
 #### From PyPI
 - Install from pip
