@@ -14,10 +14,12 @@ from io import BytesIO
 from json import dumps, loads
 
 import magic
+from PIL import Image
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from resizeimage import resizeimage
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -69,7 +71,7 @@ class WhatsAPIDriver(object):
 
     _SELECTORS = {
         'firstrun': "#wrapper",
-        'qrCode': "img[alt=\"Scan me!\"]",
+        'qrCode': "canvas",
         'qrCodePlain': "div[data-ref]",
         'mainPage': ".app.two",
         'chatList': ".infinite-list-viewport",
@@ -593,6 +595,8 @@ class WhatsAPIDriver(object):
         mime = magic.Magic(mime=True)
         content_type = mime.from_file(path)
         archive = ''
+        if is_thumbnail:
+            path = self._resize_image(path, f"{path}.bkp")
         with open(path, "rb") as image_file:
             archive = b64encode(image_file.read())
             archive = archive.decode('utf-8')
@@ -813,3 +817,19 @@ class WhatsAPIDriver(object):
 
     def demote_participant_admin_group(self, idGroup, idParticipant):
         return self.wapi_functions.demoteParticipantAdminGroup(idGroup, idParticipant)
+
+        #
+        # Helper functions
+        #
+
+    def _resize_image(self, path, output_path=None, size=[200, 200]):
+        """Thumbnail max size allowed: 200x200"""
+
+        # TODO: maybe move to someplace called utility or helper
+        if not output_path:
+            output_path = path
+        with open(path, "rb") as f:
+            with Image.open(f) as image:
+                cover = resizeimage.resize_cover(image, size)
+                cover.save(output_path, image.format)
+        return output_path
