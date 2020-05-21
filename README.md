@@ -10,6 +10,9 @@
 This package is used to provide a python interface for interacting with WhatsAPP Web to send and receive Whatsapp messages.
 It is based on the official Whatsapp Web Browser Application and uses Selenium browser automation to communicate with Whatsapp Web.
 
+## How to contribute?
+[If you are new, click here](docs/contribution_guide.md)
+
 ## Local installation
 
 ##### Dependencies
