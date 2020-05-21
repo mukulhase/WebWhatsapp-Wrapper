@@ -1,0 +1,10 @@
+python-dateutil>=2.6.0
+selenium>=3.4.3
+six>=1.10.0
+python-axolotl>=0.2.3
+cryptography>=2.9.2
+typing>=3.7.4.1
+numpy>=1.18.4
+python-magic>=0.4.18
+python-resize-image==1.1.19
+Pillow>=7.1.2

@@ -7,7 +7,9 @@ class Selectors(object):
     MAIN_PAGE = ".app.two"
     CHAT_LIST = ".infinite-list-viewport"
     MESSAGE_LIST = "#main > div > div:nth-child(1) > div > div.message-list"
-    UNREAD_MESSAGE_BAR = "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread"
+    UNREAD_MESSAGE_BAR = (
+        "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread"
+    )
     SEARCH_BAR = ".input"
     SEARCH_CANCEL = ".icon-search-morph"
     CHATS = ".infinite-list-item"
