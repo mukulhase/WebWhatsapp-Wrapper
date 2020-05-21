@@ -43,6 +43,7 @@ class WhatsAPIDriverStatus(object):
     NotConnected = "NotConnected"
     NotLoggedIn = "NotLoggedIn"
     LoggedIn = "LoggedIn"
+    LoggedInAnotherBrowser = "LoggedInAnotherBrowser"
 
 
 class WhatsAPIException(Exception):
@@ -89,6 +90,7 @@ class WhatsAPIDriver(object):
         "ReconnectLink": ".action",
         "WhatsappQrIcon": "span.icon:nth-child(2)",
         "QRReloader": "div[data-ref] > span > div",
+        "OpenHereButton": "div[data-animate-modal-body=true] div[role=button]:nth-child(2)",
     }
 
     _CLASSES = {
@@ -603,6 +605,11 @@ class WhatsAPIDriver(object):
         try:
             self.driver.find_element_by_css_selector(self._SELECTORS["qrCode"])
             return WhatsAPIDriverStatus.NotLoggedIn
+        except NoSuchElementException:
+            pass
+        try:
+            self.driver.find_element_by_css_selector(self._SELECTORS["OpenHereButton"])
+            return WhatsAPIDriverStatus.LoggedInAnotherBrowser
         except NoSuchElementException:
             pass
         return WhatsAPIDriverStatus.Unknown
