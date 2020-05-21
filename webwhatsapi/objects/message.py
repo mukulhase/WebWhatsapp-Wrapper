@@ -31,7 +31,7 @@ def factory_message(js_obj, driver):
     if js_obj["isNotification"]:
         return NotificationMessage(js_obj, driver)
 
-    if 'isMMS' in js_obj and js_obj["isMMS"]:
+    if "isMMS" in js_obj and js_obj["isMMS"]:
         return MMSMessage(js_obj, driver)
 
     if js_obj["type"] in ["vcard", "multi_vcard"]:
@@ -56,29 +56,32 @@ class Message(WhatsappObject):
         self.type = js_obj["type"]
         self.sender = Contact(js_obj["sender"], driver) if js_obj["sender"] else False
         self.timestamp = datetime.fromtimestamp(js_obj["timestamp"])
-        self.chat_id = js_obj['chatId']
+        self.chat_id = js_obj["chatId"]
 
         if js_obj["content"]:
             self.content = js_obj["content"]
-            self.safe_content = safe_str(self.content[0:25]) + '...'
-        elif self.type == 'revoked':
-            self.content = ''
-            self.safe_content = '...'
+            self.safe_content = safe_str(self.content[0:25]) + "..."
+        elif self.type == "revoked":
+            self.content = ""
+            self.safe_content = "..."
 
     def __repr__(self):
         return "<Message - {type} from {sender} at {timestamp}: {content}>".format(
             type=self.type,
             sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
-            content=self.safe_content)
+            content=self.safe_content,
+        )
 
 
 class MediaMessage(Message):
-    crypt_keys = {'document': '576861747341707020446f63756d656e74204b657973',
-                  'image': '576861747341707020496d616765204b657973',
-                  'video': '576861747341707020566964656f204b657973',
-                  'ptt': '576861747341707020417564696f204b657973',
-                  'audio': '576861747341707020417564696f204b657973'}
+    crypt_keys = {
+        "document": "576861747341707020446f63756d656e74204b657973",
+        "image": "576861747341707020496d616765204b657973",
+        "video": "576861747341707020566964656f204b657973",
+        "ptt": "576861747341707020417564696f204b657973",
+        "audio": "576861747341707020417564696f204b657973",
+    }
 
     def __init__(self, js_obj, driver=None):
         super(MediaMessage, self).__init__(js_obj, driver)
@@ -88,11 +91,11 @@ class MediaMessage(Message):
         if "caption" in self._js_obj:
             self.caption = self._js_obj["caption"] or ""
 
-        self.media_key = self._js_obj.get('mediaKey')
-        self.client_url = self._js_obj.get('clientUrl')
+        self.media_key = self._js_obj.get("mediaKey")
+        self.client_url = self._js_obj.get("clientUrl")
 
         extension = mimetypes.guess_extension(self.mime)
-        self.filename = ''.join([str(id(self)), extension or ''])
+        self.filename = "".join([str(id(self)), extension or ""])
 
     def save_media(self, path, force_download=False):
         # gets full media
@@ -107,7 +110,7 @@ class MediaMessage(Message):
             type=self.type,
             sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
-            filename=self.filename
+            filename=self.filename,
         )
 
 
@@ -125,7 +128,7 @@ class MMSMessage(MediaMessage):
         return "<MMSMessage - {type} from {sender} at {timestamp}>".format(
             type=self.type,
             sender=safe_str(self.sender.get_safe_name()),
-            timestamp=self.timestamp
+            timestamp=self.timestamp,
         )
 
 
@@ -147,7 +150,7 @@ class VCardMessage(Message):
             type=self.type,
             sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
-            contacts=self.contacts
+            contacts=self.contacts,
         )
 
 
@@ -165,7 +168,7 @@ class GeoMessage(Message):
             sender=safe_str(self.sender.get_safe_name()),
             timestamp=self.timestamp,
             lat=self.latitude,
-            lng=self.longitude
+            lng=self.longitude,
         )
 
 
@@ -179,27 +182,28 @@ class NotificationMessage(Message):
 
     def __repr__(self):
         readable = {
-            'call_log': {
-                'miss': "Missed Call",
+            "call_log": {"miss": "Missed Call"},
+            "e2e_notification": {"encrypt": "Messages now Encrypted"},
+            "gp2": {
+                "invite": "Joined an invite link",
+                "create": "Created group",
+                "add": "Added to group",
+                "remove": "Removed from group",
+                "leave": "Left the group",
             },
-            'e2e_notification': {
-                'encrypt': "Messages now Encrypted"
-            },
-            'gp2': {
-                'invite': "Joined an invite link",
-                'create': "Created group",
-                'add': "Added to group",
-                'remove': "Removed from group",
-                'leave': "Left the group"
-            }
         }
-        sender = "" if not self.sender else ("from " + str(safe_str(self.sender.get_safe_name())))
+        sender = (
+            ""
+            if not self.sender
+            else ("from " + str(safe_str(self.sender.get_safe_name())))
+        )
         return "<NotificationMessage - {type} {recip} {sender} at {timestamp}>".format(
             type=readable[self.type][self.subtype],
             sender=sender,
             timestamp=self.timestamp,
-            recip="" if not hasattr(self, 'recipients') else "".join(
-                [safe_str(x.get_safe_name()) for x in self.recipients]),
+            recip=""
+            if not hasattr(self, "recipients")
+            else "".join([safe_str(x.get_safe_name()) for x in self.recipients]),
         )
 
 
@@ -221,4 +225,5 @@ class MessageGroup(object):
         return "<MessageGroup - {num} {messages} in {chat}>".format(
             num=len(self.messages),
             messages="message" if len(self.messages) == 1 else "messages",
-            chat=safe_chat_name)
+            chat=safe_chat_name,
+        )

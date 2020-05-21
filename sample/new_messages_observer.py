@@ -13,7 +13,7 @@ def run():
         print("Please set the environment variable SELENIUM to Selenium URL")
         sys.exit(1)
 
-    driver = WhatsAPIDriver(client='remote', command_executor=os.environ["SELENIUM"])
+    driver = WhatsAPIDriver(client="remote", command_executor=os.environ["SELENIUM"])
     print("Waiting for QR")
     driver.wait_for_login()
     print("Bot started")
@@ -29,11 +29,19 @@ def run():
 class NewMessageObserver:
     def on_message_received(self, new_messages):
         for message in new_messages:
-            if message.type == 'chat':
-                print("New message '{}' received from number {}".format(message.content, message.sender.id))
+            if message.type == "chat":
+                print(
+                    "New message '{}' received from number {}".format(
+                        message.content, message.sender.id
+                    )
+                )
             else:
-                print("New message of type '{}' received from number {}".format(message.type, message.sender.id))
+                print(
+                    "New message of type '{}' received from number {}".format(
+                        message.type, message.sender.id
+                    )
+                )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

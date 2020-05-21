@@ -12,7 +12,7 @@ if (!window.Store) {
             let foundCount = 0;
             let neededObjects = [
                 { id: "Store", conditions: (module) => (module.Chat && module.Msg) ? module : null },
-                { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processFiles !== undefined) ? module.default : null },
+                { id: "MediaCollection", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.processAttachments) ? module.default : null },
                 { id: "MediaProcess", conditions: (module) => (module.BLOB) ? module : null },
                 { id: "Wap", conditions: (module) => (module.createGroup) ? module : null },
                 { id: "ServiceWorker", conditions: (module) => (module.default && module.default.killServiceWorker) ? module : null },
@@ -80,7 +80,7 @@ if (!window.Store) {
                 [['parasite']]
             ]);
         }
-            
+
     })();
 }
 
@@ -1098,9 +1098,9 @@ window.WAPI.deleteMessage = function (chatId, messageArray, revoke=false, done) 
         messageArray = [messageArray];
     }
     let messagesToDelete = messageArray.map(msgId => window.Store.Msg.get(msgId));
-    
+
     if (revoke) {
-        conversation.sendRevokeMsgs(messagesToDelete, conversation);    
+        conversation.sendRevokeMsgs(messagesToDelete, conversation);
     } else {
         conversation.sendDeleteMsgs(messagesToDelete, conversation);
     }
@@ -1232,7 +1232,7 @@ var idUser = new window.Store.UserConstructor(chatid, { intentionallyUsePrivateC
 return Store.Chat.find(idUser).then((chat) => {
     var mediaBlob = window.WAPI.base64ImageToFile(imgBase64, filename);
     var mc = new Store.MediaCollection(chat);
-    mc.processFiles([mediaBlob], chat, 1).then(() => {
+    mc.processAttachments([{file: mediaBlob}, 1], chat, 1).then(() => {
         var media = mc.models[0];
         media.sendToChat(chat, { caption: caption });
         if (done !== undefined) done(true);
@@ -1334,7 +1334,7 @@ window.WAPI.sendVCard = function (chatId, vcard) {
     chat.addAndSendMsg(tempMsg);
 };
 /**
- * Block contact 
+ * Block contact
  * @param {string} id '000000000000@c.us'
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */
@@ -1349,7 +1349,7 @@ window.WAPI.contactBlock = function (id, done) {
     return false;
 }
 /**
- * unBlock contact 
+ * unBlock contact
  * @param {string} id '000000000000@c.us'
  * @param {*} done - function - Callback function to be called when a new message arrives.
  */

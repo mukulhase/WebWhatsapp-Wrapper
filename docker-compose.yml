@@ -2,7 +2,7 @@ version: "3"
 
 services:
   firefox:
-    image: selenium/standalone-firefox-debug:3.14.0-dubnium
+    image: selenium/standalone-firefox-debug:3.14.0-curium
     ports:
       - "4444:4444"
       - "5900:5900"
@@ -16,7 +16,7 @@ services:
        - SELENIUM=http://firefox:4444/wd/hub
      volumes:
        - ".:/app"
-     command: /app/docker-entrypoint.sh
+     command: python sample/remote.py
      networks:
        - selenium
      depends_on:

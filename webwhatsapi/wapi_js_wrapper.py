@@ -65,7 +65,8 @@ class WapiJsWrapper(object):
             script_path = os.getcwd()
 
         result = self.driver.execute_script(
-            "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")  # noqa E501
+            "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }"
+        )  # noqa E501
         if result:
             with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
                 self.driver.execute_script(script.read())
@@ -124,26 +125,34 @@ class JsFunction(object):
         # Selenium's execute_async_script passes a callback function that should be called when the JS operation is done
         # It is passed to the WAPI function using arguments[0]
         if len(args):
-            command = "return WAPI.{0}({1}, arguments[0])" \
-                .format(self.function_name, ",".join([str(JsArg(arg)) for arg in args]))
+            command = "return WAPI.{0}({1}, arguments[0])".format(
+                self.function_name, ",".join([str(JsArg(arg)) for arg in args])
+            )
         else:
             command = "return WAPI.{0}(arguments[0])".format(self.function_name)
 
         try:
             return self.driver.execute_async_script(command)
         except JavascriptException as e:
-            if 'WAPI is not defined' in e.msg and self.is_a_retry is not True:
+            if "WAPI is not defined" in e.msg and self.is_a_retry is not True:
                 self.wapi_wrapper.available_functions = None
                 retry_command = getattr(self.wapi_wrapper, self.function_name)
                 retry_command.is_a_retry = True
                 retry_command(*args, **kwargs)
             else:
                 raise JsException(
-                    "Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
+                    "Error in function {0} ({1}). Command: {2}".format(
+                        self.function_name, e.msg, command
+                    )
+                )
         except WebDriverException as e:
-            if e.msg == 'Timed out':
+            if e.msg == "Timed out":
                 raise WapiPhoneNotConnectedException("Phone not connected to Internet")
-            raise JsException("Error in function {0} ({1}). Command: {2}".format(self.function_name, e.msg, command))
+            raise JsException(
+                "Error in function {0} ({1}). Command: {2}".format(
+                    self.function_name, e.msg, command
+                )
+            )
 
 
 class NewMessagesObservable(Thread):
@@ -161,10 +170,15 @@ class NewMessagesObservable(Thread):
         while self.running:
             try:
                 new_js_messages = self.wapi_js_wrapper.getBufferedNewMessages()
-                if isinstance(new_js_messages, (collections.Sequence, np.ndarray)) and len(new_js_messages) > 0:
+                if (
+                    isinstance(new_js_messages, (collections.Sequence, np.ndarray))
+                    and len(new_js_messages) > 0
+                ):
                     new_messages = []
                     for js_message in new_js_messages:
-                        new_messages.append(factory_message(js_message, self.wapi_driver))
+                        new_messages.append(
+                            factory_message(js_message, self.wapi_driver)
+                        )
 
                     self._inform_all(new_messages)
             except Exception as e:  # noqa F841
@@ -178,7 +192,9 @@ class NewMessagesObservable(Thread):
     def subscribe(self, observer):
         inform_method = getattr(observer, "on_message_received", None)
         if not callable(inform_method):
-            raise Exception('You need to inform an observable that implements \'on_message_received(new_messages)\'.')
+            raise Exception(
+                "You need to inform an observable that implements 'on_message_received(new_messages)'."
+            )
 
         self.observers.append(observer)
 
