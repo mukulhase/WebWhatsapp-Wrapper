@@ -2,6 +2,6 @@ language: python
 python:
   - "3.7"
 install:
-  - pip -r requirements/development.txt
+  - pip install -r requirements/development.txt
 script:
   - flake8 .
