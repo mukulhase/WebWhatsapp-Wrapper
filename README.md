@@ -4,6 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/webwhatsapi.svg)](https://badge.fury.io/py/webwhatsapi)
 [![Firefox version](https://img.shields.io/badge/Firefox-58.0.2-green.svg)]()
 [![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## What is it?
 This package is used to provide a python interface for interacting with WhatsAPP Web to send and receive Whatsapp messages.
@@ -22,10 +23,6 @@ You will need to install [Gecko Driver](https://github.com/mozilla/geckodriver) 
 #### From PyPI
 - Install from pip
 `pip install webwhatsapi`
-
-#### From pipenv
-- Install from pipenv
-`pipenv install`
 
 ## Docker and remote Selenium Installation
 

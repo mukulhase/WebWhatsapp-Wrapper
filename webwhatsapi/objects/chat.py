@@ -6,7 +6,9 @@ import time
 def factory_chat(js_obj, driver=None):
     """Factory function for creating appropriate object given selenium JS object"""
     if js_obj["kind"] not in ["chat", "group", "broadcast"]:
-        raise AssertionError("Expected chat, group or broadcast object, got {0}".format(js_obj["kind"]))
+        raise AssertionError(
+            "Expected chat, group or broadcast object, got {0}".format(js_obj["kind"])
+        )
 
     if js_obj["isGroup"]:
         return GroupChat(js_obj, driver)
@@ -18,7 +20,6 @@ def factory_chat(js_obj, driver=None):
 
 
 class Chat(WhatsappObjectWithId):
-
     def __init__(self, js_obj, driver=None):
         super(Chat, self).__init__(js_obj, driver)
 
@@ -28,7 +29,9 @@ class Chat(WhatsappObjectWithId):
 
     @driver_needed
     def send_message_with_thumb(self, image_path, url, title, description, text):
-        return self.driver.send_message_with_thumbnail(image_path, self.id, url, title, description, text)
+        return self.driver.send_message_with_thumbnail(
+            image_path, self.id, url, title, description, text
+        )
 
     @driver_needed
     def send_message(self, message):
@@ -39,11 +42,13 @@ class Chat(WhatsappObjectWithId):
         return self.driver.chat_send_seen(self.id)
 
     def get_messages(self, include_me=False, include_notifications=False):
-        return list(self.driver.get_all_messages_in_chat(self, include_me, include_notifications))
+        return list(
+            self.driver.get_all_messages_in_chat(
+                self, include_me, include_notifications
+            )
+        )
 
-    def get_unread_messages(self,
-                            include_me=False,
-                            include_notifications=False):
+    def get_unread_messages(self, include_me=False, include_notifications=False):
         """
         I fetch unread messages.
 
@@ -56,11 +61,11 @@ class Chat(WhatsappObjectWithId):
         :return: list of unread messages
         :rtype: list
         """
-        return list(self.driver.get_unread_messages_in_chat(
-            self.id,
-            include_me,
-            include_notifications
-        ))
+        return list(
+            self.driver.get_unread_messages_in_chat(
+                self.id, include_me, include_notifications
+            )
+        )
 
     # get_unread_messages()
 
@@ -90,9 +95,7 @@ class UserChat(Chat):
     def __repr__(self):
         safe_name = safe_str(self.name)
 
-        return "<User chat - {name}: {id}>".format(
-            name=safe_name,
-            id=self.id)
+        return "<User chat - {name}: {id}>".format(name=safe_name, id=self.id)
 
 
 class BroadcastChat(Chat):
@@ -101,9 +104,7 @@ class BroadcastChat(Chat):
 
     def __repr__(self):
         safe_name = safe_str(self.name)
-        return "<Broadcast chat - {name}: {id}>".format(
-            name=safe_name,
-            id=self.id)
+        return "<Broadcast chat - {name}: {id}>".format(name=safe_name, id=self.id)
 
 
 class GroupChat(Chat):
@@ -125,6 +126,5 @@ class GroupChat(Chat):
     def __repr__(self):
         safe_name = safe_str(self.name)
         return "<Group chat - {name}: {id}, {participants} participants>".format(
-            name=safe_name,
-            id=self.id,
-            participants=len(self.get_participants_ids()))
+            name=safe_name, id=self.id, participants=len(self.get_participants_ids())
+        )
