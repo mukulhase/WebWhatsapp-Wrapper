@@ -70,12 +70,12 @@ class WhatsappObjectWithId(WhatsappObject):
         :type driver: WhatsAPIDriver
         """
         super(WhatsappObjectWithId, self).__init__(js_obj, driver)
-        if 'id' in js_obj:
+        if "id" in js_obj:
             try:
                 self.id = js_obj["id"]["_serialized"]
             except Exception:
                 self.id = js_obj["id"]
-        if 'name' in js_obj:
+        if "name" in js_obj:
             self.name = js_obj["name"]
 
     def __hash__(self):

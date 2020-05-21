@@ -10,7 +10,7 @@ print("Bot started")
 
 while True:
     time.sleep(3)
-    print('Checking for more messages')
+    print("Checking for more messages")
     for contact in driver.get_unread():
         for message in contact.messages:
             if isinstance(message, Message):  # Currently works for text messages only.

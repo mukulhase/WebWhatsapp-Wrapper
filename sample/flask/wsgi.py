@@ -1,4 +1,4 @@
-'''
+"""
 /**********************************************************
 
 		File name	: wsgi.py
@@ -11,6 +11,6 @@ DATE		PROGRAMMER		COMMENT
 18/09/18	rbnishant		Initial Version
 
 **********************************************************/
-'''
+"""
 
 from webapi import app

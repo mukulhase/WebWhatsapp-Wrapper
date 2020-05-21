@@ -25,15 +25,15 @@ class Contact(WhatsappObjectWithId):
         self.is_business = False
 
         super(Contact, self).__init__(js_obj, driver)
-        if 'shortName' in js_obj:
+        if "shortName" in js_obj:
             self.short_name = js_obj["shortName"]
-        if 'pushname' in js_obj:
+        if "pushname" in js_obj:
             self.push_name = js_obj["pushname"]
-        if 'formattedName' in js_obj:
+        if "formattedName" in js_obj:
             self.formatted_name = js_obj["formattedName"]
-        if 'profilePicThumbObj' in js_obj:
-            self.profile_pic = js_obj["profilePicThumbObj"].get('eurl', None)
-        if 'verifiedName' in js_obj:
+        if "profilePicThumbObj" in js_obj:
+            self.profile_pic = js_obj["profilePicThumbObj"].get("eurl", None)
+        if "verifiedName" in js_obj:
             self.verified_name = js_obj["verifiedName"]
             self.is_business = js_obj["isBusiness"]
 
@@ -53,8 +53,8 @@ class Contact(WhatsappObjectWithId):
         :rtype: String
 
         """
-        name = (self.short_name or self.push_name or self.formatted_name)
-        if (isinstance(name, string_types)):
+        name = self.short_name or self.push_name or self.formatted_name
+        if isinstance(name, string_types):
             if self.is_business:
                 safe_name = self.verified_name
             else:
