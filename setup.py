@@ -47,7 +47,7 @@ with open(path, "r") as file:
             break
 
 # Get the long description from the README file
-with open(os.path.join(os.path.dirname(__file__), "README.rst"), encoding="utf-8") as f:
+with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
