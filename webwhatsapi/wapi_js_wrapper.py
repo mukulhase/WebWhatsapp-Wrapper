@@ -71,8 +71,7 @@ class WapiJsWrapper(object):
             with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
                 self.driver.execute_script(script.read())
 
-result = self.driver.execute_script("return Object.keys(window.WAPI)")
-
+            result = self.driver.execute_script("return Object.keys(window.WAPI)")
             if result:
                 self.available_functions = result
                 return self.available_functions
