@@ -11,9 +11,9 @@ driver = WhatsAPIDriverAsync(loadstyles=True, loop=loop)
 
 async def run():
     await sleep(10, loop=loop)
-    print('Connecting...')
+    print("Connecting...")
     await driver.connect()
-    print('Wait for login...')
+    print("Wait for login...")
     await driver.wait_for_login()
 
     for contact in await driver.get_unread():
@@ -22,9 +22,8 @@ async def run():
 
         for message in contact.messages:
             if isinstance(message, Message):  # Currently works for text messages only.
-                print('Message from {}: {}'.format(message.sender,
-                                                   message.content))
-                print('Resending...')
+                print("Message from {}: {}".format(message.sender, message.content))
+                print("Resending...")
                 contact.chat.chat_send_message(message.safe_content)
         await sleep(1, loop=loop)
 
@@ -33,9 +32,9 @@ async def run():
 
 async def start():
     async def heartbeat():
-        print('Starting heartbeat...')
+        print("Starting heartbeat...")
         while not Task.current_task().cancelled():
-            print('beat!')
+            print("beat!")
             await sleep(0.5, loop=loop)
 
     fut_heartbeat = ensure_future(heartbeat(), loop=loop)

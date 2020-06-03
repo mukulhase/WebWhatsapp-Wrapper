@@ -14,10 +14,12 @@ from io import BytesIO
 from json import dumps, loads
 
 import magic
+from PIL import Image
 from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from resizeimage import resizeimage
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -32,15 +34,16 @@ from .objects.message import MessageGroup, factory_message
 from .objects.number_status import NumberStatus
 from .wapi_js_wrapper import WapiJsWrapper
 
-__version__ = '2.0.3'
+__version__ = "2.0.3"
 
 
 class WhatsAPIDriverStatus(object):
-    Unknown = 'Unknown'
-    NoDriver = 'NoDriver'
-    NotConnected = 'NotConnected'
-    NotLoggedIn = 'NotLoggedIn'
-    LoggedIn = 'LoggedIn'
+    Unknown = "Unknown"
+    NoDriver = "NoDriver"
+    NotConnected = "NotConnected"
+    NotLoggedIn = "NotLoggedIn"
+    LoggedIn = "LoggedIn"
+    LoggedInAnotherBrowser = "LoggedInAnotherBrowser"
 
 
 class WhatsAPIException(Exception):
@@ -61,37 +64,39 @@ class WhatsAPIDriver(object):
         .. note::
            Runs its own instance of selenium
         """
+
     _PROXY = None
 
     _URL = "https://web.whatsapp.com"
 
-    _LOCAL_STORAGE_FILE = 'localStorage.json'
+    _LOCAL_STORAGE_FILE = "localStorage.json"
 
     _SELECTORS = {
-        'firstrun': "#wrapper",
-        'qrCode': "img[alt=\"Scan me!\"]",
-        'qrCodePlain': "div[data-ref]",
-        'mainPage': ".app.two",
-        'chatList': ".infinite-list-viewport",
-        'messageList': "#main > div > div:nth-child(1) > div > div.message-list",
-        'unreadMessageBar': "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
-        'searchBar': ".input",
-        'searchCancel': ".icon-search-morph",
-        'chats': ".infinite-list-item",
-        'chatBar': 'div.input',
-        'sendButton': 'button.icon:nth-child(3)',
-        'LoadHistory': '.btn-more',
-        'UnreadBadge': '.icon-meta',
-        'UnreadChatBanner': '.message-list',
-        'ReconnectLink': '.action',
-        'WhatsappQrIcon': 'span.icon:nth-child(2)',
-        'QRReloader': 'div[data-ref] > span > div'
+        "firstrun": "#wrapper",
+        "qrCode": "canvas",
+        "qrCodePlain": "div[data-ref]",
+        "mainPage": ".app.two",
+        "chatList": ".infinite-list-viewport",
+        "messageList": "#main > div > div:nth-child(1) > div > div.message-list",
+        "unreadMessageBar": "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
+        "searchBar": ".input",
+        "searchCancel": ".icon-search-morph",
+        "chats": ".infinite-list-item",
+        "chatBar": "div.input",
+        "sendButton": "button.icon:nth-child(3)",
+        "LoadHistory": ".btn-more",
+        "UnreadBadge": ".icon-meta",
+        "UnreadChatBanner": ".message-list",
+        "ReconnectLink": ".action",
+        "WhatsappQrIcon": "span.icon:nth-child(2)",
+        "QRReloader": "div[data-ref] > span > div",
+        "OpenHereButton": "div[data-animate-modal-body=true] div[role=button]:nth-child(2)",
     }
 
     _CLASSES = {
-        'unreadBadge': 'icon-meta',
-        'messageContent': "message-text",
-        'messageList': "msg"
+        "unreadBadge": "icon-meta",
+        "messageContent": "message-text",
+        "messageList": "msg",
     }
 
     logger = logging.getLogger(__name__)
@@ -102,16 +107,25 @@ class WhatsAPIDriver(object):
     _profile = None
 
     def get_local_storage(self):
-        return self.driver.execute_script('return window.localStorage;')
+        return self.driver.execute_script("return window.localStorage;")
 
     def set_local_storage(self, data):
-        self.driver.execute_script(''.join(
-            ["window.localStorage.setItem('{}', '{}');".format(k, v.replace("\n", "\\n") if isinstance(v, str) else v)
-             for k, v in data.items()]))
+        self.driver.execute_script(
+            "".join(
+                [
+                    "window.localStorage.setItem('{}', '{}');".format(
+                        k, v.replace("\n", "\\n") if isinstance(v, str) else v
+                    )
+                    for k, v in data.items()
+                ]
+            )
+        )
 
     def save_firefox_profile(self, remove_old=False):
         """Function to save the firefox profile to the permanant one"""
-        self.logger.info("Saving profile from %s to %s" % (self._profile.path, self._profile_path))
+        self.logger.info(
+            "Saving profile from %s to %s" % (self._profile.path, self._profile_path)
+        )
 
         if remove_old:
             if os.path.exists(self._profile_path):
@@ -120,8 +134,11 @@ class WhatsAPIDriver(object):
                 except OSError:
                     pass
 
-            shutil.copytree(os.path.join(self._profile.path), self._profile_path,
-                            ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
+            shutil.copytree(
+                os.path.join(self._profile.path),
+                self._profile_path,
+                ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"),
+            )
         else:
             for item in os.listdir(self._profile.path):
                 if item in ["parent.lock", "lock", ".parentlock"]:
@@ -129,12 +146,17 @@ class WhatsAPIDriver(object):
                 s = os.path.join(self._profile.path, item)
                 d = os.path.join(self._profile_path, item)
                 if os.path.isdir(s):
-                    shutil.copytree(s, d,
-                                    ignore=shutil.ignore_patterns("parent.lock", "lock", ".parentlock"))
+                    shutil.copytree(
+                        s,
+                        d,
+                        ignore=shutil.ignore_patterns(
+                            "parent.lock", "lock", ".parentlock"
+                        ),
+                    )
                 else:
                     shutil.copy2(s, d)
 
-        with open(os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE), 'w') as f:
+        with open(os.path.join(self._profile_path, self._LOCAL_STORAGE_FILE), "w") as f:
             f.write(dumps(self.get_local_storage()))
 
     def set_proxy(self, proxy):
@@ -150,9 +172,21 @@ class WhatsAPIDriver(object):
         """Closes the selenium instance"""
         self.driver.close()
 
-    def __init__(self, client="firefox", username="API", proxy=None, command_executor=None, loadstyles=False,
-                 profile=None, headless=False, autoconnect=True, logger=None, extra_params=None, chrome_options=None,
-                 executable_path=None):
+    def __init__(
+        self,
+        client="firefox",
+        username="API",
+        proxy=None,
+        command_executor=None,
+        loadstyles=False,
+        profile=None,
+        headless=False,
+        autoconnect=True,
+        logger=None,
+        extra_params=None,
+        chrome_options=None,
+        executable_path=None,
+    ):
         """Initialises the webdriver"""
 
         self.logger = logger or self.logger
@@ -175,12 +209,13 @@ class WhatsAPIDriver(object):
                 self._profile = webdriver.FirefoxProfile()
             if not loadstyles:
                 # Disable CSS
-                self._profile.set_preference('permissions.default.stylesheet', 2)
+                self._profile.set_preference("permissions.default.stylesheet", 2)
                 # Disable images
-                self._profile.set_preference('permissions.default.image', 2)
+                self._profile.set_preference("permissions.default.image", 2)
                 # Disable Flash
-                self._profile.set_preference('dom.ipc.plugins.enabled.libflashplayer.so',
-                                             'false')
+                self._profile.set_preference(
+                    "dom.ipc.plugins.enabled.libflashplayer.so", "false"
+                )
             if proxy is not None:
                 self.set_proxy(proxy)
 
@@ -192,36 +227,40 @@ class WhatsAPIDriver(object):
             options.profile = self._profile
 
             capabilities = DesiredCapabilities.FIREFOX.copy()
-            capabilities['webStorageEnabled'] = True
+            capabilities["webStorageEnabled"] = True
 
             self.logger.info("Starting webdriver")
             if executable_path is not None:
                 executable_path = os.path.abspath(executable_path)
 
                 self.logger.info("Starting webdriver")
-                self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
-                                                executable_path=executable_path,
-                                                **extra_params)
+                self.driver = webdriver.Firefox(
+                    capabilities=capabilities,
+                    options=options,
+                    executable_path=executable_path,
+                    **extra_params,
+                )
             else:
                 self.logger.info("Starting webdriver")
-                self.driver = webdriver.Firefox(capabilities=capabilities, options=options,
-                                                **extra_params)
+                self.driver = webdriver.Firefox(
+                    capabilities=capabilities, options=options, **extra_params
+                )
 
         elif self.client == "chrome":
             self._profile = webdriver.ChromeOptions()
             if self._profile_path is not None:
                 self._profile.add_argument("user-data-dir=%s" % self._profile_path)
             if proxy is not None:
-                self._profile.add_argument('--proxy-server=%s' % proxy)
+                self._profile.add_argument("--proxy-server=%s" % proxy)
             if headless:
-                self._profile.add_argument('headless')
+                self._profile.add_argument("headless")
             if chrome_options is not None:
                 for option in chrome_options:
                     self._profile.add_argument(option)
             self.logger.info("Starting webdriver")
             self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
-        elif client == 'remote':
+        elif client == "remote":
             if self._profile_path is not None:
                 self._profile = webdriver.FirefoxProfile(self._profile_path)
             else:
@@ -230,7 +269,7 @@ class WhatsAPIDriver(object):
             self.driver = webdriver.Remote(
                 command_executor=command_executor,
                 desired_capabilities=capabilities,
-                **extra_params
+                **extra_params,
             )
 
         else:
@@ -266,7 +305,8 @@ class WhatsAPIDriver(object):
         # instead we use this (temporary) solution:
         # return 'class="app _3dqpi two"' in self.driver.page_source
         return self.driver.execute_script(
-            "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }")
+            "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }"
+        )
 
     def is_connected(self):
         """Returns if user's phone is connected to the internet."""
@@ -275,19 +315,23 @@ class WhatsAPIDriver(object):
     def wait_for_login(self, timeout=90):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, timeout).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage']))
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, self._SELECTORS["mainPage"])
+            )
         )
 
     def get_qr_plain(self):
-        return self.driver.find_element_by_css_selector(self._SELECTORS['qrCodePlain']).get_attribute("data-ref")
+        return self.driver.find_element_by_css_selector(
+            self._SELECTORS["qrCodePlain"]
+        ).get_attribute("data-ref")
 
     def get_qr(self, filename=None):
         """Get pairing QR code from client"""
         if "Click to reload QR code" in self.driver.page_source:
             self.reload_qr()
-        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+        qr = self.driver.find_element_by_css_selector(self._SELECTORS["qrCode"])
         if filename is None:
-            fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix='.png')
+            fd, fn_png = tempfile.mkstemp(prefix=self.username, suffix=".png")
         else:
             fd = os.open(filename, os.O_RDWR | os.O_CREAT)
             fn_png = os.path.abspath(filename)
@@ -299,7 +343,7 @@ class WhatsAPIDriver(object):
     def get_qr_base64(self):
         if "Click to reload QR code" in self.driver.page_source:
             self.reload_qr()
-        qr = self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+        qr = self.driver.find_element_by_css_selector(self._SELECTORS["qrCode"])
 
         return qr.screenshot_as_base64
 
@@ -350,7 +394,9 @@ class WhatsAPIDriver(object):
         """
         return self.wapi_functions.getAllChatIds()
 
-    def get_unread(self, include_me=False, include_notifications=False, use_unread_count=False):
+    def get_unread(
+        self, include_me=False, include_notifications=False, use_unread_count=False
+    ):
         """
         Fetches unread messages
         :param include_me: Include user's messages
@@ -362,22 +408,30 @@ class WhatsAPIDriver(object):
         :return: List of unread messages grouped by chats
         :rtype: list[MessageGroup]
         """
-        raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications, use_unread_count)
+        raw_message_groups = self.wapi_functions.getUnreadMessages(
+            include_me, include_notifications, use_unread_count
+        )
 
         unread_messages = []
         for raw_message_group in raw_message_groups:
             chat = factory_chat(raw_message_group, self)
             messages = list(
-                filter(None.__ne__, [factory_message(message, self) for message in raw_message_group['messages']]))
+                filter(
+                    None.__ne__,
+                    [
+                        factory_message(message, self)
+                        for message in raw_message_group["messages"]
+                    ],
+                )
+            )
             messages.sort(key=lambda message: message.timestamp)
             unread_messages.append(MessageGroup(chat, messages))
 
         return unread_messages
 
-    def get_unread_messages_in_chat(self,
-                                    id,
-                                    include_me=False,
-                                    include_notifications=False):
+    def get_unread_messages_in_chat(
+        self, id, include_me=False, include_notifications=False
+    ):
         """
         I fetch unread messages from an asked chat.
 
@@ -392,9 +446,7 @@ class WhatsAPIDriver(object):
         """
         # get unread messages
         messages = self.wapi_functions.getUnreadMessagesInChat(
-            id,
-            include_me,
-            include_notifications
+            id, include_me, include_notifications
         )
 
         # process them
@@ -405,7 +457,9 @@ class WhatsAPIDriver(object):
 
     # get_unread_messages_in_chat()
 
-    def get_all_messages_in_chat(self, chat, include_me=False, include_notifications=False):
+    def get_all_messages_in_chat(
+        self, chat, include_me=False, include_notifications=False
+    ):
         """
         Fetches messages in chat
 
@@ -416,12 +470,16 @@ class WhatsAPIDriver(object):
         :return: List of messages in chat
         :rtype: list[Message]
         """
-        message_objs = self.wapi_functions.getAllMessagesInChat(chat.id, include_me, include_notifications)
+        message_objs = self.wapi_functions.getAllMessagesInChat(
+            chat.id, include_me, include_notifications
+        )
 
         for message in message_objs:
             yield (factory_message(message, self))
 
-    def get_all_message_ids_in_chat(self, chat, include_me=False, include_notifications=False):
+    def get_all_message_ids_in_chat(
+        self, chat, include_me=False, include_notifications=False
+    ):
         """
         Fetches message ids in chat
 
@@ -432,7 +490,9 @@ class WhatsAPIDriver(object):
         :return: List of message ids in chat
         :rtype: list[str]
         """
-        return self.wapi_functions.getAllMessageIdsInChat(chat.id, include_me, include_notifications)
+        return self.wapi_functions.getAllMessageIdsInChat(
+            chat.id, include_me, include_notifications
+        )
 
     def get_message_by_id(self, message_id):
         """
@@ -521,10 +581,10 @@ class WhatsAPIDriver(object):
                     continue
                 return chat
 
-        raise ChatNotFoundError('Chat for phone {0} not found'.format(number))
+        raise ChatNotFoundError("Chat for phone {0} not found".format(number))
 
     def reload_qr(self):
-        self.driver.find_element_by_css_selector(self._SELECTORS['QRReloader']).click()
+        self.driver.find_element_by_css_selector(self._SELECTORS["QRReloader"]).click()
 
     def get_status(self):
         """
@@ -538,13 +598,18 @@ class WhatsAPIDriver(object):
         if self.driver.session_id is None:
             return WhatsAPIDriverStatus.NotConnected
         try:
-            self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
+            self.driver.find_element_by_css_selector(self._SELECTORS["mainPage"])
             return WhatsAPIDriverStatus.LoggedIn
         except NoSuchElementException:
             pass
         try:
-            self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+            self.driver.find_element_by_css_selector(self._SELECTORS["qrCode"])
             return WhatsAPIDriverStatus.NotLoggedIn
+        except NoSuchElementException:
+            pass
+        try:
+            self.driver.find_element_by_css_selector(self._SELECTORS["OpenHereButton"])
+            return WhatsAPIDriverStatus.LoggedInAnotherBrowser
         except NoSuchElementException:
             pass
         return WhatsAPIDriverStatus.Unknown
@@ -592,13 +657,15 @@ class WhatsAPIDriver(object):
 
         mime = magic.Magic(mime=True)
         content_type = mime.from_file(path)
-        archive = ''
+        archive = ""
+        if is_thumbnail:
+            path = self._resize_image(path, f"{path}.bkp")
         with open(path, "rb") as image_file:
             archive = b64encode(image_file.read())
-            archive = archive.decode('utf-8')
+            archive = archive.decode("utf-8")
         if is_thumbnail:
             return archive
-        return 'data:' + content_type + ';base64,' + archive
+        return "data:" + content_type + ";base64," + archive
 
     def send_media(self, path, chatid, caption):
         """
@@ -627,7 +694,9 @@ class WhatsAPIDriver(object):
         imgBase64 = self.convert_to_base64(path, is_thumbnail=True)
         if url not in text:
             return False
-        return self.wapi_functions.sendMessageWithThumb(imgBase64, url, title, description, text, chatid)
+        return self.wapi_functions.sendMessageWithThumb(
+            imgBase64, url, title, description, text, chatid
+        )
 
     def chat_send_seen(self, chat_id):
         """
@@ -657,7 +726,7 @@ class WhatsAPIDriver(object):
         participant_ids = self.group_get_participants_ids(group_id)
 
         for participant_id in participant_ids:
-            yield self.get_contact_from_id(participant_id['_serialized'])
+            yield self.get_contact_from_id(participant_id["_serialized"])
 
     def group_get_admin_ids(self, group_id):
         return self.wapi_functions.getGroupAdmins(group_id)
@@ -715,19 +784,21 @@ class WhatsAPIDriver(object):
         file_data = self.download_file(media_msg.client_url)
 
         if not file_data:
-            raise Exception('Impossible to download file')
+            raise Exception("Impossible to download file")
 
         media_key = b64decode(media_msg.media_key)
-        derivative = HKDFv3().deriveSecrets(media_key,
-                                            binascii.unhexlify(media_msg.crypt_keys[media_msg.type]),
-                                            112)
+        derivative = HKDFv3().deriveSecrets(
+            media_key, binascii.unhexlify(media_msg.crypt_keys[media_msg.type]), 112
+        )
 
         parts = ByteUtil.split(derivative, 16, 32)
         iv = parts[0]
         cipher_key = parts[1]
         e_file = file_data[:-10]
 
-        cr_obj = Cipher(algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend())
+        cr_obj = Cipher(
+            algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend()
+        )
         decryptor = cr_obj.decryptor()
         return BytesIO(decryptor.update(e_file) + decryptor.finalize())
 
@@ -813,3 +884,19 @@ class WhatsAPIDriver(object):
 
     def demote_participant_admin_group(self, idGroup, idParticipant):
         return self.wapi_functions.demoteParticipantAdminGroup(idGroup, idParticipant)
+
+        #
+        # Helper functions
+        #
+
+    def _resize_image(self, path, output_path=None, size=[200, 200]):
+        """Thumbnail max size allowed: 200x200"""
+
+        # TODO: maybe move to someplace called utility or helper
+        if not output_path:
+            output_path = path
+        with open(path, "rb") as f:
+            with Image.open(f) as image:
+                cover = resizeimage.resize_cover(image, size)
+                cover.save(output_path, image.format)
+        return output_path
