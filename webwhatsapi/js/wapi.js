@@ -62,7 +62,6 @@ if (!window.Store) {
                         window.Store.sendMessage = function (e) {
                             return window.Store.SendTextMsgToChat(this, ...arguments);
                         };
-                        return window.Store;
                     }
                 }
             }
@@ -75,6 +74,8 @@ if (!window.Store) {
                     window.Store[prop] = window.Store.Presence[prop] || window.Store[prop];
                 }
             }
+
+            return window.Store;
         }
 
         if (typeof webpackJsonp === 'function') {
