@@ -74,7 +74,7 @@ class WhatsAPIDriverAsync:
     async def connect(self):
         return await self._run_async(self._driver.connect)
 
-    async def wait_for_login(self, timeout=90):
+    async def wait_for_login(self, timeout=15):
         for _ in range(timeout // 2):
             try:
                 return await self._run_async(self._driver.wait_for_login, timeout=1)

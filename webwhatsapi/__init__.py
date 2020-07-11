@@ -75,7 +75,7 @@ class WhatsAPIDriver(object):
         "firstrun": "#wrapper",
         "qrCode": "canvas",
         "qrCodePlain": "div[data-ref]",
-        "mainPage": ".app.two",
+        "mainPage": ".two",
         "chatList": ".infinite-list-viewport",
         "messageList": "#main > div > div:nth-child(1) > div > div.message-list",
         "unreadMessageBar": "#main > div > div:nth-child(1) > div > div.message-list > div.msg-unread",
@@ -312,7 +312,7 @@ class WhatsAPIDriver(object):
         """Returns if user's phone is connected to the internet."""
         return self.wapi_functions.isConnected()
 
-    def wait_for_login(self, timeout=90):
+    def wait_for_login(self, timeout=15):
         """Waits for the QR to go away"""
         WebDriverWait(self.driver, timeout).until(
             EC.visibility_of_element_located(
