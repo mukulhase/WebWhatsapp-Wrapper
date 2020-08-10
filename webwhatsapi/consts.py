@@ -4,7 +4,7 @@ URL = "http://web.whatsapp.com"
 class Selectors(object):
     FIRST_RUN = "#wrapper"
     QR_CODE = ".qrcode > img:nth-child(4)"
-    MAIN_PAGE = ".app.two"
+    MAIN_PAGE = ".two"
     CHAT_LIST = ".infinite-list-viewport"
     MESSAGE_LIST = "#main > div > div:nth-child(1) > div > div.message-list"
     UNREAD_MESSAGE_BAR = (
