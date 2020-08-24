@@ -313,12 +313,17 @@ class WhatsAPIDriver(object):
         return self.wapi_functions.isConnected()
 
     def wait_for_login(self, timeout=90):
-        """Waits for the QR to go away"""
-        WebDriverWait(self.driver, timeout).until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, self._SELECTORS["mainPage"])
-            )
-        )
+        """
+        Waits for the app to log in or for the QR to appear
+        :return: bool: True if has logged in, false if asked for QR
+        """
+        WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage'] + ',' + self._SELECTORS['qrCode'])))
+        try:
+            self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
+            return True
+        except NoSuchElementException:
+            self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+            return False
 
     def get_qr_plain(self):
         return self.driver.find_element_by_css_selector(
