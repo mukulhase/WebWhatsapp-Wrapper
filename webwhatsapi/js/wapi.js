@@ -541,7 +541,7 @@ window.WAPI.getGroupMetadata = async function (id, done) {
 
     if (output !== undefined) {
         if (output.stale) {
-            await output.update();
+            await window.Store.GroupMetadata.update(id);
         }
     }
 
