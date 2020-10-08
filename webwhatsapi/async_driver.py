@@ -133,6 +133,9 @@ class WhatsAPIDriverAsync:
     async def get_status(self):
         return await self._run_async(self._driver.get_status)
 
+    async def check_number_status(self, number_id):
+        return await self._run_async(self._driver.check_number_status, number_id)
+
     async def contact_get_common_groups(self, contact_id):
         groups = await self._run_async(
             self._driver.contact_get_common_groups(contact_id), contact_id
