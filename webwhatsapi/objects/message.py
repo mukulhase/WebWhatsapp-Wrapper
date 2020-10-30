@@ -64,6 +64,10 @@ class Message(WhatsappObject):
         elif self.type == "revoked":
             self.content = ""
             self.safe_content = "..."
+        else:
+            # type "revoked" is not overriden for legacy reason
+            self.content = ""
+            self.safe_content = "..."
 
     def __repr__(self):
         return "<Message - {type} from {sender} at {timestamp}: {content}>".format(
