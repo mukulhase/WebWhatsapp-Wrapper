@@ -97,9 +97,12 @@ class MediaMessage(Message):
         extension = mimetypes.guess_extension(self.mime)
         self.filename = "".join([str(id(self)), extension or ""])
 
-    def save_media(self, path, force_download=False):
+    def save_media(self, path, filename=None, force_download=False):
         # gets full media
-        filename = os.path.join(path, self.filename)
+        if filename:
+            filename = os.path.join(path, filename)
+        else:
+            filename = os.path.join(path, self.filename)
         ioobj = self.driver.download_media(self, force_download)
         with open(filename, "wb") as f:
             f.write(ioobj.getvalue())
