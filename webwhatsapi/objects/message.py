@@ -184,13 +184,6 @@ class GeoMessage(Message):
 
 class NotificationMessage(Message):
     def __init__(self, js_obj, driver=None):
-        super(NotificationMessage, self).__init__(js_obj, driver)
-        self.type = js_obj["type"]
-        self.subtype = js_obj["subtype"]
-        if js_obj["recipients"]:
-            self.recipients = [getContacts(x, driver) for x in js_obj["recipients"]]
-
-    def __repr__(self):
         readable = {
             "call_log": {"miss": "Missed Call"},
             "e2e_notification": {"encrypt": "Messages now Encrypted"},
@@ -202,13 +195,21 @@ class NotificationMessage(Message):
                 "leave": "Left the group",
             },
         }
+        super(NotificationMessage, self).__init__(js_obj, driver)
+        self.type = js_obj["type"]
+        self.subtype = js_obj["subtype"]
+        self.readable = readable[self.type][self.subtype]
+        if js_obj["recipients"]:
+            self.recipients = [getContacts(x, driver) for x in js_obj["recipients"]]
+
+    def __repr__(self):
         sender = (
             ""
             if not self.sender
             else ("from " + str(safe_str(self.sender.get_safe_name())))
         )
         return "<NotificationMessage - {type} {recip} {sender} at {timestamp}>".format(
-            type=readable[self.type][self.subtype],
+            type=self.readable,
             sender=sender,
             timestamp=self.timestamp,
             recip=""
