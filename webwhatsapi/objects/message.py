@@ -65,6 +65,16 @@ class Message(WhatsappObject):
             self.content = ""
             self.safe_content = "..."
 
+        if js_obj["quotedStanzaID"]:
+            self.quoting = js_obj["quotedStanzaID"]
+        else:
+            self.quoting = ""
+
+        if js_obj["isForwarded"]:
+            self.forwarded = js_obj["isForwarded"]
+        else:
+            self.forwarded = False
+
     def __repr__(self):
         return "<Message - {type} from {sender} at {timestamp}: {content}>".format(
             type=self.type,
