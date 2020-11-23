@@ -185,7 +185,10 @@ class GeoMessage(Message):
 class NotificationMessage(Message):
     def __init__(self, js_obj, driver=None):
         readable = {
-            "call_log": {"miss": "Missed Call"},
+            "call_log": {
+                "miss": "Missed Call",
+                "miss_video": "Missed Video Call",
+            },
             "e2e_notification": {"encrypt": "Messages now Encrypted"},
             "gp2": {
                 "invite": "Joined an invite link",
