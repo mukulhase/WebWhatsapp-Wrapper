@@ -475,12 +475,16 @@ class WhatsAPIDriver(object):
         :return: List of messages in chat
         :rtype: list[Message]
         """
-        message_objs = self.wapi_functions.getAllMessagesInChat(
-            chat.id, include_me, include_notifications
-        )
+        if type(chat) == str:
+            message_objs = self.wapi_functions.getAllMessagesInChat(
+                chat, include_me, include_notifications)
+        else:
+            message_objs = self.wapi_functions.getAllMessagesInChat(
+                chat.id, include_me, include_notifications)
 
         for message in message_objs:
             yield (factory_message(message, self))
+
 
     def get_all_message_ids_in_chat(
         self, chat, include_me=False, include_notifications=False
