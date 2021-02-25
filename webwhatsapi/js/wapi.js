@@ -53,6 +53,11 @@ if (!window.Store) {
                 window.Store[needObj.id] = needObj.foundedModule;
             }
         });
+		
+		window.Store.Chat.modelClass.prototype.sendMessage = function (e) {
+			window.Store.SendTextMsgToChat(this, ...arguments);
+		}		
+		
         return window.Store;
     }
 
