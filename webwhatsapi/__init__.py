@@ -258,7 +258,12 @@ class WhatsAPIDriver(object):
                 for option in chrome_options:
                     self._profile.add_argument(option)
             self.logger.info("Starting webdriver")
-            self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
+
+            if executable_path is not None:
+                executable_path = os.path.abspath(executable_path)
+                self.driver = webdriver.Chrome(chrome_options=self._profile, executable_path=executable_path, **extra_params)
+            else:
+                self.driver = webdriver.Chrome(chrome_options=self._profile, **extra_params)
 
         elif client == "remote":
             if self._profile_path is not None:
