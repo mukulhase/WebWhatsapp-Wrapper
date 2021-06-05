@@ -66,7 +66,7 @@ class Message(WhatsappObject):
             self.safe_content = "..."
         else:
             self.content = ""
-            self.safe_content =  self.type+ "..."
+            self.safe_content =  self.type + "..."
 
     def __repr__(self):
         return "<Message - {type} from {sender} at {timestamp}: {content}>".format(
