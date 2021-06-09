@@ -1014,6 +1014,10 @@ window.WAPI.downloadFileWithCredentials = function (url, done) {
         }
     };
 
+    xhr.ontimeout = function (e) {
+        done(false);
+    };
+
     xhr.open("GET", url, true);
     xhr.withCredentials = true;
     xhr.responseType = 'blob';
@@ -1040,6 +1044,10 @@ window.WAPI.downloadFile = function (url, done) {
             console.log(err);
             done(false);
         }
+    };
+
+    xhr.ontimeout = function (e) {
+        done(false);
     };
 
     xhr.open("GET", url, true);
