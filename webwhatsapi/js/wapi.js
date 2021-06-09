@@ -996,7 +996,7 @@ window.WAPI.getProfilePicFromId = function (id, done) {
 
 window.WAPI.downloadFileWithCredentials = function (url, done) {
     let xhr = new XMLHttpRequest();
-
+    xhr.timeout = 30000;
     xhr.onload = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
@@ -1024,7 +1024,7 @@ window.WAPI.downloadFileWithCredentials = function (url, done) {
 window.WAPI.downloadFile = function (url, done) {
     let xhr = new XMLHttpRequest();
 
-
+    xhr.timeout = 30000;
     xhr.onload = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
