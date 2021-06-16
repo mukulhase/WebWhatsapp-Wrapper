@@ -62,7 +62,7 @@ class RepeatedTimer(object):
     """
 
     def __init__(self, interval, function, *args, **kwargs):
-        """ Starts a timer of given interval
+        """Starts a timer of given interval
         @param self:
         @param interval: Wait time between calls
         @param function: Function object that is needed to be called
@@ -184,7 +184,7 @@ def create_logger():
 
 def init_driver(client_id):
     """Initialises a new driver via webwhatsapi module
-    
+
     @param client_id: ID of user client
     @return webwhatsapi object
     """
@@ -216,7 +216,7 @@ def init_driver(client_id):
 
 def init_client(client_id):
     """Initialse a driver for client and store for future reference
-    
+
     @param client_id: ID of client user
     @return whebwhatsapi object
     """
@@ -227,7 +227,7 @@ def init_client(client_id):
 
 def delete_client(client_id, preserve_cache):
     """Delete all objects related to client
-    
+
     @param client_id: ID of client user
     @param preserve_cache: Boolean, whether to delete the chrome profile folder or not
     """
@@ -248,7 +248,7 @@ def delete_client(client_id, preserve_cache):
 
 def init_timer(client_id):
     """Create a timer for the client driver to watch for events
-    
+
     @param client_id: ID of clinet user
     """
     if client_id in timers and timers[client_id]:
@@ -298,7 +298,7 @@ def check_new_messages(client_id):
 
 def get_client_info(client_id):
     """Get the status of a perticular client, as to he/she is connected or not
-    
+
     @param client_id: ID of client user
     @return JSON object {
         "driver_status": webdriver status
@@ -330,7 +330,7 @@ def get_client_info(client_id):
 
 def allowed_file(filename):
     """Check if file as allowed type or not
-    
+
     @param filename: Name of the file to be checked
     @return boolean True or False based on file name check
     """
@@ -373,7 +373,7 @@ def send_media(chat_id, requestObj):
 
 def create_static_profile_path(client_id):
     """Create a profile path folder if not exist
-    
+
     @param client_id: ID of client user
     @return string profile path
     """
@@ -412,7 +412,7 @@ def before_request():
     """This runs before every API request. The function take cares of creating
     driver object is not already created. Also it checks for few prerequisits
     parameters and set global variables for other functions to use
-    
+
     Required paramters for an API hit are:
     auth-key: key string to identify valid request
     client_id: to identify for which client the request is to be run
@@ -502,7 +502,7 @@ def on_bad_internal_server_error(e):
 
 @app.route("/client", methods=["PUT"])
 def create_client():
-    """Create a new client driver. The driver is automatically created in 
+    """Create a new client driver. The driver is automatically created in
     before_request function."""
     result = False
     if g.client_id in drivers:
@@ -523,7 +523,7 @@ def delete_client():
 
 @app.route("/screen", methods=["GET"])
 def get_screen():
-    """Capture chrome screen image and send it back. If the screen is currently 
+    """Capture chrome screen image and send it back. If the screen is currently
     at qr scanning phase, return the image of qr only, else return image of full
     screen"""
     img_title = "screen_" + g.client_id + ".png"
@@ -657,7 +657,7 @@ def get_active_clients():
 
 @app.route("/admin/clients", methods=["PUT"])
 def run_clients():
-    """Force create driver for client """
+    """Force create driver for client"""
     clients = request.form.get("clients")
     if not clients:
         return jsonify({"Error": "no clients provided"})

@@ -12,11 +12,12 @@ import tempfile
 from base64 import b64decode, b64encode
 from io import BytesIO
 from json import dumps, loads
+import hmac
+import hashlib
+from math import ceil
 
 import magic
 from PIL import Image
-from axolotl.kdf.hkdfv3 import HKDFv3
-from axolotl.util.byteutil import ByteUtil
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from resizeimage import resizeimage
@@ -63,7 +64,7 @@ class WhatsAPIDriver(object):
     This is our main driver objects.
         .. note::
            Runs its own instance of selenium
-        """
+    """
 
     _PROXY = None
 
@@ -317,12 +318,19 @@ class WhatsAPIDriver(object):
         Waits for the app to log in or for the QR to appear
         :return: bool: True if has logged in, false if asked for QR
         """
-        WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located((By.CSS_SELECTOR, self._SELECTORS['mainPage'] + ',' + self._SELECTORS['qrCode'])))
+        WebDriverWait(self.driver, timeout).until(
+            EC.visibility_of_element_located(
+                (
+                    By.CSS_SELECTOR,
+                    self._SELECTORS["mainPage"] + "," + self._SELECTORS["qrCode"],
+                )
+            )
+        )
         try:
-            self.driver.find_element_by_css_selector(self._SELECTORS['mainPage'])
+            self.driver.find_element_by_css_selector(self._SELECTORS["mainPage"])
             return True
         except NoSuchElementException:
-            self.driver.find_element_by_css_selector(self._SELECTORS['qrCode'])
+            self.driver.find_element_by_css_selector(self._SELECTORS["qrCode"])
             return False
 
     def get_qr_plain(self):
@@ -778,6 +786,33 @@ class WhatsAPIDriver(object):
     def download_file_with_credentials(self, url):
         return b64decode(self.wapi_functions.downloadFileWithCredentials(url))
 
+    def hmac_sha256(self, key, data):
+        return hmac.new(key, data, hashlib.sha256).digest()
+
+    def hkdf_expand(self, input_key_material, length, info=b""):
+        # https://datatracker.ietf.org/doc/html/draft-krawczyk-hkdf-01#section-2.3
+
+        hash_len = hashlib.sha256().digest_size
+        if length > 255 * hash_len:
+            raise Exception(
+                "Cannot expand to more than 255 * %d = %d bytes using the specified hash function"
+                % (hash_len, 255 * hash_len)
+            )
+
+        n = ceil(length / hash_len)
+
+        salt = bytearray(32)
+        pseudo_random_key = self.hmac_sha256(salt, input_key_material)
+
+        output_key_material = b""
+        output_block = b""
+        for index in range(n):
+            output_block = self.hmac_sha256(
+                key=pseudo_random_key, data=output_block + info + bytes([1 + index])
+            )
+            output_key_material += output_block
+        return output_key_material[:length]
+
     def download_media(self, media_msg, force_download=False):
         if not force_download:
             try:
@@ -786,26 +821,32 @@ class WhatsAPIDriver(object):
             except AttributeError:
                 pass
 
-        file_data = self.download_file(media_msg.client_url)
+        base_url = "https://mmg-fna.whatsapp.net"
+        file_data = self.download_file(base_url + media_msg.direct_path)
 
         if not file_data:
             raise Exception("Impossible to download file")
 
-        media_key = b64decode(media_msg.media_key)
-        derivative = HKDFv3().deriveSecrets(
-            media_key, binascii.unhexlify(media_msg.crypt_keys[media_msg.type]), 112
+        media_key = media_msg.media_key
+        info = binascii.unhexlify(media_msg.crypt_keys[media_msg.type])
+        media_key_expanded = self.hkdf_expand(
+            input_key_material=b64decode(media_key), length=112, info=info
         )
 
-        parts = ByteUtil.split(derivative, 16, 32)
-        iv = parts[0]
-        cipher_key = parts[1]
-        e_file = file_data[:-10]
+        iv = media_key_expanded[:16]
+        cipherKey = media_key_expanded[16:48]
+
+        media_data = file_data[:-10]
 
         cr_obj = Cipher(
-            algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend()
+            algorithms.AES(cipherKey), modes.CBC(iv), backend=default_backend()
         )
         decryptor = cr_obj.decryptor()
-        return BytesIO(decryptor.update(e_file) + decryptor.finalize())
+        decoded_image_data = BytesIO(
+            decryptor.update(media_data) + decryptor.finalize()
+        )
+
+        return decoded_image_data
 
     def mark_default_unread_messages(self):
         """

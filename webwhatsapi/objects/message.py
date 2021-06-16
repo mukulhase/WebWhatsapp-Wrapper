@@ -93,6 +93,7 @@ class MediaMessage(Message):
 
         self.media_key = self._js_obj.get("mediaKey")
         self.client_url = self._js_obj.get("clientUrl")
+        self.direct_path = self._js_obj.get("directPath")
 
         extension = mimetypes.guess_extension(self.mime)
         self.filename = "".join([str(id(self)), extension or ""])
@@ -106,11 +107,13 @@ class MediaMessage(Message):
         return filename
 
     def __repr__(self):
-        return "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
-            type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
-            timestamp=self.timestamp,
-            filename=self.filename,
+        return (
+            "<MediaMessage - {type} from {sender} at {timestamp} ({filename})>".format(
+                type=self.type,
+                sender=safe_str(self.sender.get_safe_name()),
+                timestamp=self.timestamp,
+                filename=self.filename,
+            )
         )
 
 
@@ -146,11 +149,13 @@ class VCardMessage(Message):
                 self.contacts.append(card["vcard"].encode("ascii", "ignore"))
 
     def __repr__(self):
-        return "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
-            type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
-            timestamp=self.timestamp,
-            contacts=self.contacts,
+        return (
+            "<VCardMessage - {type} from {sender} at {timestamp} ({contacts})>".format(
+                type=self.type,
+                sender=safe_str(self.sender.get_safe_name()),
+                timestamp=self.timestamp,
+                contacts=self.contacts,
+            )
         )
 
 
@@ -163,12 +168,14 @@ class GeoMessage(Message):
         self.longitude = js_obj["lng"]
 
     def __repr__(self):
-        return "<GeoMessage - {type} from {sender} at {timestamp} ({lat}, {lng})>".format(
-            type=self.type,
-            sender=safe_str(self.sender.get_safe_name()),
-            timestamp=self.timestamp,
-            lat=self.latitude,
-            lng=self.longitude,
+        return (
+            "<GeoMessage - {type} from {sender} at {timestamp} ({lat}, {lng})>".format(
+                type=self.type,
+                sender=safe_str(self.sender.get_safe_name()),
+                timestamp=self.timestamp,
+                lat=self.latitude,
+                lng=self.longitude,
+            )
         )
 
 

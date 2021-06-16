@@ -96,7 +96,6 @@ setup(
         "python-dateutil>=2.6.0",
         "selenium>=3.4.3",
         "six>=1.10.0",
-        "python-axolotl",
         "cryptography",
         "python-magic",
     ],

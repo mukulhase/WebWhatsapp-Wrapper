@@ -17,6 +17,8 @@ class NumberStatus(WhatsappObjectWithId):
             self.can_receive_message = js_obj["canReceiveMessage"]
 
     def __repr__(self):
-        return "<NumberStatus - {id} (business={is_business}) - status = {status}>".format(
-            id=self.id, is_business=self.is_business, status=self.status
+        return (
+            "<NumberStatus - {id} (business={is_business}) - status = {status}>".format(
+                id=self.id, is_business=self.is_business, status=self.status
+            )
         )

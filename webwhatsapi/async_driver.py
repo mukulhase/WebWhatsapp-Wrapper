@@ -1,11 +1,12 @@
+import hmac
+import hashlib
+from math import ceil
 import binascii
 from asyncio import CancelledError, get_event_loop, sleep
 from concurrent.futures import ThreadPoolExecutor
 from logging import getLogger
 
 import aiohttp
-from axolotl.kdf.hkdfv3 import HKDFv3
-from axolotl.util.byteutil import ByteUtil
 from base64 import b64decode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -210,6 +211,33 @@ class WhatsAPIDriverAsync:
             async with session.get(url) as resp:
                 return await resp.read()
 
+    def hmac_sha256(self, key, data):
+        return hmac.new(key, data, hashlib.sha256).digest()
+
+    def hkdf_expand(self, input_key_material, length, info=b""):
+        # https://datatracker.ietf.org/doc/html/draft-krawczyk-hkdf-01#section-2.3
+
+        hash_len = hashlib.sha256().digest_size
+        if length > 255 * hash_len:
+            raise Exception(
+                "Cannot expand to more than 255 * %d = %d bytes using the specified hash function"
+                % (hash_len, 255 * hash_len)
+            )
+
+        n = ceil(length / hash_len)
+
+        salt = bytearray(32)
+        pseudo_random_key = self.hmac_sha256(salt, input_key_material)
+
+        output_key_material = b""
+        output_block = b""
+        for index in range(n):
+            output_block = self.hmac_sha256(
+                key=pseudo_random_key, data=output_block + info + bytes([1 + index])
+            )
+            output_key_material += output_block
+        return output_key_material[:length]
+
     async def download_media(self, media_msg, force_download=False):
         if not force_download:
             try:
@@ -218,23 +246,30 @@ class WhatsAPIDriverAsync:
             except AttributeError:
                 pass
 
-        file_data = await self.download_file(media_msg.client_url)
+        base_url = "https://mmg-fna.whatsapp.net"
+        file_data = await self.download_file(base_url + media_msg.direct_path)
 
         media_key = b64decode(media_msg.media_key)
-        derivative = HKDFv3().deriveSecrets(
-            media_key, binascii.unhexlify(media_msg.crypt_keys[media_msg.type]), 112
+        media_key_expanded = self.hkdf_expand(
+            input_key_material=b64decode(media_key),
+            length=112,
+            info=binascii.unhexlify(media_msg.crypt_keys[media_msg.type]),
         )
 
-        parts = ByteUtil.split(derivative, 16, 32)
-        iv = parts[0]
-        cipher_key = parts[1]
-        e_file = file_data[:-10]
+        iv = media_key_expanded[:16]
+        cipherKey = media_key_expanded[16:48]
+
+        media_data = file_data[:-10]
 
         cr_obj = Cipher(
-            algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend()
+            algorithms.AES(cipherKey), modes.CBC(iv), backend=default_backend()
         )
         decryptor = cr_obj.decryptor()
-        return BytesIO(decryptor.update(e_file) + decryptor.finalize())
+        decoded_image_data = BytesIO(
+            decryptor.update(media_data) + decryptor.finalize()
+        )
+
+        return decoded_image_data
 
     async def quit(self):
         return await self._run_async(self._driver.quit)
