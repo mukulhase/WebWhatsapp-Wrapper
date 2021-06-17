@@ -98,6 +98,10 @@ setup(
         "six>=1.10.0",
         "cryptography",
         "python-magic",
+        "typing>=3.7.4.1",
+        "numpy>=1.18.4",
+        "python-resize-image==1.1.19",
+        "Pillow>=7.1.2",
     ],
     extras_require={},
 )
