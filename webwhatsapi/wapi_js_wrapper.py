@@ -57,16 +57,20 @@ class WapiJsWrapper(object):
         if self.available_functions is not None:
             return self.available_functions
 
-        """Sleep wait until WhatsApp loads and creates webpack objects"""
-        time.sleep(5)
         try:
             script_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
             script_path = os.getcwd()
 
-        result = self.driver.execute_script(
-            "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }"
-        )  # noqa E501
+        """Wait until WhatsApp loads and creates webpack objects"""
+        for _ in range(100):
+            result = self.driver.execute_script(
+                "if (document.querySelector('*[data-icon=chat]') !== null) { return true } else { return false }"
+            )  # noqa E501
+            if result:
+                break
+            time.sleep(1)
+        
         if result:
             with open(os.path.join(script_path, "js", "wapi.js"), "r") as script:
                 self.driver.execute_script(script.read())
@@ -77,6 +81,8 @@ class WapiJsWrapper(object):
                 return self.available_functions
             else:
                 return []
+        else:
+            raise SystemError("Couldnt bind js functions")
 
     def quit(self):
         self.new_messages_observable.stop()
