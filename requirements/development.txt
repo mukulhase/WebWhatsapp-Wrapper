@@ -1,0 +1,7 @@
+-r base.txt
+commitizen>=1.22.0
+black==19.10b0
+flake8
+flake8-black==0.2.0
+coverage
+ipython

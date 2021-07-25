@@ -1,0 +1,12 @@
+{
+  "projectName": "WebWhatsAPI",
+  "projectOwner": "Mukul Hase",
+  "repoType": "github",
+  "repoHost": "https://github.com/mukulhase/WebWhatsapp-Wrapper",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "contributors": []
+}

@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  firefox:
+    image: selenium/standalone-firefox-debug:3.14.0-curium
+    ports:
+      - "4444:4444"
+      - "5900:5900"
+    volumes:
+      - "/dev/shm:/dev/shm"
+    networks:
+      - selenium
+  whatsapp:
+     build: .
+     environment:
+       - SELENIUM=http://firefox:4444/wd/hub
+     volumes:
+       - ".:/app"
+     command: python sample/remote.py
+     networks:
+       - selenium
+     depends_on:
+       - firefox
+
+volumes:
+  devshm:
+
+networks:
+  selenium:
