@@ -11,7 +11,8 @@ way, feel free to contribute.
 
 ### Prepare environment
 * run `docker-compose up firefox`, then a instance of selenium in your 
-[localhost:4444](http://localhost:4444/wd/hub/static/resource/hub.html) will be available
+[localhost:4444](http://localhost:4444/wd/hub/static/resource/hub.html) will be available.  
+  If "docker-compose up firefox" command fails try to replace "image: selenium/standalone-firefox-debug:3.14.0-curium" by "image: selenium/standalone-firefox-debug:latest" in docker-compose.yml file.
 * open your vnc client in localhost:5900, it will ask for a password that is `secret`
 
 ### Run project
