@@ -7,7 +7,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## What is it?
-This package is used to provide a python interface for interacting with WhatsAPP Web to send and receive Whatsapp messages.
+This package is used to provide a python interface for interacting with Whatsapp Web to send and receive Whatsapp messages.
 It is based on the official Whatsapp Web Browser Application and uses Selenium browser automation to communicate with Whatsapp Web.
 
 ## How to contribute?
