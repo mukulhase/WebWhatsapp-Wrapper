@@ -687,12 +687,17 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
         if (done !== undefined) done(false);
         return false;
     }
-    messageObject = messageObject.value();
-
+    messageObject = messageObject.valueOf();
+	let params = {
+		linkPreview : null, 
+		mentionedJidList : null, 
+		quotedMsg : messageObject, 
+		quotedMsgAdminGroupJid : null
+	};
     const chat = WAPI.getChat(messageObject.chat.id)
     if (chat !== undefined) {
         if (done !== undefined) {
-            chat.sendMessage(message, null, messageObject).then(function () {
+            chat.sendMessage(message, params, messageObject).then(function () {
                 function sleep(ms) {
                     return new Promise(resolve => setTimeout(resolve, ms));
                 }
@@ -721,7 +726,7 @@ window.WAPI.ReplyMessage = function (idMessage, message, done) {
             });
             return true;
         } else {
-            chat.sendMessage(message, null, messageObject);
+            chat.sendMessage(message, params, messageObject);
             return true;
         }
     } else {
