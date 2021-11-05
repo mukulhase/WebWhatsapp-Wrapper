@@ -25,7 +25,10 @@ if (!window.Store) {
                 { id: "UserConstructor", conditions: (module) => (module.default && module.default.prototype && module.default.prototype.isServer && module.default.prototype.isUser) ? module.default : null },
                 { id: "SendTextMsgToChat", conditions: (module) => (module.sendTextMsgToChat) ? module.sendTextMsgToChat : null },
                 { id: "SendSeen", conditions: (module) => (module.sendSeen) ? module.sendSeen : null },
-                { id: "sendDelete", conditions: (module) => (module.sendDelete) ? module.sendDelete : null }
+                { id: "sendDelete", conditions: (module) => (module.sendDelete) ? module.sendDelete : null },
+		{ id: "FeatureChecker", conditions: (module) => (module && module.getProtobufFeatureName) ? module : null },
+		{ id: "GetMaybeMeUser", conditions: (module) => (module && module.getMaybeMeUser) ? module : null },
+		{ id: "QueryExist", conditions: (module) => (module.queryExist) ? module : null }
             ];
         for (let idx in modules) {
             if ((typeof modules[idx] === "object") && (modules[idx] !== null)) {
@@ -1115,8 +1118,16 @@ window.WAPI.deleteMessage = function (chatId, messageArray, revoke=false, done) 
     return true;
 };
 
+window.WAPI.isMultiDeviceVersion = function () {
+    return Store.FeatureChecker.default.supportsFeature(Store.FeatureChecker.default.F.MD_BACKEND);
+}
+
+window.WAPI.getMyChatId = () => {
+    return Store.GetMaybeMeUser.getMaybeMeUser();
+}
+
 window.WAPI.checkNumberStatus = function (id, done) {
-    window.Store.WapQuery.queryExist(id).then((result) => {
+    window.WAPI.findJidFromNumber(id).then((result) => {
         if( done !== undefined) {
             if (result.jid === undefined) throw 404;
             done(window.WAPI._serializeNumberStatusObj(result));
@@ -1125,13 +1136,42 @@ window.WAPI.checkNumberStatus = function (id, done) {
         if (done !== undefined) {
             done(window.WAPI._serializeNumberStatusObj({
                 status: e,
-                jid   : id
+                jid   : id 
             }));
         }
     });
 
     return true;
 };
+
+window.WAPI.findJidFromNumber = (number) => {
+    if (WAPI.isMultiDeviceVersion()) {
+        return Store.QueryExist.queryExist(WAPI.tryFixNumber(number)).then(value => {
+            return {
+                status: 200,
+                jid: value.wid
+            }
+        });
+    } else {
+        if (!number.includes("@c.us"))
+            number += "@c.us";
+        return Store.WapQuery.queryExist(number);
+    }
+}
+
+window.WAPI.tryFixNumber = (number) => {
+    let firstNumbersMe = Store.GetMaybeMeUser.getMaybeMeUser().user.substring(0, 2);
+    let firstNumbersContact = number.substring(0, 2);
+    if (firstNumbersMe === firstNumbersContact) {
+        return number.substring(2);
+    }
+    firstNumbersMe = Store.GetMaybeMeUser.getMaybeMeUser().user.substring(0, 3);
+    firstNumbersContact = number.substring(0, 3);
+    if (firstNumbersMe === firstNumbersContact) {
+        return number.substring(3);
+    }
+    return number;
+}
 
 /**
  * New messages observable functions.
