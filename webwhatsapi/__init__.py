@@ -1,7 +1,7 @@
 """
 WebWhatsAPI module
 
-.. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>
+.. moduleauthor:: Mukul Hase <mukulhase@gmail.com>, Adarsh Sanjeev <adarshsanjeev@gmail.com>, Shaikh Aquib <shaikhaquib394@gmail.com>
 """
 
 import binascii
@@ -185,6 +185,9 @@ class WhatsAPIDriver(object):
         logger=None,
         extra_params=None,
         chrome_options=None,
+        chrome_remote=False,
+        chrome_remote_ip="localhost",
+        chrome_port=8989,
         executable_path=None,
     ):
         """Initialises the webdriver"""
@@ -257,6 +260,11 @@ class WhatsAPIDriver(object):
             if chrome_options is not None:
                 for option in chrome_options:
                     self._profile.add_argument(option)
+            
+            # If the browser is running as a remote debugging session
+            if (not headless and chrome_remote and chrome_port):
+                self._profile.add_experimental_option("debuggerAddress", "{}:{}".format(chrome_remote_ip, chrome_port))
+
             self.logger.info("Starting webdriver")
 
             if executable_path is not None:
